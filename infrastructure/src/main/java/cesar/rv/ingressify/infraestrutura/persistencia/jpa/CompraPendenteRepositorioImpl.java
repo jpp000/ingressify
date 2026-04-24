@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
+import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.compra.CompraPendente;
 import cesar.rv.ingressify.dominio.marketplace.compra.CompraPendenteRepositorio;
@@ -15,11 +16,9 @@ import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoId;
 public class CompraPendenteRepositorioImpl implements CompraPendenteRepositorio {
 
 	private final CompraPendenteJpaRepository jpaRepository;
-	private final JpaMapeador mapeador;
 
-	public CompraPendenteRepositorioImpl(CompraPendenteJpaRepository jpaRepository, JpaMapeador mapeador) {
+	public CompraPendenteRepositorioImpl(CompraPendenteJpaRepository jpaRepository) {
 		this.jpaRepository = jpaRepository;
-		this.mapeador = mapeador;
 	}
 
 	@Override
@@ -30,7 +29,7 @@ public class CompraPendenteRepositorioImpl implements CompraPendenteRepositorio 
 		jpa.setEventoId(compra.getEventoId().getId());
 		jpa.setQuantidade(compra.getQuantidade());
 		jpa.setCompradorId(compra.getComprador().getId());
-		mapeador.aplicarDinheiro(jpa.getValorTotal(), compra.getValorTotal());
+		jpa.setValorTotal(compra.getValorTotal().getValor());
 		jpa.setCriadaEm(compra.getCriadaEm());
 		jpaRepository.save(jpa);
 	}
@@ -52,6 +51,10 @@ public class CompraPendenteRepositorioImpl implements CompraPendenteRepositorio 
 
 	private CompraPendente paraDominio(CompraPendenteJpa j) {
 		return new CompraPendente(j.getId(), new TipoIngressoId(j.getTipoIngressoId()), new EventoId(j.getEventoId()), j.getQuantidade(),
-				new UsuarioId(j.getCompradorId()), mapeador.paraDinheiro(j.getValorTotal()), j.getCriadaEm());
+				new UsuarioId(j.getCompradorId()), paraDinheiro(j.getValorTotal()), j.getCriadaEm());
+	}
+
+	private static Dinheiro paraDinheiro(java.math.BigDecimal valor) {
+		return valor == null ? Dinheiro.ZERO : new Dinheiro(valor);
 	}
 }

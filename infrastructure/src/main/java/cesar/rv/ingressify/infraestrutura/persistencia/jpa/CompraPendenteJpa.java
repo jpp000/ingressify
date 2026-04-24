@@ -1,10 +1,10 @@
 package cesar.rv.ingressify.infraestrutura.persistencia.jpa;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -29,8 +29,8 @@ public class CompraPendenteJpa {
 	@Column(name = "comprador_id", nullable = false)
 	private Integer compradorId;
 
-	@Embedded
-	private DinheiroJpa valorTotal = new DinheiroJpa();
+	@Column(name = "valor_total", nullable = false, precision = 14, scale = 2)
+	private BigDecimal valorTotal;
 
 	@Column(name = "criada_em", nullable = false)
 	private LocalDateTime criadaEm;
@@ -75,11 +75,11 @@ public class CompraPendenteJpa {
 		this.compradorId = compradorId;
 	}
 
-	public DinheiroJpa getValorTotal() {
+	public BigDecimal getValorTotal() {
 		return valorTotal;
 	}
 
-	public void setValorTotal(DinheiroJpa valorTotal) {
+	public void setValorTotal(BigDecimal valorTotal) {
 		this.valorTotal = valorTotal;
 	}
 
