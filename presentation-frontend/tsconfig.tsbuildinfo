@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/routes.tsx","./src/vite-env.d.ts","./src/api/client.ts","./src/pages/anuncios.tsx","./src/pages/comprar.tsx","./src/pages/eventoeditar.tsx","./src/pages/eventoscatalogo.tsx","./src/pages/historicotransacoes.tsx","./src/pages/meusingressos.tsx","./src/pages/saldo.tsx"],"version":"5.7.3"}

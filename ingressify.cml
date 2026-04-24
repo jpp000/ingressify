@@ -1,0 +1,29 @@
+ContextMap {
+  type SYSTEM_CONTEXT_MAP
+  state as-is
+
+  contains Ingressify
+
+  domain Ingressify {
+    domainVisionStatement "Plataforma de ingressos com marketplace e financeiro."
+
+    subdomain Marketplace
+    subdomain Financeiro
+    subdomain SharedKernel
+
+    BoundedContext Marketplace {
+      type APPLICATION
+      domainVisionStatement "Eventos, tipos de ingresso, ingressos, revenda e compras."
+    }
+
+    BoundedContext Financeiro {
+      type APPLICATION
+      domainVisionStatement "Pagamentos, saldos e transações."
+    }
+
+    BoundedContext SharedKernel {
+      type SYSTEM
+      domainVisionStatement "UsuarioId, Dinheiro e tipos compartilhados."
+    }
+  }
+}

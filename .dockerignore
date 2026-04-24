@@ -1,0 +1,10 @@
+.git
+**/.git
+**/target
+**/.idea
+**/.vscode
+**/*.iml
+.cursor
+presentation-frontend/node_modules
+presentation-frontend/dist
+**/node_modules
