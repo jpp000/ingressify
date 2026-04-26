@@ -1,6 +1,7 @@
 package cesar.rv.ingressify.dominio.marketplace.evento;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.apache.commons.lang3.Validate;
 
@@ -35,5 +36,11 @@ public class EventoServico {
 
 	public void remover(EventoId id) {
 		repositorio.remover(id);
+	}
+
+	public List<Evento> listarAtivos() {
+		return repositorio.listarAtivos().stream()
+				.filter(Evento::ativo)
+				.toList();
 	}
 }
