@@ -1,0 +1,22 @@
+Feature: Processar pagamento
+
+  Scenario: Pagamento pendente pode ser confirmado
+    Given um pagamento pendente
+    When confirmo o pagamento
+    Then o status passa a confirmado
+
+  Scenario: Pagamento pendente pode ser rejeitado
+    Given um pagamento pendente
+    When rejeito o pagamento
+    Then o status passa a rejeitado
+
+  Scenario: Pagamento rejeitado não pode ser confirmado
+    Given um pagamento pendente
+    When rejeito o pagamento
+    And tento confirmar o pagamento rejeitado
+    Then a confirmação do pagamento é rejeitada
+
+  Scenario: Pagamento já confirmado não pode ser confirmado novamente
+    Given um pagamento já confirmado
+    When tento confirmar o pagamento novamente
+    Then a confirmação do pagamento é rejeitada

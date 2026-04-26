@@ -1,0 +1,322 @@
+Domain Ingressify {
+	Subdomain Marketplace
+	Subdomain Financeiro
+	Subdomain SharedKernel
+}
+
+ContextMap {
+	contains Marketplace
+	contains Financeiro
+	contains SharedKernel
+
+	Marketplace Shared-Kernel SharedKernel
+
+	Financeiro Shared-Kernel SharedKernel
+}
+
+BoundedContext Marketplace implements Marketplace {
+	Aggregate Evento {
+		Entity Evento {
+			aggregateRoot
+
+			-EventoId id
+			String nome
+			DateTime dataHora
+			String local
+			String descricao
+			-StatusEvento status
+			int capacidade
+
+			def boolean iniciado();  // return dataHora.isBefore(now)
+			def boolean ativo();     // return status == ATIVO && !iniciado()
+
+			def void atualizar(String nome, DateTime dataHora, String local, String descricao, int capacidade);
+			def void cancelar();
+
+			Repository EventoRepository {
+				@Evento obter(@EventoId id);
+				void salvar(@Evento evento);
+				void remover(@EventoId id);
+			}
+		}
+
+		ValueObject EventoId {
+			int id
+		}
+
+		enum StatusEvento {
+			ATIVO,
+			CANCELADO,
+			INICIADO
+		}
+	}
+
+	Aggregate TipoIngresso {
+		Service TipoIngressoServico {
+			void salvar(@TipoIngresso tipo);
+			@TipoIngresso obter(@TipoIngressoId id);
+			void devolver(@TipoIngressoId id, int qtd);
+		}
+
+		Entity TipoIngresso {
+			aggregateRoot
+
+			-TipoIngressoId id
+			-EventoId evento
+			String nome
+			-Dinheiro preco
+			int quantidadeDisponivel
+			int quantidadeTotal
+
+			def void reservar(int qtd);   // quantidadeDisponivel -= qtd
+			def void devolver(int qtd);   // quantidadeDisponivel += qtd
+
+			Repository TipoIngressoRepository {
+				@TipoIngresso obter(@TipoIngressoId id);
+				void salvar(@TipoIngresso tipo);
+				List<@TipoIngresso> pesquisarPorEvento(@EventoId eventoId);
+			}
+		}
+
+		ValueObject TipoIngressoId {
+			int id
+		}
+	}
+
+	Aggregate Ingresso {
+		Service IngressoServico {
+			void salvar(@Ingresso ingresso);
+			@Ingresso obter(@IngressoId id);
+			void transferir(@IngressoId id, @UsuarioId novoDono);
+			void concluirRevenda(@IngressoId id, @UsuarioId comprador);
+		}
+
+		DomainEvent IngressoTransferidoEvento {
+			-Ingresso ingresso
+			-UsuarioId novoDono
+		}
+
+		DomainEvent IngressoRevendidoEvento {
+			-Ingresso ingresso
+			-UsuarioId comprador
+		}
+
+		Entity Ingresso {
+			aggregateRoot
+
+			-IngressoId id
+			-TipoIngressoId tipoIngresso
+			-EventoId evento
+			-UsuarioId proprietario
+			-StatusIngresso status
+
+			def void transferir(@UsuarioId novoDono);       // status deve ser ATIVO
+			def void marcarEmRevenda();                     // status ATIVO -> EM_REVENDA
+			def void concluirRevenda(@UsuarioId comprador); // status EM_REVENDA -> REVENDIDO
+			def void cancelar();
+			def void desmarcarRevenda();                    // status EM_REVENDA -> ATIVO
+
+			Repository IngressoRepository {
+				@Ingresso obter(@IngressoId id);
+				void salvar(@Ingresso ingresso);
+			}
+		}
+
+		ValueObject IngressoId {
+			String id  // UUID
+		}
+
+		enum StatusIngresso {
+			ATIVO,
+			CANCELADO,
+			EM_REVENDA,
+			REVENDIDO
+		}
+	}
+
+	Aggregate AnuncioRevenda {
+		Service AnuncioRevendaServico {
+			@AnuncioRevenda criar(List<@IngressoId> ingressoIds, @Dinheiro preco, @UsuarioId vendedorId);
+			@AnuncioRevenda reservar(@AnuncioRevendaId anuncioId, @UsuarioId comprador, String correlacaoPagamento);
+			void cancelar(@AnuncioRevendaId id);
+			void cancelarReserva(@AnuncioRevendaId id);
+			void alterarPreco(@AnuncioRevendaId id, @Dinheiro novoPreco);
+			void concluir(@AnuncioRevendaId id);
+			@AnuncioRevenda obter(@AnuncioRevendaId id);
+		}
+
+		Entity AnuncioRevenda {
+			aggregateRoot
+
+			-AnuncioRevendaId id
+			-List<IngressoId> ingressoIds notEmpty
+			int quantidade
+			-UsuarioId vendedor
+			-Dinheiro preco
+			-UsuarioId compradorReservado nullable
+			-StatusAnuncio status
+			String correlacaoPagamento nullable  // UUID
+
+			def void reservar(@UsuarioId comprador, String correlacao);  // status DISPONIVEL -> RESERVADO
+			def void cancelar();
+			def void cancelarReserva();  // status RESERVADO -> DISPONIVEL
+			def void concluir();         // status RESERVADO -> VENDIDO
+			def void alterarPreco(@Dinheiro novoPreco);
+
+			Repository AnuncioRevendaRepository {
+				@AnuncioRevenda obter(@AnuncioRevendaId id);
+				void salvar(@AnuncioRevenda anuncio);
+				boolean existeDisponivelOuReservadoParaIngresso(@IngressoId ingressoId);
+			}
+		}
+
+		ValueObject AnuncioRevendaId {
+			int id
+		}
+
+		enum StatusAnuncio {
+			DISPONIVEL,
+			RESERVADO,
+			VENDIDO,
+			CANCELADO
+		}
+	}
+
+	Aggregate Pedido {
+		Entity Pedido {
+			aggregateRoot
+
+			String id  // UUID
+			-TipoIngressoId tipoIngresso
+			-EventoId evento
+			int quantidade
+			-UsuarioId comprador
+			-Dinheiro valorTotal
+			DateTime criadaEm
+
+			Repository PedidoRepository {
+				void salvar(@Pedido pedido);
+				@Pedido obter(String id);
+				void remover(String id);
+			}
+		}
+	}
+}
+
+BoundedContext Financeiro implements Financeiro {
+	Aggregate Pagamento {
+		Service PagamentoServico {
+			@Pagamento criarPendente(@Dinheiro valor, @UsuarioId comprador, @UsuarioId vendedor, @TipoOperacao tipo, String correlacaoId);
+			@Pagamento confirmar(@PagamentoId id);
+			@Pagamento rejeitar(@PagamentoId id);
+			@Pagamento obter(@PagamentoId id);
+		}
+
+		Entity Pagamento {
+			aggregateRoot
+
+			-PagamentoId id
+			-Dinheiro valor
+			-UsuarioId comprador
+			-UsuarioId vendedor nullable
+			-TipoOperacao tipo
+			-StatusPagamento status
+			String correlacaoId  // UUID
+
+			def void confirmar();  // status PENDENTE -> CONFIRMADO
+			def void rejeitar();   // status PENDENTE -> REJEITADO
+			def @Divisao dividir(BigDecimal percentualPlataforma);
+
+			Repository PagamentoRepository {
+				@Pagamento obter(@PagamentoId id);
+				void salvar(@Pagamento pagamento);
+			}
+		}
+
+		ValueObject PagamentoId {
+			int id
+		}
+
+		ValueObject Divisao {
+			-Dinheiro vendedor
+			-Dinheiro plataforma
+		}
+
+		enum StatusPagamento {
+			PENDENTE,
+			CONFIRMADO,
+			REJEITADO
+		}
+
+		enum TipoOperacao {
+			COMPRA_DIRETA,
+			REVENDA
+		}
+	}
+
+	Aggregate Saldo {
+		Service SaldoServico {
+			@Saldo obter(@UsuarioId usuario);
+			void creditar(@UsuarioId usuario, @Dinheiro quantia);
+			void debitar(@UsuarioId usuario, @Dinheiro quantia);
+		}
+
+		Entity Saldo {
+			aggregateRoot
+
+			-UsuarioId usuario
+			-Dinheiro valor
+
+			def void creditar(@Dinheiro quantia);
+			def void debitar(@Dinheiro quantia);  // lança exceção se saldo insuficiente
+
+			Repository SaldoRepository {
+				@Saldo obter(@UsuarioId usuario);
+				void salvar(@Saldo saldo);
+			}
+		}
+	}
+
+	Aggregate Transacao {
+		Entity Transacao {
+			aggregateRoot
+
+			-TransacaoId id
+			-UsuarioId usuario
+			-TipoTransacao tipo
+			-Dinheiro valor
+			DateTime data
+			String referenciaExternaId  // UUID
+
+			Repository TransacaoRepository {
+				void salvar(@Transacao transacao);
+				List<@Transacao> pesquisarPorUsuario(@UsuarioId usuario);
+			}
+		}
+
+		ValueObject TransacaoId {
+			int id
+		}
+
+		enum TipoTransacao {
+			COMPRA,
+			VENDA,
+			TRANSFERENCIA,
+			AJUSTE_SALDO
+		}
+	}
+}
+
+BoundedContext SharedKernel implements SharedKernel {
+	Aggregate Identidade {
+		ValueObject UsuarioId {
+			int id
+		}
+	}
+
+	Aggregate Monetario {
+		ValueObject Dinheiro {
+			BigDecimal valor
+		}
+	}
+}

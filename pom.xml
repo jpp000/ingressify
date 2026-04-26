@@ -1,94 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.5</version>
-		<relativePath />
-	</parent>
+	<groupId>cesar.rv</groupId>
+	<artifactId>ingressify-modules</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>ingressify-modules</name>
+	<description>Ingressify — agregador Maven (DDD multi-módulo)</description>
 
-    <groupId>cesar.rv</groupId>
-    <artifactId>ingressify-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-
-    <packaging>pom</packaging>
-    
-    <modules>
+	<modules>
+		<module>parent</module>
 		<module>domain-shared</module>
-        <module>domain-marketplace</module>
-        <module>domain-financeiro</module>
-        <module>application</module>
-        <module>infrastructure</module>
-        <module>presentation-frontend</module>
-        <module>presentation-backend</module>
-    </modules>
+		<module>domain-marketplace</module>
+		<module>domain-financeiro</module>
+		<module>application</module>
+		<module>infrastructure</module>
+		<module>presentation-backend</module>
+	</modules>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>com.google.cloud.tools</groupId>
-					<artifactId>jib-maven-plugin</artifactId>
-					<version>3.5.1</version>
-					<configuration>
-						<from>
-							<image>eclipse-temurin:17-jre@sha256:677a6527614425eb0493248cb0cc6c88265ead4118b61db015575756e7393bed</image>
-						</from>
-					</configuration>
-					<executions>
-						<execution>
-							<phase>package</phase>
-							<goals>
-								<goal>dockerBuild</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>	
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>io.cucumber</groupId>
-				<artifactId>cucumber-bom</artifactId>
-				<version>7.34.3</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>        
-		
-			<dependency>
-				<groupId>org.junit</groupId>
-				<artifactId>junit-bom</artifactId>
-				<version>6.0.3</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>5.23.0</version>
-				<scope>test</scope>
-			</dependency>      
-		</dependencies>
-	</dependencyManagement>
-    
-	<dependencies>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
-	</dependencies>
 </project>
