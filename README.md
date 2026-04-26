@@ -10,15 +10,14 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-<!-- Links do projeto — substitua os # pelos endereços reais -->
-[🌐 Deploy]() •
-[📄 Documentação]() •
-[🐛 Reportar Bug]() •
-[💡 Solicitar Feature]()
 
 </div>
 
 ---
+[![Prototipo](https://img.shields.io/badge/Prot%C3%B3tipo-ff3737?style=for-the-badge&logo=Figma&logoColor=white)](https://stitch.withgoogle.com/preview/16366040039797702871?node-id=ad9461aa2ae847b9b6f2639d74895a54)
+[![Documentação](https://img.shields.io/badge/Documentação-ff3737?style=for-the-badge&logo=GoogleDocs&logoColor=white)](https://docs.google.com/document/d/10VmFjQZuVO0OBRZF1uklAyEj-6kUazRMJNBXiSY6eXo/edit?tab=t.7zvumwyx0k03)
+
+
 
 ## Sobre o projeto
 
@@ -215,12 +214,3 @@ mvn test
 O arquivo `ingressify.cml` na raiz do repositório descreve o mapa de contexto e todos os agregados em linguagem Context Mapper. Utilize a extensão [Context Mapper](https://contextmapper.org/) no VS Code ou IntelliJ para visualizar o diagrama gerado automaticamente.
 
 ---
-
-## Contribuindo
-
-<!-- Link para o guia de contribuição, se houver -->
-
-1. Crie um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feat/minha-feature`)
-3. Faça commit das alterações (`git commit -m 'feat: minha feature'`)
-4. Abra um Pull Request
