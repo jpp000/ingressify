@@ -29,3 +29,13 @@ Feature: Anúncio de revenda
     Given um anúncio de revenda reservado
     When tento alterar o preço do anúncio reservado
     Then a alteração de preço é rejeitada
+
+  Scenario: Anúncio não pode ser criado para ingresso de outro usuário
+    Given um ingresso pertencente ao usuário 1
+    When tento criar um anúncio para esse ingresso como usuário 2
+    Then a criação do anúncio é rejeitada
+
+  Scenario: Ingresso que já está em revenda não pode ter novo anúncio
+    Given um ingresso com anúncio já ativo
+    When tento criar mais um anúncio para o mesmo ingresso
+    Then a criação do segundo anúncio é rejeitada

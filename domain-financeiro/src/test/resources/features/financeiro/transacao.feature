@@ -1,13 +1,17 @@
 Feature: Histórico de transações
 
-  Scenario: Transação de compra é registrada com dados válidos
-    Given uma transação de compra de 100 reais
-    Then a transação possui tipo compra e valor 100 reais
+  Scenario: Transação de compra é registrada e consultada pelo usuário
+    Given uma transação de compra de 100 reais registrada para o usuário 1
+    When busco o histórico do usuário 1
+    Then o histórico contém 1 transação do tipo compra com valor 100 reais
 
-  Scenario: Transação de venda é registrada com dados válidos
-    Given uma transação de venda de 90 reais
-    Then a transação possui tipo venda e valor 90 reais
+  Scenario: Transação de venda é registrada e consultada pelo usuário
+    Given uma transação de venda de 90 reais registrada para o usuário 1
+    When busco o histórico do usuário 1
+    Then o histórico contém 1 transação do tipo venda com valor 90 reais
 
-  Scenario: Transação de ajuste de saldo é registrada com dados válidos
-    Given uma transação de ajuste de saldo de 200 reais
-    Then a transação possui tipo ajuste de saldo e valor 200 reais
+  Scenario: Múltiplas transações de um usuário são retornadas juntas
+    Given uma transação de compra de 100 reais registrada para o usuário 1
+    And uma transação de venda de 90 reais registrada para o usuário 1
+    When busco o histórico do usuário 1
+    Then o histórico contém 2 transações

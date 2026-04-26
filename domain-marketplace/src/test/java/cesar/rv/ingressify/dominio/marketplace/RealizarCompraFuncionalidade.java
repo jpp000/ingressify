@@ -16,53 +16,54 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-public class RealizarCompraFuncionalidade {
+public class RealizarCompraFuncionalidade extends MarketplaceFuncionalidade {
 
-	private CompraPendente compraPendente;
-	private Throwable excecao;
-	private TipoIngressoId tipoIngressoId;
-	private EventoId eventoId;
+    private CompraPendente compraPendente;
+    private TipoIngressoId tipoIngressoId;
+    private EventoId eventoId;
 
-	@When("inicio compra com quantidade zero")
-	public void quantidadeZero() {
-		try {
-			new CompraPendente(UUID.randomUUID(), new TipoIngressoId(1), new EventoId(1), 0,
-					new UsuarioId(1), new Dinheiro(BigDecimal.ZERO), LocalDateTime.now());
-		} catch (Exception e) {
-			excecao = e;
-		}
-	}
+    @When("inicio compra com quantidade zero")
+    public void quantidadeZero() {
+        try {
+            new CompraPendente(UUID.randomUUID(), new TipoIngressoId(1), new EventoId(1), 0,
+                    new UsuarioId(1), new Dinheiro(BigDecimal.TEN), LocalDateTime.now());
+        } catch (Exception e) {
+            excecao = e;
+        }
+    }
 
-	@When("inicio compra com quantidade negativa")
-	public void quantidadeNegativa() {
-		try {
-			new CompraPendente(UUID.randomUUID(), new TipoIngressoId(1), new EventoId(1), -1,
-					new UsuarioId(1), new Dinheiro(BigDecimal.TEN), LocalDateTime.now());
-		} catch (Exception e) {
-			excecao = e;
-		}
-	}
+    @When("inicio compra com quantidade negativa")
+    public void quantidadeNegativa() {
+        try {
+            new CompraPendente(UUID.randomUUID(), new TipoIngressoId(1), new EventoId(1), -1,
+                    new UsuarioId(1), new Dinheiro(BigDecimal.TEN), LocalDateTime.now());
+        } catch (Exception e) {
+            excecao = e;
+        }
+    }
 
-	@Then("a operação é inválida")
-	public void operacaoInvalida() {
-		assertNotNull(excecao);
-	}
+    @Then("a operação é inválida")
+    public void operacaoInvalida() {
+        assertNotNull(excecao);
+    }
 
-	@Given("um tipo de ingresso e evento válidos")
-	public void tipoEEventoValidos() {
-		tipoIngressoId = new TipoIngressoId(1);
-		eventoId = new EventoId(1);
-	}
+    @Given("um tipo de ingresso e evento válidos")
+    public void tipoEEventoValidos() {
+        tipoIngressoId = new TipoIngressoId(1);
+        eventoId = new EventoId(1);
+    }
 
-	@When("inicio uma compra com quantidade válida")
-	public void inicioCompraValida() {
-		compraPendente = new CompraPendente(UUID.randomUUID(), tipoIngressoId, eventoId, 2,
-				new UsuarioId(1), new Dinheiro(new BigDecimal("50.00")), LocalDateTime.now());
-	}
+    @When("inicio uma compra com quantidade válida")
+    public void inicioCompraValida() {
+        compraPendente = new CompraPendente(UUID.randomUUID(), tipoIngressoId, eventoId, 2,
+                new UsuarioId(1), new Dinheiro(new BigDecimal("100.00")), LocalDateTime.now());
+    }
 
-	@Then("a compra pendente é criada com sucesso")
-	public void compraPendenteCriadaComSucesso() {
-		assertNotNull(compraPendente);
-		assertEquals(2, compraPendente.getQuantidade());
-	}
+    @Then("a compra pendente é criada com sucesso")
+    public void compraPendenteCriadaComSucesso() {
+        assertNotNull(compraPendente);
+        assertEquals(2, compraPendente.getQuantidade());
+        assertEquals(tipoIngressoId, compraPendente.getTipoIngressoId());
+        assertEquals(eventoId, compraPendente.getEventoId());
+    }
 }

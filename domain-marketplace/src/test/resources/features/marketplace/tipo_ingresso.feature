@@ -14,3 +14,8 @@ Feature: Gerenciar tipo de ingresso
     Given um tipo de ingresso com 5 ingressos disponíveis de um total de 10
     When devolvo 2 ingressos ao tipo
     Then a quantidade disponível do tipo é 7
+
+  Scenario: Tipo de ingresso não pode exceder a capacidade do evento
+    Given um evento com capacidade de 10 lugares
+    When cadastro um tipo de ingresso com 11 ingressos no total
+    Then o cadastro do tipo é rejeitado por exceder a capacidade

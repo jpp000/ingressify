@@ -12,74 +12,102 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-public class CadastrarEventoFuncionalidade {
+public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
 
-	private Evento evento;
-	private Throwable excecao;
+    private EventoId eventoId;
 
-	@When("tento criar um evento com nome em branco")
-	public void tentarNomeEmBranco() {
-		try {
-			new Evento("   ", LocalDateTime.now().plusDays(1), "Local X", 100);
-		} catch (Exception e) {
-			excecao = e;
-		}
-	}
+    @When("tento criar um evento com nome em branco")
+    public void tentarNomeEmBranco() {
+        try {
+            new Evento("   ", LocalDateTime.now().plusDays(1), "Local X", 100);
+        } catch (Exception e) {
+            excecao = e;
+        }
+    }
 
-	@When("tento criar um evento com data no passado")
-	public void tentarDataNoPassado() {
-		try {
-			new Evento("Show", LocalDateTime.now().minusDays(1), "Local X", 100);
-		} catch (Exception e) {
-			excecao = e;
-		}
-	}
+    @When("tento criar um evento com data no passado")
+    public void tentarDataNoPassado() {
+        try {
+            new Evento("Show", LocalDateTime.now().minusDays(1), "Local X", 100);
+        } catch (Exception e) {
+            excecao = e;
+        }
+    }
 
-	@When("tento criar um evento com capacidade zero")
-	public void tentarCapacidadeZero() {
-		try {
-			new Evento("Show", LocalDateTime.now().plusDays(1), "Local X", 0);
-		} catch (Exception e) {
-			excecao = e;
-		}
-	}
+    @When("tento criar um evento com capacidade zero")
+    public void tentarCapacidadeZero() {
+        try {
+            new Evento("Show", LocalDateTime.now().plusDays(1), "Local X", 0);
+        } catch (Exception e) {
+            excecao = e;
+        }
+    }
 
-	@Then("a criação é rejeitada")
-	public void criacaoRejeitada() {
-		assertNotNull(excecao);
-	}
+    @Then("a criação é rejeitada")
+    public void criacaoRejeitada() {
+        assertNotNull(excecao);
+    }
 
-	@Given("um evento ativo")
-	public void umEventoAtivo() {
-		evento = new Evento("Show", LocalDateTime.now().plusDays(1), "Local X", 100);
-	}
+    @When("crio um evento com dados válidos")
+    public void criarEventoValido() {
+        Evento evento = new Evento("Festival de Verão", LocalDateTime.now().plusDays(30), "Estádio Municipal", 5000);
+        eventoServico.salvar(evento);
+        eventoId = evento.getId();
+    }
 
-	@When("cancelo o evento")
-	public void canceloOEvento() {
-		evento.cancelar();
-	}
+    @Then("o evento é persistido com status ativo")
+    public void eventoPeristidoComStatusAtivo() {
+        assertNotNull(eventoId);
+        assertEquals(StatusEvento.ATIVO, eventoServico.obter(eventoId).getStatus());
+    }
 
-	@Then("o status do evento é cancelado")
-	public void statusEventoCancelado() {
-		assertEquals(StatusEvento.CANCELADO, evento.getStatus());
-	}
+    @Given("um evento ativo")
+    public void umEventoAtivo() {
+        Evento evento = new Evento("Show de Rock", LocalDateTime.now().plusDays(10), "Arena", 1000);
+        eventoServico.salvar(evento);
+        eventoId = evento.getId();
+    }
 
-	@Given("um evento já iniciado")
-	public void umEventoJaIniciado() {
-		evento = new Evento(new EventoId(1), "Show", LocalDateTime.now().minusHours(1), "Local X", StatusEvento.ATIVO, 100);
-	}
+    @When("cancelo o evento")
+    public void canceloOEvento() {
+        eventoServico.cancelar(eventoId);
+    }
 
-	@When("tento atualizar os dados do evento")
-	public void tentarAtualizarEvento() {
-		try {
-			evento.atualizar("Show 2", LocalDateTime.now().plusDays(1), "Local Y", 200);
-		} catch (Exception e) {
-			excecao = e;
-		}
-	}
+    @Then("o status do evento é cancelado")
+    public void statusEventoCancelado() {
+        assertEquals(StatusEvento.CANCELADO, eventoServico.obter(eventoId).getStatus());
+    }
 
-	@Then("a atualização do evento é rejeitada")
-	public void atualizacaoDoEventoRejeitada() {
-		assertNotNull(excecao);
-	}
+    @When("atualizo o nome do evento")
+    public void atualizarNomeEvento() {
+        eventoServico.atualizar(eventoId, "Show de Rock - Edição Especial",
+                LocalDateTime.now().plusDays(10), "Arena", 1500);
+    }
+
+    @Then("o nome do evento é atualizado")
+    public void nomeEventoAtualizado() {
+        assertEquals("Show de Rock - Edição Especial", eventoServico.obter(eventoId).getNome());
+    }
+
+    @Given("um evento já iniciado")
+    public void umEventoJaIniciado() {
+        Evento evento = new Evento(new EventoId(99), "Show Passado", LocalDateTime.now().minusHours(2),
+                "Teatro", StatusEvento.ATIVO, 200);
+        eventoServico.salvar(evento);
+        eventoId = evento.getId();
+    }
+
+    @When("tento atualizar os dados do evento")
+    public void tentarAtualizarEvento() {
+        try {
+            eventoServico.atualizar(eventoId, "Novo Nome", LocalDateTime.now().plusDays(1), "Novo Local", 300);
+        } catch (Exception e) {
+            excecao = e;
+        }
+    }
+
+    @Then("a atualização do evento é rejeitada")
+    public void atualizacaoDoEventoRejeitada() {
+        assertNotNull(excecao);
+    }
 }

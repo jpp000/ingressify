@@ -12,45 +12,44 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-public class SaldoFuncionalidade {
+public class SaldoFuncionalidade extends FinanceiroFuncionalidade {
 
-	private Saldo saldo;
-	private Throwable excecao;
+	private static final UsuarioId USUARIO = new UsuarioId(1);
 
 	@Given("um saldo de 100 reais")
 	public void saldoCem() {
-		saldo = new Saldo(new UsuarioId(1), new Dinheiro(new BigDecimal("100.00")));
+		saldoRepositorio.salvar(new Saldo(USUARIO, new Dinheiro(new BigDecimal("100.00"))));
 	}
 
 	@When("credito 50 reais ao saldo")
 	public void creditarCinquenta() {
-		saldo.creditar(new Dinheiro(new BigDecimal("50.00")));
+		saldoServico.creditar(USUARIO, new Dinheiro(new BigDecimal("50.00")));
 	}
 
 	@Then("o saldo passa a 150 reais")
 	public void saldoCentoECinquenta() {
-		assertEquals(new Dinheiro(new BigDecimal("150.00")), saldo.getValor());
+		assertEquals(new Dinheiro(new BigDecimal("150.00")), saldoServico.obter(USUARIO).getValor());
 	}
 
 	@When("debito 30 reais do saldo")
 	public void debitarTrinta() {
-		saldo.debitar(new Dinheiro(new BigDecimal("30.00")));
+		saldoServico.debitar(USUARIO, new Dinheiro(new BigDecimal("30.00")));
 	}
 
 	@Then("o saldo passa a 70 reais")
 	public void saldoSetenta() {
-		assertEquals(new Dinheiro(new BigDecimal("70.00")), saldo.getValor());
+		assertEquals(new Dinheiro(new BigDecimal("70.00")), saldoServico.obter(USUARIO).getValor());
 	}
 
 	@Given("um saldo de 20 reais")
 	public void saldoVinte() {
-		saldo = new Saldo(new UsuarioId(1), new Dinheiro(new BigDecimal("20.00")));
+		saldoRepositorio.salvar(new Saldo(USUARIO, new Dinheiro(new BigDecimal("20.00"))));
 	}
 
 	@When("tento debitar 50 reais do saldo")
 	public void tentarDebitarCinquenta() {
 		try {
-			saldo.debitar(new Dinheiro(new BigDecimal("50.00")));
+			saldoServico.debitar(USUARIO, new Dinheiro(new BigDecimal("50.00")));
 		} catch (Exception e) {
 			excecao = e;
 		}
