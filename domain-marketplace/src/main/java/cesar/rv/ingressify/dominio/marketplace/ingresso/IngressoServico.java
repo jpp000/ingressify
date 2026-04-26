@@ -1,13 +1,8 @@
 package cesar.rv.ingressify.dominio.marketplace.ingresso;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import org.apache.commons.lang3.Validate;
 
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
-import cesar.rv.ingressify.dominio.marketplace.compra.CompraPendente;
 
 public class IngressoServico {
 
@@ -36,19 +31,5 @@ public class IngressoServico {
 		Ingresso i = repositorio.obter(id);
 		i.concluirRevenda(comprador);
 		repositorio.salvar(i);
-	}
-
-	public List<Ingresso> emitir(CompraPendente compra, UsuarioId comprador) {
-		Validate.notNull(compra, "compra");
-		Validate.notNull(comprador, "comprador");
-		List<Ingresso> criados = new ArrayList<>();
-		for (int n = 0; n < compra.getQuantidade(); n++) {
-			Ingresso ing = new Ingresso(compra.getTipoIngressoId(), compra.getEventoId(), comprador);
-			IngressoId novoId = new IngressoId(UUID.randomUUID());
-			ing.atribuirId(novoId);
-			repositorio.salvar(ing);
-			criados.add(ing);
-		}
-		return criados;
 	}
 }

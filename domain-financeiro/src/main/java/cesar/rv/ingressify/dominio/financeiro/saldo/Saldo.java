@@ -30,11 +30,6 @@ public class Saldo {
 		this.valor = this.valor.subtrair(quantia);
 	}
 
-	public void ajustar(Dinheiro novoValor) {
-		Validate.notNull(novoValor, "novoValor");
-		this.valor = novoValor;
-	}
-
 	public UsuarioId getUsuario() {
 		return usuario;
 	}

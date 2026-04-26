@@ -18,12 +18,6 @@ public class SaldoServico {
 		return repositorio.obter(usuario);
 	}
 
-	public void ajustar(UsuarioId usuario, Dinheiro novoValor) {
-		Saldo s = repositorio.obter(usuario);
-		s.ajustar(novoValor);
-		repositorio.salvar(s);
-	}
-
 	public void creditar(UsuarioId usuario, Dinheiro quantia) {
 		Saldo s = repositorio.obter(usuario);
 		s.creditar(quantia);

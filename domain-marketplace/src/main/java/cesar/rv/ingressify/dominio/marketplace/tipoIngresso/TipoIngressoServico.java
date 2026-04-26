@@ -1,11 +1,8 @@
 package cesar.rv.ingressify.dominio.marketplace.tipoIngresso;
 
-import java.util.List;
-
 import org.apache.commons.lang3.Validate;
 
 import cesar.rv.ingressify.dominio.marketplace.evento.Evento;
-import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoRepositorio;
 
 public class TipoIngressoServico {
@@ -33,10 +30,6 @@ public class TipoIngressoServico {
 
 	public TipoIngresso obter(TipoIngressoId id) {
 		return repositorio.obter(id);
-	}
-
-	public List<TipoIngresso> pesquisarPorEvento(EventoId eventoId) {
-		return repositorio.pesquisarPorEvento(eventoId);
 	}
 
 	public void devolver(TipoIngressoId id, int qtd) {

@@ -167,16 +167,6 @@ public class MarketplaceFuncionalidade {
         }
 
         @Override
-        public Optional<AnuncioRevenda> obterPorCorrelacaoPagamento(UUID correlacao) {
-            for (AnuncioRevenda a : dados.values()) {
-                if (correlacao.equals(a.getCorrelacaoPagamento())) {
-                    return Optional.of(a);
-                }
-            }
-            return Optional.empty();
-        }
-
-        @Override
         public boolean existeDisponivelOuReservadoParaIngresso(IngressoId ingressoId) {
             for (AnuncioRevenda a : dados.values()) {
                 if (a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO) {

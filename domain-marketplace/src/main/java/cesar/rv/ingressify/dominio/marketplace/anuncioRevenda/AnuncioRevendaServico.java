@@ -121,13 +121,4 @@ public class AnuncioRevendaServico {
 	public AnuncioRevenda obter(AnuncioRevendaId id) {
 		return anuncioRepositorio.obter(id);
 	}
-
-	public AnuncioRevenda obterPorCorrelacao(UUID correlacao) {
-		return anuncioRepositorio.obterPorCorrelacaoPagamento(correlacao)
-				.orElseThrow(() -> new IllegalArgumentException("anúncio não encontrado para correlação"));
-	}
-
-	public void cancelarReservaPorCorrelacao(UUID correlacao) {
-		anuncioRepositorio.obterPorCorrelacaoPagamento(correlacao).ifPresent(x -> cancelarReserva(x.getId()));
-	}
 }
