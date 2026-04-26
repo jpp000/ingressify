@@ -12,8 +12,8 @@ import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaId;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaServico;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.StatusAnuncio;
-import cesar.rv.ingressify.dominio.marketplace.compra.CompraPendente;
-import cesar.rv.ingressify.dominio.marketplace.compra.CompraPendenteRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.compra.Pedido;
+import cesar.rv.ingressify.dominio.marketplace.compra.PedidoRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.evento.Evento;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoRepositorio;
@@ -181,26 +181,26 @@ public class MarketplaceFuncionalidade {
         }
     }
 
-    static class CompraPendenteRepositorioMemoria implements CompraPendenteRepositorio {
-        private final Map<UUID, CompraPendente> dados = new HashMap<>();
+    static class PedidoRepositorioMemoria implements PedidoRepositorio {
+        private final Map<UUID, Pedido> dados = new HashMap<>();
 
         @Override
-        public void salvar(CompraPendente compra) {
-            dados.put(compra.getId(), compra);
+        public void salvar(Pedido pedido) {
+            dados.put(pedido.getId(), pedido);
         }
 
         @Override
-        public Optional<CompraPendente> buscar(UUID id) {
+        public Optional<Pedido> buscar(UUID id) {
             return Optional.ofNullable(dados.get(id));
         }
 
         @Override
-        public CompraPendente obter(UUID id) {
-            CompraPendente c = dados.get(id);
-            if (c == null) {
-                throw new IllegalArgumentException("Compra pendente não encontrada: " + id);
+        public Pedido obter(UUID id) {
+            Pedido p = dados.get(id);
+            if (p == null) {
+                throw new IllegalArgumentException("Pedido não encontrado: " + id);
             }
-            return c;
+            return p;
         }
 
         @Override

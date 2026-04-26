@@ -10,7 +10,7 @@ import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoId;
 
-public class CompraPendente {
+public class Pedido {
 
 	private final UUID id;
 	private final TipoIngressoId tipoIngressoId;
@@ -20,7 +20,7 @@ public class CompraPendente {
 	private final Dinheiro valorTotal;
 	private final LocalDateTime criadaEm;
 
-	public CompraPendente(UUID id, TipoIngressoId tipoIngressoId, EventoId eventoId, int quantidade, UsuarioId comprador,
+	public Pedido(UUID id, TipoIngressoId tipoIngressoId, EventoId eventoId, int quantidade, UsuarioId comprador,
 			Dinheiro valorTotal, LocalDateTime criadaEm) {
 		Validate.notNull(id, "id");
 		Validate.notNull(tipoIngressoId, "tipoIngressoId");
