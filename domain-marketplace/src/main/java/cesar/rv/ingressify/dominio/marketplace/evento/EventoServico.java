@@ -27,9 +27,9 @@ public class EventoServico {
 		repositorio.salvar(e);
 	}
 
-	public void atualizar(EventoId id, String nome, LocalDateTime dataHora, String local, int capacidade) {
+	public void atualizar(EventoId id, String nome, LocalDateTime dataHora, String local, String descricao, int capacidade) {
 		Evento e = repositorio.obter(id);
-		e.atualizar(nome, dataHora, local, capacidade);
+		e.atualizar(nome, dataHora, local, descricao, capacidade);
 		repositorio.salvar(e);
 	}
 

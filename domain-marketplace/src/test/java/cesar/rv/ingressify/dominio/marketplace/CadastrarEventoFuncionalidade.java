@@ -19,7 +19,7 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
     @When("tento criar um evento com nome em branco")
     public void tentarNomeEmBranco() {
         try {
-            new Evento("   ", LocalDateTime.now().plusDays(1), "Local X", 100);
+            new Evento("   ", LocalDateTime.now().plusDays(1), "Local X", "Festival de música.", 100);
         } catch (Exception e) {
             excecao = e;
         }
@@ -28,7 +28,7 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
     @When("tento criar um evento com data no passado")
     public void tentarDataNoPassado() {
         try {
-            new Evento("Show", LocalDateTime.now().minusDays(1), "Local X", 100);
+            new Evento("Show", LocalDateTime.now().minusDays(1), "Local X", "Show de rock e pop.", 100);
         } catch (Exception e) {
             excecao = e;
         }
@@ -37,7 +37,7 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
     @When("tento criar um evento com capacidade zero")
     public void tentarCapacidadeZero() {
         try {
-            new Evento("Show", LocalDateTime.now().plusDays(1), "Local X", 0);
+            new Evento("Show", LocalDateTime.now().plusDays(1), "Local X", "Festival de verão.", 0);
         } catch (Exception e) {
             excecao = e;
         }
@@ -50,7 +50,8 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
 
     @When("crio um evento com dados válidos")
     public void criarEventoValido() {
-        Evento evento = new Evento("Festival de Verão", LocalDateTime.now().plusDays(30), "Estádio Municipal", 5000);
+        Evento evento = new Evento("Festival de Verão", LocalDateTime.now().plusDays(30), "Estádio Municipal",
+                "Dias de apresentação com atrações nacionais e internacionais. Open food e bebida.", 5000);
         eventoServico.salvar(evento);
         eventoId = evento.getId();
     }
@@ -63,7 +64,7 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
 
     @Given("um evento ativo")
     public void umEventoAtivo() {
-        Evento evento = new Evento("Show de Rock", LocalDateTime.now().plusDays(10), "Arena", 1000);
+        Evento evento = new Evento("Show de Rock", LocalDateTime.now().plusDays(10), "Arena", "Bandas de rock e blues.", 1000);
         eventoServico.salvar(evento);
         eventoId = evento.getId();
     }
@@ -81,7 +82,7 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
     @When("atualizo o nome do evento")
     public void atualizarNomeEvento() {
         eventoServico.atualizar(eventoId, "Show de Rock - Edição Especial",
-                LocalDateTime.now().plusDays(10), "Arena", 1500);
+                LocalDateTime.now().plusDays(10), "Arena", "Edição com convidados especiais e abertura antecipada.", 1500);
     }
 
     @Then("o nome do evento é atualizado")
@@ -92,7 +93,7 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
     @Given("um evento já iniciado")
     public void umEventoJaIniciado() {
         Evento evento = new Evento(new EventoId(99), "Show Passado", LocalDateTime.now().minusHours(2),
-                "Teatro", StatusEvento.ATIVO, 200);
+                "Teatro", "Espetáculo de teatro experimental em duas atuações.", StatusEvento.ATIVO, 200);
         eventoServico.salvar(evento);
         eventoId = evento.getId();
     }
@@ -100,7 +101,8 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
     @When("tento atualizar os dados do evento")
     public void tentarAtualizarEvento() {
         try {
-            eventoServico.atualizar(eventoId, "Novo Nome", LocalDateTime.now().plusDays(1), "Novo Local", 300);
+            eventoServico.atualizar(eventoId, "Novo Nome", LocalDateTime.now().plusDays(1), "Novo Local",
+                    "Nova descrição após a mudança de data.", 300);
         } catch (Exception e) {
             excecao = e;
         }

@@ -21,7 +21,7 @@ public class TipoIngressoFuncionalidade extends MarketplaceFuncionalidade {
     private EventoId eventoId;
 
     private EventoId criarEventoComCapacidade(int capacidade) {
-        Evento evento = new Evento("Show", LocalDateTime.now().plusDays(5), "Arena", capacidade);
+        Evento evento = new Evento("Show", LocalDateTime.now().plusDays(5), "Arena", "Apresentação ao vivo com repertório variado.", capacidade);
         eventoServico.salvar(evento);
         return evento.getId();
     }

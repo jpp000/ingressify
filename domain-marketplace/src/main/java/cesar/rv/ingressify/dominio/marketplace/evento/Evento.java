@@ -10,33 +10,39 @@ public class Evento {
 	private String nome;
 	private LocalDateTime dataHora;
 	private String local;
+	private String descricao;
 	private StatusEvento status;
 	private int capacidade;
 
-	public Evento(String nome, LocalDateTime dataHora, String local, int capacidade) {
+	public Evento(String nome, LocalDateTime dataHora, String local, String descricao, int capacidade) {
 		Validate.notBlank(nome, "nome");
 		Validate.notNull(dataHora, "dataHora");
 		Validate.isTrue(dataHora.isAfter(LocalDateTime.now()), "dataHora deve ser futura");
 		Validate.notBlank(local, "local");
+		Validate.notBlank(descricao, "descricao");
 		Validate.isTrue(capacidade > 0, "capacidade deve ser > 0");
 		this.nome = nome;
 		this.dataHora = dataHora;
 		this.local = local;
+		this.descricao = descricao;
 		this.status = StatusEvento.ATIVO;
 		this.capacidade = capacidade;
 	}
 
-	public Evento(EventoId id, String nome, LocalDateTime dataHora, String local, StatusEvento status, int capacidade) {
+	public Evento(EventoId id, String nome, LocalDateTime dataHora, String local, String descricao, StatusEvento status,
+			int capacidade) {
 		Validate.notNull(id, "id");
 		Validate.notBlank(nome, "nome");
 		Validate.notNull(dataHora, "dataHora");
 		Validate.notBlank(local, "local");
+		Validate.notBlank(descricao, "descricao");
 		Validate.notNull(status, "status");
 		Validate.isTrue(capacidade > 0, "capacidade deve ser > 0");
 		this.id = id;
 		this.nome = nome;
 		this.dataHora = dataHora;
 		this.local = local;
+		this.descricao = descricao;
 		this.status = status;
 		this.capacidade = capacidade;
 	}
@@ -46,7 +52,7 @@ public class Evento {
 		this.id = novoId;
 	}
 
-	public void atualizar(String nome, LocalDateTime dataHora, String local, int capacidade) {
+	public void atualizar(String nome, LocalDateTime dataHora, String local, String descricao, int capacidade) {
 		if (iniciado()) {
 			throw new IllegalStateException("evento já iniciado");
 		}
@@ -54,10 +60,12 @@ public class Evento {
 		Validate.notNull(dataHora, "dataHora");
 		Validate.isTrue(dataHora.isAfter(LocalDateTime.now()), "dataHora deve ser futura");
 		Validate.notBlank(local, "local");
+		Validate.notBlank(descricao, "descricao");
 		Validate.isTrue(capacidade > 0, "capacidade deve ser > 0");
 		this.nome = nome;
 		this.dataHora = dataHora;
 		this.local = local;
+		this.descricao = descricao;
 		this.capacidade = capacidade;
 	}
 
@@ -87,6 +95,10 @@ public class Evento {
 
 	public String getLocal() {
 		return local;
+	}
+
+	public String getDescricao() {
+		return descricao;
 	}
 
 	public StatusEvento getStatus() {

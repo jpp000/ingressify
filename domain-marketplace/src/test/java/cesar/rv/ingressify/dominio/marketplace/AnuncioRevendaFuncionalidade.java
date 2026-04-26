@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
@@ -11,10 +14,10 @@ import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevenda;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaId;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.StatusAnuncio;
-import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
+import cesar.rv.ingressify.dominio.marketplace.evento.Evento;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.Ingresso;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoId;
-import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoId;
+import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngresso;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -22,22 +25,30 @@ import io.cucumber.java.en.When;
 public class AnuncioRevendaFuncionalidade extends MarketplaceFuncionalidade {
 
     private AnuncioRevendaId anuncioId;
-    private IngressoId ingressoId;
+    private List<IngressoId> correnteIds;
 
     private static final Dinheiro PRECO_PADRAO = new Dinheiro(new BigDecimal("100.00"));
     private static final UsuarioId VENDEDOR = new UsuarioId(1);
     private static final UsuarioId COMPRADOR = new UsuarioId(2);
 
-    private IngressoId criarIngressoAtivo() {
-        Ingresso ingresso = new Ingresso(new TipoIngressoId(1), new EventoId(1), VENDEDOR);
-        ingressoServico.salvar(ingresso);
-        return ingresso.getId();
+    private void prepararVendaOficialEsgotadaEIngressoAtivo(int quantidadeIngressos) {
+        Evento e = new Evento("Festival de Revenda", LocalDateTime.now().plusDays(30), "Arena",
+                "Festival de música eletrônica de um dia com vários Djs e artistas.", 10_000);
+        eventoServico.salvar(e);
+        TipoIngresso tipo = new TipoIngresso(e.getId(), "Pista", new Dinheiro(new BigDecimal("200.00")), 0, 5_000);
+        tipoIngressoServico.salvar(tipo);
+        correnteIds = new ArrayList<>();
+        for (int n = 0; n < quantidadeIngressos; n++) {
+            Ingresso i = new Ingresso(tipo.getId(), e.getId(), VENDEDOR);
+            ingressoServico.salvar(i);
+            correnteIds.add(i.getId());
+        }
     }
 
     @Given("um anúncio de revenda disponível")
     public void anuncioDisponivel() {
-        ingressoId = criarIngressoAtivo();
-        AnuncioRevenda anuncio = anuncioRevendaServico.criar(ingressoId, PRECO_PADRAO, VENDEDOR);
+        prepararVendaOficialEsgotadaEIngressoAtivo(1);
+        AnuncioRevenda anuncio = anuncioRevendaServico.criar(correnteIds, PRECO_PADRAO, VENDEDOR);
         anuncioId = anuncio.getId();
     }
 
@@ -53,8 +64,8 @@ public class AnuncioRevendaFuncionalidade extends MarketplaceFuncionalidade {
 
     @Given("um anúncio de revenda reservado")
     public void anuncioReservado() {
-        ingressoId = criarIngressoAtivo();
-        AnuncioRevenda anuncio = anuncioRevendaServico.criar(ingressoId, PRECO_PADRAO, VENDEDOR);
+        prepararVendaOficialEsgotadaEIngressoAtivo(1);
+        AnuncioRevenda anuncio = anuncioRevendaServico.criar(correnteIds, PRECO_PADRAO, VENDEDOR);
         anuncioRevendaServico.reservar(anuncio.getId(), COMPRADOR, UUID.randomUUID());
         anuncioId = anuncio.getId();
     }
@@ -81,8 +92,8 @@ public class AnuncioRevendaFuncionalidade extends MarketplaceFuncionalidade {
 
     @Given("um anúncio de revenda vendido")
     public void anuncioVendido() {
-        ingressoId = criarIngressoAtivo();
-        AnuncioRevenda anuncio = anuncioRevendaServico.criar(ingressoId, PRECO_PADRAO, VENDEDOR);
+        prepararVendaOficialEsgotadaEIngressoAtivo(1);
+        AnuncioRevenda anuncio = anuncioRevendaServico.criar(correnteIds, PRECO_PADRAO, VENDEDOR);
         anuncioRevendaServico.reservar(anuncio.getId(), COMPRADOR, UUID.randomUUID());
         anuncioRevendaServico.concluir(anuncio.getId());
         anuncioId = anuncio.getId();
@@ -128,13 +139,13 @@ public class AnuncioRevendaFuncionalidade extends MarketplaceFuncionalidade {
 
     @Given("um ingresso pertencente ao usuário 1")
     public void ingressoDoUsuario1() {
-        ingressoId = criarIngressoAtivo();
+        prepararVendaOficialEsgotadaEIngressoAtivo(1);
     }
 
     @When("tento criar um anúncio para esse ingresso como usuário 2")
     public void tentarCriarAnuncioComoUsuario2() {
         try {
-            anuncioRevendaServico.criar(ingressoId, PRECO_PADRAO, new UsuarioId(2));
+            anuncioRevendaServico.criar(correnteIds, PRECO_PADRAO, new UsuarioId(2));
         } catch (Exception e) {
             excecao = e;
         }
@@ -147,14 +158,14 @@ public class AnuncioRevendaFuncionalidade extends MarketplaceFuncionalidade {
 
     @Given("um ingresso com anúncio já ativo")
     public void ingressoComAnuncioAtivo() {
-        ingressoId = criarIngressoAtivo();
-        anuncioRevendaServico.criar(ingressoId, PRECO_PADRAO, VENDEDOR);
+        prepararVendaOficialEsgotadaEIngressoAtivo(1);
+        anuncioRevendaServico.criar(correnteIds, PRECO_PADRAO, VENDEDOR);
     }
 
     @When("tento criar mais um anúncio para o mesmo ingresso")
     public void tentarCriarSegundoAnuncio() {
         try {
-            anuncioRevendaServico.criar(ingressoId, new Dinheiro(new BigDecimal("90.00")), VENDEDOR);
+            anuncioRevendaServico.criar(correnteIds, new Dinheiro(new BigDecimal("90.00")), VENDEDOR);
         } catch (Exception e) {
             excecao = e;
         }
@@ -163,5 +174,41 @@ public class AnuncioRevendaFuncionalidade extends MarketplaceFuncionalidade {
     @Then("a criação do segundo anúncio é rejeitada")
     public void criacaoSegundoAnuncioRejeitada() {
         assertNotNull(excecao);
+    }
+
+    @Given("venda oficial do evento ainda não esgotada")
+    public void vendaOficialNaoEsgotada() {
+        Evento e = new Evento("Festival Soma", LocalDateTime.now().plusDays(20), "Parque", "Dia de música ao ar livre.", 5_000);
+        eventoServico.salvar(e);
+        TipoIngresso tipo = new TipoIngresso(e.getId(), "Pista", new Dinheiro(new BigDecimal("100.00")), 50, 1_000);
+        tipoIngressoServico.salvar(tipo);
+        Ingresso i = new Ingresso(tipo.getId(), e.getId(), VENDEDOR);
+        ingressoServico.salvar(i);
+        correnteIds = List.of(i.getId());
+    }
+
+    @When("tento criar anúncio de revenda nesse evento")
+    public void tentarCriarAnuncioEsgotamentoBloqueado() {
+        try {
+            anuncioRevendaServico.criar(correnteIds, PRECO_PADRAO, VENDEDOR);
+        } catch (Exception e) {
+            excecao = e;
+        }
+    }
+
+    @Given("vendedor com 2 ingressos e venda oficial do evento esgotada")
+    public void vendedorComDoisEsgotado() {
+        prepararVendaOficialEsgotadaEIngressoAtivo(2);
+    }
+
+    @When("crio um anúncio de revenda com esses ingressos no mesmo lote")
+    public void crioAnuncioLote() {
+        AnuncioRevenda a = anuncioRevendaServico.criar(correnteIds, PRECO_PADRAO, VENDEDOR);
+        anuncioId = a.getId();
+    }
+
+    @Then("a quantidade anunciada é 2")
+    public void quantidadeAnunciadaDois() {
+        assertEquals(2, anuncioRevendaServico.obter(anuncioId).getQuantidade());
     }
 }

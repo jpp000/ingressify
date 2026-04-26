@@ -1,5 +1,8 @@
 package cesar.rv.ingressify.dominio.marketplace.anuncioRevenda;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.Validate;
@@ -11,33 +14,42 @@ import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoId;
 public class AnuncioRevenda {
 
 	private AnuncioRevendaId id;
-	private IngressoId ingressoId;
+	private final List<IngressoId> ingressoIds;
+	private final int quantidade;
 	private UsuarioId vendedor;
 	private Dinheiro preco;
 	private UsuarioId compradorReservado;
 	private StatusAnuncio status;
 	private UUID correlacaoPagamento;
 
-	public AnuncioRevenda(IngressoId ingressoId, UsuarioId vendedor, Dinheiro preco) {
-		Validate.notNull(ingressoId, "ingressoId");
+	public AnuncioRevenda(List<IngressoId> ingressoIds, UsuarioId vendedor, Dinheiro preco) {
+		Validate.notEmpty(ingressoIds, "ingressoIds");
+		Validate.isTrue(unicos(ingressoIds) == ingressoIds.size(), "ingressos duplicados no anúncio");
+		this.ingressoIds = new ArrayList<>(ingressoIds);
+		this.quantidade = this.ingressoIds.size();
 		Validate.notNull(vendedor, "vendedor");
 		Validate.notNull(preco, "preco");
-		this.ingressoId = ingressoId;
 		this.vendedor = vendedor;
 		this.preco = preco;
 		this.status = StatusAnuncio.DISPONIVEL;
 	}
 
-	public AnuncioRevenda(AnuncioRevendaId id, IngressoId ingressoId, UsuarioId vendedor, Dinheiro preco,
+	private static int unicos(List<IngressoId> ids) {
+		return (int) ids.stream().distinct().count();
+	}
+
+	public AnuncioRevenda(AnuncioRevendaId id, List<IngressoId> ingressoIds, UsuarioId vendedor, Dinheiro preco,
 			UsuarioId compradorReservado, StatusAnuncio status, UUID correlacaoPagamento) {
 		Validate.notNull(id, "id");
-		Validate.notNull(ingressoId, "ingressoId");
+		Validate.notEmpty(ingressoIds, "ingressoIds");
+		Validate.isTrue(unicos(ingressoIds) == ingressoIds.size(), "ingressos duplicados no anúncio");
 		Validate.notNull(vendedor, "vendedor");
 		Validate.notNull(preco, "preco");
 		Validate.notNull(status, "status");
-		// correlacaoPagamento pode ser nulo (anúncio DISPONIVEL)
+
 		this.id = id;
-		this.ingressoId = ingressoId;
+		this.ingressoIds = new ArrayList<>(ingressoIds);
+		this.quantidade = this.ingressoIds.size();
 		this.vendedor = vendedor;
 		this.preco = preco;
 		this.compradorReservado = compradorReservado;
@@ -95,8 +107,12 @@ public class AnuncioRevenda {
 		return id;
 	}
 
-	public IngressoId getIngressoId() {
-		return ingressoId;
+	public int getQuantidade() {
+		return quantidade;
+	}
+
+	public List<IngressoId> getIngressoIds() {
+		return Collections.unmodifiableList(ingressoIds);
 	}
 
 	public UsuarioId getVendedor() {

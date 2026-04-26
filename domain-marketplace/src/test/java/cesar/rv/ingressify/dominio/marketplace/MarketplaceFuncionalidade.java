@@ -45,7 +45,7 @@ public class MarketplaceFuncionalidade {
         eventoServico = new EventoServico(eventoRepo);
         ingressoServico = new IngressoServico(ingressoRepo);
         tipoIngressoServico = new TipoIngressoServico(tipoRepo, eventoRepo);
-        anuncioRevendaServico = new AnuncioRevendaServico(anuncioRepo, ingressoRepo);
+        anuncioRevendaServico = new AnuncioRevendaServico(anuncioRepo, ingressoRepo, tipoRepo);
     }
 
     static class EventoRepositorioMemoria implements EventoRepositorio {
@@ -179,9 +179,12 @@ public class MarketplaceFuncionalidade {
         @Override
         public boolean existeDisponivelOuReservadoParaIngresso(IngressoId ingressoId) {
             for (AnuncioRevenda a : dados.values()) {
-                if (a.getIngressoId().equals(ingressoId)
-                        && (a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO)) {
-                    return true;
+                if (a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO) {
+                    for (IngressoId iid : a.getIngressoIds()) {
+                        if (iid.equals(ingressoId)) {
+                            return true;
+                        }
+                    }
                 }
             }
             return false;

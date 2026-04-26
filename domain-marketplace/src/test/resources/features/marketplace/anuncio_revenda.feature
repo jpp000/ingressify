@@ -39,3 +39,13 @@ Feature: Anúncio de revenda
     Given um ingresso com anúncio já ativo
     When tento criar mais um anúncio para o mesmo ingresso
     Then a criação do segundo anúncio é rejeitada
+
+  Scenario: Revenda rejeitada enquanto houver ingressos oficiais disponíveis
+    Given venda oficial do evento ainda não esgotada
+    When tento criar anúncio de revenda nesse evento
+    Then a criação do anúncio é rejeitada
+
+  Scenario: Anúncio informa a quantidade de ingressos anunciados
+    Given vendedor com 2 ingressos e venda oficial do evento esgotada
+    When crio um anúncio de revenda com esses ingressos no mesmo lote
+    Then a quantidade anunciada é 2
