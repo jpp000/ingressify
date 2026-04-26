@@ -77,3 +77,7 @@ Por padrão o Vite usa a porta **5173**. Defina `VITE_API_URL=http://localhost:8
 ## Context Mapper
 
 Modelo de contexto em `ingressify.cml`.
+
+## Mapa de Histórias do Usuário
+
+https://lucid.app/lucidspark/c012a823-f686-4f14-a4ff-758ffb78807a/edit?viewport_loc=-1201%2C-1477%2C4944%2C2459%2C0_0&invitationId=inv_d96d5d5a-eaf1-4d05-897a-97f6ac6f3451
