@@ -18,6 +18,7 @@ import cesar.rv.ingressify.dominio.marketplace.evento.Evento;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoServico;
+import cesar.rv.ingressify.dominio.marketplace.evento.StatusEvento;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.Ingresso;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoId;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoRepositorio;
@@ -72,6 +73,17 @@ public class MarketplaceFuncionalidade {
         @Override
         public void remover(EventoId id) {
             dados.remove(id);
+        }
+
+        @Override
+        public List<Evento> listarAtivos() {
+            List<Evento> resultado = new ArrayList<>();
+            for (Evento e : dados.values()) {
+                if (e.getStatus() == StatusEvento.ATIVO) {
+                    resultado.add(e);
+                }
+            }
+            return resultado;
         }
     }
 
