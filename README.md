@@ -15,7 +15,7 @@
 
 ---
 [![Prototipo](https://img.shields.io/badge/Prot%C3%B3tipo-ff3737?style=for-the-badge&logo=Figma&logoColor=white)](https://stitch.withgoogle.com/preview/16366040039797702871?node-id=ad9461aa2ae847b9b6f2639d74895a54)
-[![Documentação](https://img.shields.io/badge/Documentação-ff3737?style=for-the-badge&logo=GoogleDocs&logoColor=white)](https://docs.google.com/document/d/10VmFjQZuVO0OBRZF1uklAyEj-6kUazRMJNBXiSY6eXo/edit?tab=t.7zvumwyx0k03)
+[![Documentação](https://img.shields.io/badge/Documentação-ff3737?style=for-the-badge&logo=GoogleDocs&logoColor=white)](https://drive.google.com/drive/folders/1sPfKQZKRNiRfDLrPCzHwCgD-K8S7FFn2)
 
 
 
