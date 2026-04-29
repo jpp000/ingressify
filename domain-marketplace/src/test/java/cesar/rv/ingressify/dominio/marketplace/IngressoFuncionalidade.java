@@ -52,7 +52,7 @@ public class IngressoFuncionalidade extends MarketplaceFuncionalidade {
     public void umIngressoEmRevenda() {
         IngressoId id = new IngressoId(UUID.randomUUID());
         Ingresso ingresso = new Ingresso(id, new TipoIngressoId(1), new EventoId(1),
-                new UsuarioId(1), StatusIngresso.EM_REVENDA);
+                new UsuarioId(1), StatusIngresso.EM_REVENDA, false);
         ingressoServico.salvar(ingresso);
         ingressoId = id;
     }

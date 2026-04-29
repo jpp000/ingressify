@@ -4,5 +4,7 @@ public enum StatusIngresso {
 	ATIVO,
 	CANCELADO,
 	EM_REVENDA,
-	REVENDIDO
+	REVENDIDO,
+	UTILIZADO,
+	REEMBOLSADO
 }

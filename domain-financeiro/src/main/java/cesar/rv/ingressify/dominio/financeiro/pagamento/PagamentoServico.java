@@ -1,5 +1,6 @@
 package cesar.rv.ingressify.dominio.financeiro.pagamento;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.lang3.Validate;
@@ -39,5 +40,9 @@ public class PagamentoServico {
 
 	public Pagamento obter(PagamentoId id) {
 		return repositorio.obter(id);
+	}
+
+	public Optional<Pagamento> obterPorCorrelacao(UUID correlacaoId) {
+		return repositorio.obterPorCorrelacao(correlacaoId);
 	}
 }

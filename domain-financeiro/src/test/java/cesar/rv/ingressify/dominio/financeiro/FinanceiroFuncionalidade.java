@@ -98,15 +98,22 @@ public class FinanceiroFuncionalidade {
             dados.put(transacao.getId(), transacao);
         }
 
-        @Override
-        public List<Transacao> pesquisarPorUsuario(UsuarioId usuario) {
-            List<Transacao> resultado = new ArrayList<>();
-            for (Transacao t : dados.values()) {
-                if (t.getUsuario().equals(usuario)) {
-                    resultado.add(t);
-                }
-            }
-            return resultado;
-        }
-    }
+		@Override
+		public List<Transacao> pesquisarPorUsuario(UsuarioId usuario) {
+			List<Transacao> resultado = new ArrayList<>();
+			for (Transacao t : dados.values()) {
+				if (t.getUsuario().equals(usuario)) {
+					resultado.add(t);
+				}
+			}
+			return resultado;
+		}
+
+		@Override
+		public List<Transacao> pesquisarPorUsuarioOrdenadoDesc(UsuarioId usuario) {
+			List<Transacao> lista = pesquisarPorUsuario(usuario);
+			lista.sort((a, b) -> b.getData().compareTo(a.getData()));
+			return lista;
+		}
+	}
 }

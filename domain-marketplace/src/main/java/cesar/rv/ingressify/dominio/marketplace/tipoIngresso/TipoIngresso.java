@@ -13,8 +13,10 @@ public class TipoIngresso {
 	private Dinheiro preco;
 	private int quantidadeDisponivel;
 	private int quantidadeTotal;
+	private String descricao;
 
-	public TipoIngresso(EventoId eventoId, String nome, Dinheiro preco, int quantidadeDisponivel, int quantidadeTotal) {
+	public TipoIngresso(EventoId eventoId, String nome, Dinheiro preco, int quantidadeDisponivel, int quantidadeTotal,
+			String descricao) {
 		Validate.notNull(eventoId, "eventoId");
 		Validate.notBlank(nome, "nome");
 		Validate.notNull(preco, "preco");
@@ -26,10 +28,11 @@ public class TipoIngresso {
 		this.preco = preco;
 		this.quantidadeDisponivel = quantidadeDisponivel;
 		this.quantidadeTotal = quantidadeTotal;
+		this.descricao = descricao;
 	}
 
 	public TipoIngresso(TipoIngressoId id, EventoId eventoId, String nome, Dinheiro preco, int quantidadeDisponivel,
-			int quantidadeTotal) {
+			int quantidadeTotal, String descricao) {
 		Validate.notNull(id, "id");
 		Validate.notNull(eventoId, "eventoId");
 		Validate.notBlank(nome, "nome");
@@ -43,11 +46,26 @@ public class TipoIngresso {
 		this.preco = preco;
 		this.quantidadeDisponivel = quantidadeDisponivel;
 		this.quantidadeTotal = quantidadeTotal;
+		this.descricao = descricao;
 	}
 
 	public void atribuirId(TipoIngressoId novoId) {
 		Validate.notNull(novoId, "novoId");
 		this.id = novoId;
+	}
+
+	public void atualizar(String nome, Dinheiro preco, int novaQuantidadeTotal, String descricao) {
+		Validate.notBlank(nome, "nome");
+		Validate.notNull(preco, "preco");
+		int vendidos = quantidadeTotal - quantidadeDisponivel;
+		if (novaQuantidadeTotal < vendidos) {
+			throw new IllegalStateException("nova quantidade total menor que ingressos já vendidos");
+		}
+		this.nome = nome;
+		this.preco = preco;
+		this.quantidadeTotal = novaQuantidadeTotal;
+		this.quantidadeDisponivel = novaQuantidadeTotal - vendidos;
+		this.descricao = descricao;
 	}
 
 	public void reservar(int qtd) {
@@ -87,5 +105,9 @@ public class TipoIngresso {
 
 	public int getQuantidadeTotal() {
 		return quantidadeTotal;
+	}
+
+	public String getDescricao() {
+		return descricao;
 	}
 }

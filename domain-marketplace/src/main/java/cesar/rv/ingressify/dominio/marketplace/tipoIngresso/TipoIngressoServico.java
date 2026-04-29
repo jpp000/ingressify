@@ -37,4 +37,8 @@ public class TipoIngressoServico {
 		t.devolver(qtd);
 		repositorio.salvar(t);
 	}
+
+	public void remover(TipoIngressoId id) {
+		repositorio.remover(id);
+	}
 }

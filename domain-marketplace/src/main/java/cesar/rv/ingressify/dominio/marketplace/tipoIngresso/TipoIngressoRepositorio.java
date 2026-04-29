@@ -10,5 +10,7 @@ public interface TipoIngressoRepositorio {
 
 	TipoIngresso obter(TipoIngressoId id);
 
+	void remover(TipoIngressoId id);
+
 	List<TipoIngresso> pesquisarPorEvento(EventoId eventoId);
 }

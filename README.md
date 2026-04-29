@@ -60,9 +60,12 @@ A camada de aplicação orquestra as transações diretamente (sem barramento de
 |---------------------------|---------------------------------------|------------------------------------------|
 | `parent/`                 | `ingressify-parent`                   | BOM — gerenciamento de dependências      |
 | `domain-shared/`          | `ingressify-domain-shared`            | Shared Kernel (UsuarioId, Dinheiro)      |
+| `domain-identidade/`      | `ingressify-domain-identidade`        | BC Identidade (Usuario, papéis, senha)   |
 | `domain-marketplace/`     | `ingressify-domain-marketplace`       | BC Marketplace (Evento, Ingresso, etc.)  |
 | `domain-financeiro/`      | `ingressify-domain-financeiro`        | BC Financeiro (Pagamento, Saldo)         |
-| `application/`            | `ingressify-application`              | Orquestração transacional                |
+| `application/`            | `ingressify-application`              | Casos de uso (ServicoAplicacao, read models) |
+
+A camada **application** orquestra agregados entre bounded contexts (estilo sgb-2025-01): serviços `*ServicoAplicacao`, interfaces `*RepositorioAplicacao` para projeções de leitura e DTOs `*Resumo` / `*ResumoExpandido`, sem persistência concreta neste repositório.
 | `infrastructure/`         | `ingressify-infrastructure`           | JPA, Flyway, adaptadores externos        |
 | `presentation-backend/`   | `ingressify-presentation-backend`     | API REST (Spring Boot)                   |
 | `presentation-frontend/`  | —                                     | SPA React + Vite (fora do reactor Maven) |

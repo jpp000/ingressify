@@ -9,4 +9,6 @@ public interface TransacaoRepositorio {
 	void salvar(Transacao transacao);
 
 	List<Transacao> pesquisarPorUsuario(UsuarioId usuario);
+
+	List<Transacao> pesquisarPorUsuarioOrdenadoDesc(UsuarioId usuario);
 }

@@ -32,10 +32,11 @@ public class AnuncioRevendaFuncionalidade extends MarketplaceFuncionalidade {
     private static final UsuarioId COMPRADOR = new UsuarioId(2);
 
     private void prepararVendaOficialEsgotadaEIngressoAtivo(int quantidadeIngressos) {
-        Evento e = new Evento("Festival de Revenda", LocalDateTime.now().plusDays(30), "Arena",
+        LocalDateTime dh = LocalDateTime.now().plusDays(30);
+        Evento e = MarketplaceTestData.eventoNovo("Festival de Revenda", dh, "Arena",
                 "Festival de música eletrônica de um dia com vários Djs e artistas.", 10_000);
         eventoServico.salvar(e);
-        TipoIngresso tipo = new TipoIngresso(e.getId(), "Pista", new Dinheiro(new BigDecimal("200.00")), 0, 5_000);
+        TipoIngresso tipo = new TipoIngresso(e.getId(), "Pista", new Dinheiro(new BigDecimal("200.00")), 0, 5_000, null);
         tipoIngressoServico.salvar(tipo);
         correnteIds = new ArrayList<>();
         for (int n = 0; n < quantidadeIngressos; n++) {
@@ -178,9 +179,10 @@ public class AnuncioRevendaFuncionalidade extends MarketplaceFuncionalidade {
 
     @Given("venda oficial do evento ainda não esgotada")
     public void vendaOficialNaoEsgotada() {
-        Evento e = new Evento("Festival Soma", LocalDateTime.now().plusDays(20), "Parque", "Dia de música ao ar livre.", 5_000);
+        LocalDateTime dh = LocalDateTime.now().plusDays(20);
+        Evento e = MarketplaceTestData.eventoNovo("Festival Soma", dh, "Parque", "Dia de música ao ar livre.", 5_000);
         eventoServico.salvar(e);
-        TipoIngresso tipo = new TipoIngresso(e.getId(), "Pista", new Dinheiro(new BigDecimal("100.00")), 50, 1_000);
+        TipoIngresso tipo = new TipoIngresso(e.getId(), "Pista", new Dinheiro(new BigDecimal("100.00")), 50, 1_000, null);
         tipoIngressoServico.salvar(tipo);
         Ingresso i = new Ingresso(tipo.getId(), e.getId(), VENDEDOR);
         ingressoServico.salvar(i);

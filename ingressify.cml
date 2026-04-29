@@ -1,17 +1,21 @@
 Domain Ingressify {
 	Subdomain Marketplace
 	Subdomain Financeiro
+	Subdomain Identidade
 	Subdomain SharedKernel
 }
 
 ContextMap {
 	contains Marketplace
 	contains Financeiro
+	contains Identidade
 	contains SharedKernel
 
 	Marketplace Shared-Kernel SharedKernel
 
 	Financeiro Shared-Kernel SharedKernel
+
+	Identidade Shared-Kernel SharedKernel
 }
 
 BoundedContext Marketplace implements Marketplace {
@@ -130,7 +134,9 @@ BoundedContext Marketplace implements Marketplace {
 			ATIVO,
 			CANCELADO,
 			EM_REVENDA,
-			REVENDIDO
+			REVENDIDO,
+			UTILIZADO,
+			REEMBOLSADO
 		}
 	}
 
@@ -302,7 +308,39 @@ BoundedContext Financeiro implements Financeiro {
 			COMPRA,
 			VENDA,
 			TRANSFERENCIA,
-			AJUSTE_SALDO
+			AJUSTE_SALDO,
+			REEMBOLSO
+		}
+	}
+}
+
+BoundedContext Identidade implements Identidade {
+	Aggregate Usuario {
+		Entity Usuario {
+			aggregateRoot
+			-UsuarioId id
+			String nome
+			String email
+			String senhaHash
+			String fotoUrl nullable
+			String cidade nullable
+			Date dataNascimento nullable
+			boolean bloqueadoRevenda
+			Set<Papel> papeis
+
+			Repository UsuarioRepository {
+				@Usuario obter(@UsuarioId id);
+				void salvar(@Usuario usuario);
+				@Usuario obterPorEmail(String email);
+				boolean existeEmail(String email);
+			}
+		}
+
+		enum Papel {
+			COMPRADOR,
+			ORGANIZADOR,
+			OPERADOR_PORTA,
+			ADMIN
 		}
 	}
 }

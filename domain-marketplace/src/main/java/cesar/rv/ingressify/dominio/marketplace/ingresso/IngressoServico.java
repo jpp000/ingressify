@@ -32,4 +32,10 @@ public class IngressoServico {
 		i.concluirRevenda(comprador);
 		repositorio.salvar(i);
 	}
+
+	public void cancelar(IngressoId id) {
+		Ingresso i = repositorio.obter(id);
+		i.cancelar();
+		repositorio.salvar(i);
+	}
 }

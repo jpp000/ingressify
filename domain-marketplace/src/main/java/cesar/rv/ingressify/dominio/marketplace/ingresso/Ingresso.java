@@ -13,6 +13,7 @@ public class Ingresso {
 	private EventoId eventoId;
 	private UsuarioId proprietario;
 	private StatusIngresso status;
+	private boolean bloqueadoPorReembolso;
 
 	public Ingresso(TipoIngressoId tipoIngressoId, EventoId eventoId, UsuarioId proprietario) {
 		Validate.notNull(tipoIngressoId, "tipoIngressoId");
@@ -25,7 +26,7 @@ public class Ingresso {
 	}
 
 	public Ingresso(IngressoId id, TipoIngressoId tipoIngressoId, EventoId eventoId, UsuarioId proprietario,
-			StatusIngresso status) {
+			StatusIngresso status, boolean bloqueadoPorReembolso) {
 		Validate.notNull(id, "id");
 		Validate.notNull(tipoIngressoId, "tipoIngressoId");
 		Validate.notNull(eventoId, "eventoId");
@@ -36,6 +37,7 @@ public class Ingresso {
 		this.eventoId = eventoId;
 		this.proprietario = proprietario;
 		this.status = status;
+		this.bloqueadoPorReembolso = bloqueadoPorReembolso;
 	}
 
 	public void atribuirId(IngressoId novoId) {
@@ -45,6 +47,9 @@ public class Ingresso {
 
 	public void transferir(UsuarioId novoDono) {
 		Validate.notNull(novoDono, "novoDono");
+		if (bloqueadoPorReembolso) {
+			throw new IllegalStateException("ingresso bloqueado para reembolso");
+		}
 		if (status != StatusIngresso.ATIVO) {
 			throw new IllegalStateException("somente ingresso ATIVO pode ser transferido");
 		}
@@ -52,6 +57,9 @@ public class Ingresso {
 	}
 
 	public void marcarEmRevenda() {
+		if (bloqueadoPorReembolso) {
+			throw new IllegalStateException("ingresso bloqueado para reembolso");
+		}
 		if (status != StatusIngresso.ATIVO) {
 			throw new IllegalStateException("somente ingresso ATIVO pode ir para revenda");
 		}
@@ -78,6 +86,31 @@ public class Ingresso {
 		this.status = StatusIngresso.ATIVO;
 	}
 
+	public void bloquearParaReembolso() {
+		this.bloqueadoPorReembolso = true;
+	}
+
+	public void desbloquearReembolso() {
+		this.bloqueadoPorReembolso = false;
+	}
+
+	public void marcarUtilizado() {
+		if (status != StatusIngresso.ATIVO) {
+			throw new IllegalStateException("somente ingresso ATIVO pode ser utilizado");
+		}
+		this.status = StatusIngresso.UTILIZADO;
+	}
+
+	public void marcarReembolsado() {
+		if (status == StatusIngresso.UTILIZADO) {
+			throw new IllegalStateException("ingresso já utilizado");
+		}
+		if (status == StatusIngresso.REEMBOLSADO) {
+			throw new IllegalStateException("ingresso já reembolsado");
+		}
+		this.status = StatusIngresso.REEMBOLSADO;
+	}
+
 	public IngressoId getId() {
 		return id;
 	}
@@ -96,5 +129,9 @@ public class Ingresso {
 
 	public StatusIngresso getStatus() {
 		return status;
+	}
+
+	public boolean isBloqueadoPorReembolso() {
+		return bloqueadoPorReembolso;
 	}
 }

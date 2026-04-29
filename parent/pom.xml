@@ -25,6 +25,11 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>cesar.rv</groupId>
+				<artifactId>ingressify-domain-identidade</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>io.cucumber</groupId>
 				<artifactId>cucumber-bom</artifactId>
 				<version>${cucumber.version}</version>
