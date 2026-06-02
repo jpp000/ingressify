@@ -70,26 +70,26 @@ public class EventoServicoAplicacao {
 
 	public EventoId criarEvento(UsuarioId organizadorId, String nome, LocalDateTime dataHora, String local,
 			String descricao, int capacidade, String imagemCapaUrl, int prazoReembolsoDias,
-			LocalDateTime aberturaPortoes) {
+			LocalDateTime aberturaPortoes, String categoria) {
 		var organizador = usuarioRepositorio.obter(organizadorId);
 		if (!organizador.temPapel(Papel.ORGANIZADOR)) {
 			throw new IllegalStateException("usuário deve ser organizador");
 		}
 		Evento evento = new Evento(organizadorId, nome, dataHora, local, descricao, capacidade, imagemCapaUrl,
-				prazoReembolsoDias, aberturaPortoes);
+				prazoReembolsoDias, aberturaPortoes, categoria);
 		eventoServico.salvar(evento);
 		return evento.getId();
 	}
 
 	public void editarEvento(EventoId eventoId, UsuarioId organizadorId, String nome, LocalDateTime dataHora,
 			String local, String descricao, int capacidade, String imagemCapaUrl, int prazoReembolsoDias,
-			LocalDateTime aberturaPortoes) {
+			LocalDateTime aberturaPortoes, String categoria) {
 		Evento evento = eventoServico.obter(eventoId);
 		if (!evento.getOrganizadorId().equals(organizadorId)) {
 			throw new IllegalStateException("evento não pertence ao organizador");
 		}
 		eventoServico.atualizar(eventoId, nome, dataHora, local, descricao, capacidade, imagemCapaUrl,
-				prazoReembolsoDias, aberturaPortoes);
+				prazoReembolsoDias, aberturaPortoes, categoria);
 	}
 
 	public void cancelarEvento(EventoId eventoId, UsuarioId organizadorId) {

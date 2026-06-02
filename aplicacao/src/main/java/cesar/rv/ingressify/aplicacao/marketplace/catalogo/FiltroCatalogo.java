@@ -11,6 +11,7 @@ public class FiltroCatalogo {
 	private BigDecimal precoMin;
 	private BigDecimal precoMax;
 	private String nome;
+	private String categoria;
 
 	public FiltroCatalogo() {
 	}
@@ -71,5 +72,13 @@ public class FiltroCatalogo {
 
 	public void setNome(String nome) {
 		this.nome = nome;
+	}
+
+	public String getCategoria() {
+		return categoria;
+	}
+
+	public void setCategoria(String categoria) {
+		this.categoria = categoria;
 	}
 }

@@ -15,12 +15,14 @@ public record EventoResponse(
 		int capacidade,
 		String imagemCapaUrl,
 		int prazoReembolsoDias,
-		LocalDateTime aberturaPortoes) {
+		LocalDateTime aberturaPortoes,
+		String categoria) {
 
 	public static EventoResponse fromDomain(Evento e) {
 		return new EventoResponse(
 				e.getId().getId(), e.getNome(), e.getDataHora(), e.getLocal(),
 				e.getDescricao(), e.getStatus(), e.getCapacidade(),
-				e.getImagemCapaUrl(), e.getPrazoReembolsoDias(), e.getAberturaPortoes());
+				e.getImagemCapaUrl(), e.getPrazoReembolsoDias(), e.getAberturaPortoes(),
+				e.getCategoria());
 	}
 }

@@ -10,5 +10,6 @@ public record EditarEventoRequest(
 		int capacidade,
 		String imagemCapaUrl,
 		int prazoReembolsoDias,
-		LocalDateTime aberturaPortoes) {
+		LocalDateTime aberturaPortoes,
+		String categoria) {
 }

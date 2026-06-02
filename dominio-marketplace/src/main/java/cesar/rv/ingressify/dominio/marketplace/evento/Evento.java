@@ -19,9 +19,17 @@ public class Evento {
 	private String imagemCapaUrl;
 	private int prazoReembolsoDias;
 	private LocalDateTime aberturaPortoes;
+	private String categoria;
 
 	public Evento(UsuarioId organizadorId, String nome, LocalDateTime dataHora, String local, String descricao,
 			int capacidade, String imagemCapaUrl, int prazoReembolsoDias, LocalDateTime aberturaPortoes) {
+		this(organizadorId, nome, dataHora, local, descricao, capacidade, imagemCapaUrl, prazoReembolsoDias,
+				aberturaPortoes, null);
+	}
+
+	public Evento(UsuarioId organizadorId, String nome, LocalDateTime dataHora, String local, String descricao,
+			int capacidade, String imagemCapaUrl, int prazoReembolsoDias, LocalDateTime aberturaPortoes,
+			String categoria) {
 		Validate.notNull(organizadorId, "organizadorId");
 		Validate.notBlank(nome, "nome");
 		Validate.notNull(dataHora, "dataHora");
@@ -40,11 +48,19 @@ public class Evento {
 		this.imagemCapaUrl = imagemCapaUrl;
 		this.prazoReembolsoDias = prazoReembolsoDias;
 		this.aberturaPortoes = aberturaPortoes;
+		this.categoria = categoria;
 	}
 
 	public Evento(EventoId id, UsuarioId organizadorId, String nome, LocalDateTime dataHora, String local,
 			String descricao, StatusEvento status, int capacidade, String imagemCapaUrl, int prazoReembolsoDias,
 			LocalDateTime aberturaPortoes) {
+		this(id, organizadorId, nome, dataHora, local, descricao, status, capacidade, imagemCapaUrl,
+				prazoReembolsoDias, aberturaPortoes, null);
+	}
+
+	public Evento(EventoId id, UsuarioId organizadorId, String nome, LocalDateTime dataHora, String local,
+			String descricao, StatusEvento status, int capacidade, String imagemCapaUrl, int prazoReembolsoDias,
+			LocalDateTime aberturaPortoes, String categoria) {
 		Validate.notNull(id, "id");
 		Validate.notNull(organizadorId, "organizadorId");
 		Validate.notBlank(nome, "nome");
@@ -65,6 +81,7 @@ public class Evento {
 		this.imagemCapaUrl = imagemCapaUrl;
 		this.prazoReembolsoDias = prazoReembolsoDias;
 		this.aberturaPortoes = aberturaPortoes;
+		this.categoria = categoria;
 	}
 
 	public void atribuirId(EventoId novoId) {
@@ -73,7 +90,7 @@ public class Evento {
 	}
 
 	public void atualizar(String nome, LocalDateTime dataHora, String local, String descricao, int capacidade,
-			String imagemCapaUrl, int prazoReembolsoDias, LocalDateTime aberturaPortoes) {
+			String imagemCapaUrl, int prazoReembolsoDias, LocalDateTime aberturaPortoes, String categoria) {
 		if (iniciado()) {
 			throw new IllegalStateException("evento já iniciado");
 		}
@@ -92,6 +109,7 @@ public class Evento {
 		this.imagemCapaUrl = imagemCapaUrl;
 		this.prazoReembolsoDias = prazoReembolsoDias;
 		this.aberturaPortoes = aberturaPortoes;
+		this.categoria = categoria;
 	}
 
 	public void cancelar() {
@@ -148,5 +166,9 @@ public class Evento {
 
 	public LocalDateTime getAberturaPortoes() {
 		return aberturaPortoes;
+	}
+
+	public String getCategoria() {
+		return categoria;
 	}
 }

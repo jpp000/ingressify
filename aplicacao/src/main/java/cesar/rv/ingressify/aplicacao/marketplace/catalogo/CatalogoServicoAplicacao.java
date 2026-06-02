@@ -66,6 +66,7 @@ public class CatalogoServicoAplicacao {
 			LocalDateTime dataHora = evento.getDataHora();
 			String local = evento.getLocal();
 			String imagem = evento.getImagemCapaUrl();
+			String cat = evento.getCategoria();
 			boolean estoque = temEstoquePrimario;
 			boolean revenda = temRevendaDisponivel;
 			Dinheiro precoMin = precoMinimo;
@@ -114,6 +115,11 @@ public class CatalogoServicoAplicacao {
 				public boolean isTemRevendaDisponivel() {
 					return revenda;
 				}
+
+				@Override
+				public String getCategoria() {
+					return cat;
+				}
 			});
 		}
 		resultado.sort(Comparator
@@ -131,6 +137,12 @@ public class CatalogoServicoAplicacao {
 		}
 		if (f.getNome() != null && !f.getNome().isBlank()) {
 			if (!evento.getNome().toLowerCase(Locale.ROOT).contains(f.getNome().toLowerCase(Locale.ROOT))) {
+				return false;
+			}
+		}
+		if (f.getCategoria() != null && !f.getCategoria().isBlank()) {
+			if (evento.getCategoria() == null
+					|| !evento.getCategoria().equalsIgnoreCase(f.getCategoria())) {
 				return false;
 			}
 		}

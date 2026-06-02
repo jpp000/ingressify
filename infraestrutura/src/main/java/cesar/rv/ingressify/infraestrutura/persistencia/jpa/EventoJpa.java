@@ -55,6 +55,9 @@ public class EventoJpa {
 	@Column(name = "abertura_portoes", nullable = false)
 	private LocalDateTime aberturaPortoes;
 
+	@Column
+	private String categoria;
+
 	protected EventoJpa() {}
 
 	public static EventoJpa fromDomain(Evento e) {
@@ -70,6 +73,7 @@ public class EventoJpa {
 		jpa.imagemCapaUrl = e.getImagemCapaUrl();
 		jpa.prazoReembolsoDias = e.getPrazoReembolsoDias();
 		jpa.aberturaPortoes = e.getAberturaPortoes();
+		jpa.categoria = e.getCategoria();
 		return jpa;
 	}
 
@@ -77,7 +81,7 @@ public class EventoJpa {
 		return new Evento(
 				new EventoId(id), new UsuarioId(organizadorId), nome, dataHora,
 				local, descricao, status, capacidade, imagemCapaUrl,
-				prazoReembolsoDias, aberturaPortoes);
+				prazoReembolsoDias, aberturaPortoes, categoria);
 	}
 
 	public Integer getId() { return id; }

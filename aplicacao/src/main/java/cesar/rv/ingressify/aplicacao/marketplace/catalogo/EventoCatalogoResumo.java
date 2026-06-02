@@ -25,4 +25,6 @@ public interface EventoCatalogoResumo {
 	boolean isTemEstoquePrimario();
 
 	boolean isTemRevendaDisponivel();
+
+	String getCategoria();
 }

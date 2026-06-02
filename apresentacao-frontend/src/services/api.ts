@@ -17,7 +17,8 @@ export const setUsuarioId = (id: number) => {
 export const eventoService = {
   listar: (usuarioId: number) =>
     api.get('/eventos', { headers: { 'X-Usuario-Id': usuarioId } }),
-  catalogo: () => api.get('/eventos/catalogo'),
+  catalogo: (params?: { nome?: string; cidade?: string; categoria?: string; precoMin?: number; precoMax?: number }) =>
+    api.get('/eventos/catalogo', { params }),
   detalhe: (id: number) => api.get(`/eventos/${id}`),
   criar: (usuarioId: number, dados: object) =>
     api.post('/eventos', dados, { headers: { 'X-Usuario-Id': usuarioId } }),

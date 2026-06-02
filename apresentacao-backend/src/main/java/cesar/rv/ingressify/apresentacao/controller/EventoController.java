@@ -1,5 +1,6 @@
 package cesar.rv.ingressify.apresentacao.controller;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,11 +14,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import cesar.rv.ingressify.aplicacao.marketplace.catalogo.CatalogoServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.catalogo.FiltroCatalogo;
 import cesar.rv.ingressify.aplicacao.marketplace.evento.EventoServicoAplicacao;
 import cesar.rv.ingressify.apresentacao.dto.CriarEventoRequest;
 import cesar.rv.ingressify.apresentacao.dto.EditarEventoRequest;
+import cesar.rv.ingressify.apresentacao.dto.EventoCatalogoResponse;
 import cesar.rv.ingressify.apresentacao.dto.EventoResponse;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
@@ -27,9 +32,11 @@ import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 public class EventoController {
 
 	private final EventoServicoAplicacao eventoServico;
+	private final CatalogoServicoAplicacao catalogoServico;
 
-	public EventoController(EventoServicoAplicacao eventoServico) {
+	public EventoController(EventoServicoAplicacao eventoServico, CatalogoServicoAplicacao catalogoServico) {
 		this.eventoServico = eventoServico;
+		this.catalogoServico = catalogoServico;
 	}
 
 	@PostMapping
@@ -52,7 +59,7 @@ public class EventoController {
 			EventoId id = eventoServico.criarEvento(
 					new UsuarioId(usuarioId), req.nome(), req.dataHora(), req.local(),
 					req.descricao(), req.capacidade(), req.imagemCapaUrl(),
-					req.prazoReembolsoDias(), req.aberturaPortoes());
+					req.prazoReembolsoDias(), req.aberturaPortoes(), req.categoria());
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(EventoResponse.fromDomain(eventoServico.obter(id)));
 		} catch (IllegalStateException e) {
@@ -72,11 +79,25 @@ public class EventoController {
 	}
 
 	@GetMapping("/catalogo")
-	public ResponseEntity<List<EventoResponse>> catalogo() {
-		List<EventoResponse> lista = eventoServico
-				.listarAtivos()
+	public ResponseEntity<List<EventoCatalogoResponse>> catalogo(
+			@RequestParam(required = false) String nome,
+			@RequestParam(required = false) String cidade,
+			@RequestParam(required = false) String categoria,
+			@RequestParam(required = false) BigDecimal precoMin,
+			@RequestParam(required = false) BigDecimal precoMax,
+			@RequestParam(required = false) LocalDateTime dataInicio,
+			@RequestParam(required = false) LocalDateTime dataFim) {
+		FiltroCatalogo filtro = new FiltroCatalogo();
+		filtro.setNome(nome);
+		filtro.setCidade(cidade);
+		filtro.setCategoria(categoria);
+		filtro.setPrecoMin(precoMin);
+		filtro.setPrecoMax(precoMax);
+		filtro.setDataInicio(dataInicio);
+		filtro.setDataFim(dataFim);
+		List<EventoCatalogoResponse> lista = catalogoServico.listar(filtro)
 				.stream()
-				.map(EventoResponse::fromDomain)
+				.map(EventoCatalogoResponse::fromResumo)
 				.toList();
 		return ResponseEntity.ok(lista);
 	}
@@ -99,7 +120,7 @@ public class EventoController {
 			eventoServico.editarEvento(
 					new EventoId(id), new UsuarioId(usuarioId), req.nome(), req.dataHora(),
 					req.local(), req.descricao(), req.capacidade(), req.imagemCapaUrl(),
-					req.prazoReembolsoDias(), req.aberturaPortoes());
+					req.prazoReembolsoDias(), req.aberturaPortoes(), req.categoria());
 			return ResponseEntity.ok(EventoResponse.fromDomain(eventoServico.obter(new EventoId(id))));
 		} catch (IllegalStateException e) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();
