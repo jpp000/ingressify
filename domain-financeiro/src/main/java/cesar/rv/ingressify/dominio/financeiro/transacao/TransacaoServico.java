@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.Validate;
 
+import cesar.rv.ingressify.dominio.financeiro.padroes.iterador.ColecaoTransacoes;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 
 public class TransacaoServico {
@@ -21,5 +22,9 @@ public class TransacaoServico {
 
 	public List<Transacao> extratoPorUsuario(UsuarioId usuario) {
 		return repositorio.pesquisarPorUsuarioOrdenadoDesc(usuario);
+	}
+
+	public ColecaoTransacoes colecaoPorUsuario(UsuarioId usuario) {
+		return new ColecaoTransacoes(repositorio.pesquisarPorUsuario(usuario));
 	}
 }

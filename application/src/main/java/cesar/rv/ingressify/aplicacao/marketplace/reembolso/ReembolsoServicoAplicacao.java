@@ -19,6 +19,9 @@ import cesar.rv.ingressify.dominio.marketplace.ingresso.Ingresso;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoId;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoServico;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.StatusIngresso;
+import cesar.rv.ingressify.aplicacao.marketplace.padroes.estrategia.ReembolsoCancelamentoEstrategia;
+import cesar.rv.ingressify.aplicacao.marketplace.padroes.estrategia.ReembolsoVoluntarioEstrategia;
+import cesar.rv.ingressify.dominio.padroes.estrategia.EstrategiaReembolso;
 import cesar.rv.ingressify.dominio.marketplace.reembolso.MotivoReembolso;
 import cesar.rv.ingressify.dominio.marketplace.reembolso.SolicitacaoReembolso;
 import cesar.rv.ingressify.dominio.marketplace.reembolso.SolicitacaoReembolsoId;
@@ -65,6 +68,13 @@ public class ReembolsoServicoAplicacao {
 		this.transacaoServico = transacaoServico;
 	}
 
+	private EstrategiaReembolso selecionarEstrategia(MotivoReembolso motivo) {
+		return switch (motivo) {
+			case VOLUNTARIO -> new ReembolsoVoluntarioEstrategia();
+			case EVENTO_CANCELADO -> new ReembolsoCancelamentoEstrategia();
+		};
+	}
+
 	public SolicitacaoReembolsoId solicitar(IngressoId ingressoId, UsuarioId solicitanteId) {
 		Ingresso ingresso = ingressoServico.obter(ingressoId);
 		if (!ingresso.getProprietario().equals(solicitanteId)) {
@@ -85,12 +95,8 @@ public class ReembolsoServicoAplicacao {
 				.stream()
 				.findFirst()
 				.orElseThrow(() -> new IllegalStateException("pedido não encontrado para o ingresso"));
-		if (pedidoMaisRecente.getCriadaEm().isBefore(agora.minusDays(7))) {
-			throw new IllegalStateException("fora do prazo de reembolso");
-		}
-		if (!evento.getDataHora().isAfter(agora.plusHours(48))) {
-			throw new IllegalStateException("fora do prazo de reembolso");
-		}
+		selecionarEstrategia(MotivoReembolso.VOLUNTARIO)
+				.validar(pedidoMaisRecente.getCriadaEm(), evento.getDataHora());
 		ingresso.bloquearParaReembolso();
 		ingressoServico.salvar(ingresso);
 		SolicitacaoReembolso solicitacao = new SolicitacaoReembolso(ingressoId, solicitanteId, MotivoReembolso.VOLUNTARIO,

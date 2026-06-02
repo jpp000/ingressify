@@ -1,10 +1,14 @@
 package cesar.rv.ingressify.aplicacao.marketplace.evento;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.Validate;
 
+import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.ContextoCancelamento;
+import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.IngressoCancelado;
+import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.PublicadorEvento;
 import cesar.rv.ingressify.aplicacao.marketplace.reembolso.ReembolsoServicoAplicacao;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.identidade.usuario.Papel;
@@ -35,12 +39,13 @@ public class EventoServicoAplicacao {
 	private final ReembolsoServicoAplicacao reembolsoServicoAplicacao;
 	private final TipoIngressoRepositorio tipoIngressoRepositorio;
 	private final UsuarioRepositorio usuarioRepositorio;
+	private final PublicadorEvento publicadorEvento;
 
 	public EventoServicoAplicacao(EventoServico eventoServico, EventoRepositorio eventoRepositorio,
 			IngressoRepositorio ingressoRepositorio, IngressoServico ingressoServico,
 			AnuncioRevendaRepositorio anuncioRevendaRepositorio, AnuncioRevendaServico anuncioRevendaServico,
 			ReembolsoServicoAplicacao reembolsoServicoAplicacao, TipoIngressoRepositorio tipoIngressoRepositorio,
-			UsuarioRepositorio usuarioRepositorio) {
+			UsuarioRepositorio usuarioRepositorio, PublicadorEvento publicadorEvento) {
 		Validate.notNull(eventoServico, "eventoServico");
 		Validate.notNull(eventoRepositorio, "eventoRepositorio");
 		Validate.notNull(ingressoRepositorio, "ingressoRepositorio");
@@ -50,6 +55,7 @@ public class EventoServicoAplicacao {
 		Validate.notNull(reembolsoServicoAplicacao, "reembolsoServicoAplicacao");
 		Validate.notNull(tipoIngressoRepositorio, "tipoIngressoRepositorio");
 		Validate.notNull(usuarioRepositorio, "usuarioRepositorio");
+		Validate.notNull(publicadorEvento, "publicadorEvento");
 		this.eventoServico = eventoServico;
 		this.eventoRepositorio = eventoRepositorio;
 		this.ingressoRepositorio = ingressoRepositorio;
@@ -59,6 +65,7 @@ public class EventoServicoAplicacao {
 		this.reembolsoServicoAplicacao = reembolsoServicoAplicacao;
 		this.tipoIngressoRepositorio = tipoIngressoRepositorio;
 		this.usuarioRepositorio = usuarioRepositorio;
+		this.publicadorEvento = publicadorEvento;
 	}
 
 	public EventoId criarEvento(UsuarioId organizadorId, String nome, LocalDateTime dataHora, String local,
@@ -99,14 +106,17 @@ public class EventoServicoAplicacao {
 				anuncioRevendaServico.cancelar(a.getId());
 			}
 		}
+		List<IngressoCancelado> cancelados = new ArrayList<>();
 		for (Ingresso ingresso : afetados) {
 			Ingresso atual = ingressoRepositorio.obter(ingresso.getId());
 			if (atual.getStatus() == StatusIngresso.ATIVO || atual.getStatus() == StatusIngresso.EM_REVENDA) {
 				ingressoServico.cancelar(atual.getId());
 				TipoIngresso tipo = tipoIngressoRepositorio.obter(atual.getTipoIngressoId());
-				reembolsoServicoAplicacao.aprovarPorCancelamento(atual.getId(), atual.getProprietario(),
-						tipo.getPreco());
+				cancelados.add(new IngressoCancelado(atual.getId(), atual.getProprietario(), tipo.getPreco()));
 			}
+		}
+		if (!cancelados.isEmpty()) {
+			publicadorEvento.notificarCancelamento(new ContextoCancelamento(eventoId, cancelados));
 		}
 	}
 

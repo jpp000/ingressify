@@ -17,6 +17,7 @@ import cesar.rv.ingressify.dominio.financeiro.transacao.Transacao;
 import cesar.rv.ingressify.dominio.financeiro.transacao.TransacaoServico;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.identidade.usuario.UsuarioRepositorio;
+import cesar.rv.ingressify.dominio.padroes.proxy.UsuarioServico;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevenda;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaId;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaServico;
@@ -36,10 +37,12 @@ public class AnuncioRevendaServicoAplicacao {
 	private final PagamentoServico pagamentoServico;
 	private final SaldoServico saldoServico;
 	private final TransacaoServico transacaoServico;
+	private final UsuarioServico usuarioServico;
 
 	public AnuncioRevendaServicoAplicacao(AnuncioRevendaServico anuncioRevendaServico,
 			IngressoServico ingressoServico, EventoRepositorio eventoRepositorio, UsuarioRepositorio usuarioRepositorio,
-			PagamentoServico pagamentoServico, SaldoServico saldoServico, TransacaoServico transacaoServico) {
+			PagamentoServico pagamentoServico, SaldoServico saldoServico, TransacaoServico transacaoServico,
+			UsuarioServico usuarioServico) {
 		Validate.notNull(anuncioRevendaServico, "anuncioRevendaServico");
 		Validate.notNull(ingressoServico, "ingressoServico");
 		Validate.notNull(eventoRepositorio, "eventoRepositorio");
@@ -47,6 +50,7 @@ public class AnuncioRevendaServicoAplicacao {
 		Validate.notNull(pagamentoServico, "pagamentoServico");
 		Validate.notNull(saldoServico, "saldoServico");
 		Validate.notNull(transacaoServico, "transacaoServico");
+		Validate.notNull(usuarioServico, "usuarioServico");
 		this.anuncioRevendaServico = anuncioRevendaServico;
 		this.ingressoServico = ingressoServico;
 		this.eventoRepositorio = eventoRepositorio;
@@ -54,12 +58,11 @@ public class AnuncioRevendaServicoAplicacao {
 		this.pagamentoServico = pagamentoServico;
 		this.saldoServico = saldoServico;
 		this.transacaoServico = transacaoServico;
+		this.usuarioServico = usuarioServico;
 	}
 
 	public AnuncioRevendaId anunciar(UsuarioId vendedorId, List<IngressoId> ingressoIds, BigDecimal precoRevenda) {
-		if (usuarioRepositorio.obter(vendedorId).isBloqueadoRevenda()) {
-			throw new IllegalStateException("usuário bloqueado para revenda");
-		}
+		usuarioServico.podeCriarAnuncioRevenda(vendedorId);
 		IngressoId primeiro = ingressoIds.get(0);
 		Evento evento = eventoRepositorio.obter(ingressoServico.obter(primeiro).getEventoId());
 		if (evento.getStatus() == StatusEvento.CANCELADO) {
