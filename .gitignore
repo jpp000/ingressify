@@ -1,13 +1,62 @@
+# ── Maven / Java ─────────────────────────────────────────────────────────────
 target/
-!.mvn/wrapper/maven-wrapper.jar
 *.class
-*.log
-*.jar
 *.war
-*.iml
-.idea/
-.vscode/
-.DS_Store
+*.ear
+# Ignorar JARs, mas preservar o Maven Wrapper
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ── Spring Boot ───────────────────────────────────────────────────────────────
+HELP.md
+
+# ── Node / React (apresentacao-frontend) ─────────────────────────────────────
 node_modules/
 dist/
-*.local
+build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# ── Variáveis de ambiente / segredos ─────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── IDEs ─────────────────────────────────────────────────────────────────────
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# Spring Tools Suite
+.sts4-cache
+
+# Cursor
+.cursor/
+
+# ── Sistema operacional ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Cobertura de testes ───────────────────────────────────────────────────────
+jacoco.exec
+.jacoco/
