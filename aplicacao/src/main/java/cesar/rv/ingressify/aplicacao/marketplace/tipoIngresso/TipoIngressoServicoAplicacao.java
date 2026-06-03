@@ -1,6 +1,7 @@
 package cesar.rv.ingressify.aplicacao.marketplace.tipoIngresso;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.apache.commons.lang3.Validate;
 
@@ -10,6 +11,7 @@ import cesar.rv.ingressify.dominio.marketplace.evento.Evento;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.Lote;
 import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngresso;
 import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoId;
 import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoRepositorio;
@@ -36,7 +38,7 @@ public class TipoIngressoServicoAplicacao {
 	}
 
 	public TipoIngressoId criarTipoIngresso(EventoId eventoId, UsuarioId organizadorId, String nome, BigDecimal preco,
-			int quantidade, String descricao) {
+			int quantidade, String descricao, List<String> beneficios, List<CriarLoteDto> lotesDto) {
 		Evento evento = eventoRepositorio.obter(eventoId);
 		if (!evento.getOrganizadorId().equals(organizadorId)) {
 			throw new IllegalStateException("evento não pertence ao organizador");
@@ -44,14 +46,38 @@ public class TipoIngressoServicoAplicacao {
 		if (!evento.ativo()) {
 			throw new IllegalStateException("evento não está ativo para novos tipos");
 		}
+
+		boolean usarLotes = lotesDto != null && !lotesDto.isEmpty();
+		int quantidadeTotal = usarLotes
+				? lotesDto.stream().mapToInt(CriarLoteDto::quantidade).sum()
+				: quantidade;
+
 		int somaExistentes = tipoIngressoRepositorio.pesquisarPorEvento(eventoId).stream()
 				.mapToInt(TipoIngresso::getQuantidadeTotal)
 				.sum();
-		if (somaExistentes + quantidade > evento.getCapacidade()) {
+		if (somaExistentes + quantidadeTotal > evento.getCapacidade()) {
 			throw new IllegalStateException("soma das quantidades excede capacidade do evento");
 		}
-		Dinheiro dinheiro = new Dinheiro(preco);
-		TipoIngresso tipo = new TipoIngresso(eventoId, nome, dinheiro, quantidade, quantidade, descricao);
+
+		Dinheiro dinheiroDisplay = usarLotes
+				? new Dinheiro(lotesDto.get(0).preco())
+				: new Dinheiro(preco);
+
+		TipoIngresso tipo = new TipoIngresso(eventoId, nome, dinheiroDisplay,
+				quantidadeTotal, quantidadeTotal, descricao);
+
+		if (beneficios != null && !beneficios.isEmpty()) {
+			tipo.definirBeneficios(beneficios);
+		}
+
+		if (usarLotes) {
+			for (int i = 0; i < lotesDto.size(); i++) {
+				CriarLoteDto l = lotesDto.get(i);
+				tipo.adicionarLote(new Lote(i + 1, l.nome(), new Dinheiro(l.preco()),
+						l.quantidade(), l.dataInicio(), l.dataFim()));
+			}
+		}
+
 		tipoIngressoServico.salvar(tipo);
 		return tipo.getId();
 	}

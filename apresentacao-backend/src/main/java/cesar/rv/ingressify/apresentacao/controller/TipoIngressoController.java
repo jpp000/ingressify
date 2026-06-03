@@ -1,6 +1,8 @@
 package cesar.rv.ingressify.apresentacao.controller;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import cesar.rv.ingressify.aplicacao.marketplace.tipoIngresso.CriarLoteDto;
 import cesar.rv.ingressify.aplicacao.marketplace.tipoIngresso.TipoIngressoServicoAplicacao;
 import cesar.rv.ingressify.apresentacao.dto.CriarTipoIngressoRequest;
 import cesar.rv.ingressify.apresentacao.dto.EditarTipoIngressoRequest;
@@ -40,16 +43,21 @@ public class TipoIngressoController {
 		if (req.nome() == null || req.nome().isBlank()) {
 			return ResponseEntity.badRequest().build();
 		}
-		if (req.preco() == null || req.preco().signum() <= 0) {
-			return ResponseEntity.badRequest().build();
-		}
-		if (req.quantidade() <= 0) {
-			return ResponseEntity.badRequest().build();
+		boolean temLotes = req.lotes() != null && !req.lotes().isEmpty();
+		if (!temLotes) {
+			if (req.preco() == null || req.preco().signum() <= 0) return ResponseEntity.badRequest().build();
+			if (req.quantidade() <= 0) return ResponseEntity.badRequest().build();
 		}
 		try {
+			List<CriarLoteDto> lotesDto = temLotes
+					? req.lotes().stream()
+							.map(l -> new CriarLoteDto(l.nome(), l.preco(), l.quantidade(), l.dataInicio(), l.dataFim()))
+							.collect(Collectors.toList())
+					: Collections.emptyList();
 			TipoIngressoId id = tipoIngressoServico.criarTipoIngresso(
 					new EventoId(eventoId), new UsuarioId(usuarioId),
-					req.nome(), req.preco(), req.quantidade(), req.descricao());
+					req.nome(), req.preco(), req.quantidade(), req.descricao(),
+					req.beneficios(), lotesDto);
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(TipoIngressoResponse.fromDomain(tipoIngressoServico.obter(id)));
 		} catch (IllegalStateException e) {

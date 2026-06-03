@@ -1,12 +1,22 @@
 package cesar.rv.ingressify.infraestrutura.persistencia.jpa;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
@@ -40,6 +50,16 @@ public class TipoIngressoJpa {
 	@Column(columnDefinition = "TEXT")
 	private String descricao;
 
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "tipo_ingresso_beneficios", joinColumns = @JoinColumn(name = "tipo_ingresso_id"))
+	@Column(name = "beneficio")
+	private List<String> beneficios = new ArrayList<>();
+
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+	@JoinColumn(name = "tipo_ingresso_id")
+	@OrderBy("numero ASC")
+	private List<LoteJpa> lotes = new ArrayList<>();
+
 	protected TipoIngressoJpa() {}
 
 	public static TipoIngressoJpa fromDomain(TipoIngresso t) {
@@ -51,15 +71,23 @@ public class TipoIngressoJpa {
 		jpa.quantidadeDisponivel = t.getQuantidadeDisponivel();
 		jpa.quantidadeTotal = t.getQuantidadeTotal();
 		jpa.descricao = t.getDescricao();
+		jpa.beneficios = new ArrayList<>(t.getBeneficios());
+		jpa.lotes = t.getLotes().stream().map(LoteJpa::fromDomain).collect(Collectors.toList());
 		return jpa;
 	}
 
 	public TipoIngresso toDomain() {
-		return new TipoIngresso(
+		TipoIngresso t = new TipoIngresso(
 				new TipoIngressoId(id), new EventoId(eventoId), nome,
 				new Dinheiro(preco), quantidadeDisponivel, quantidadeTotal, descricao);
+		t.definirBeneficios(new ArrayList<>(beneficios));
+		for (LoteJpa l : lotes) {
+			t.adicionarLote(l.toDomain());
+		}
+		return t;
 	}
 
 	public Integer getId() { return id; }
 	public Integer getEventoId() { return eventoId; }
+	public List<LoteJpa> getLotes() { return lotes; }
 }

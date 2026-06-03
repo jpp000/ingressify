@@ -1,5 +1,12 @@
 package cesar.rv.ingressify.dominio.marketplace.tipoIngresso;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
 import org.apache.commons.lang3.Validate;
 
 import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
@@ -14,6 +21,8 @@ public class TipoIngresso {
 	private int quantidadeDisponivel;
 	private int quantidadeTotal;
 	private String descricao;
+	private List<String> beneficios = new ArrayList<>();
+	private List<Lote> lotes = new ArrayList<>();
 
 	public TipoIngresso(EventoId eventoId, String nome, Dinheiro preco, int quantidadeDisponivel, int quantidadeTotal,
 			String descricao) {
@@ -68,12 +77,33 @@ public class TipoIngresso {
 		this.descricao = descricao;
 	}
 
+	public void adicionarLote(Lote lote) {
+		Validate.notNull(lote, "lote");
+		lotes.add(lote);
+	}
+
+	public void definirBeneficios(List<String> novos) {
+		this.beneficios = novos != null ? new ArrayList<>(novos) : new ArrayList<>();
+	}
+
+	public Optional<Lote> loteAtivo() {
+		LocalDateTime agora = LocalDateTime.now();
+		return lotes.stream()
+				.filter(l -> l.ativo(agora))
+				.min(Comparator.comparingInt(Lote::getNumero));
+	}
+
 	public void reservar(int qtd) {
 		Validate.isTrue(qtd > 0, "qtd deve ser > 0");
 		if (quantidadeDisponivel < qtd) {
 			throw new IllegalStateException("quantidade indisponível");
 		}
 		this.quantidadeDisponivel -= qtd;
+		if (!lotes.isEmpty()) {
+			loteAtivo()
+					.orElseThrow(() -> new IllegalStateException("nenhum lote ativo disponível"))
+					.reservar(qtd);
+		}
 	}
 
 	public void devolver(int qtd) {
@@ -109,5 +139,13 @@ public class TipoIngresso {
 
 	public String getDescricao() {
 		return descricao;
+	}
+
+	public List<String> getBeneficios() {
+		return Collections.unmodifiableList(beneficios);
+	}
+
+	public List<Lote> getLotes() {
+		return Collections.unmodifiableList(lotes);
 	}
 }
