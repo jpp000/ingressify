@@ -56,10 +56,11 @@ public class EventoController {
 			return ResponseEntity.badRequest().build();
 		}
 		try {
+			LocalDateTime aberturaPortoes = req.aberturaPortoes() != null ? req.aberturaPortoes() : req.dataHora();
 			EventoId id = eventoServico.criarEvento(
 					new UsuarioId(usuarioId), req.nome(), req.dataHora(), req.local(),
 					req.descricao(), req.capacidade(), req.imagemCapaUrl(),
-					req.prazoReembolsoDias(), req.aberturaPortoes(), req.categoria());
+					req.prazoReembolsoDias(), aberturaPortoes, req.categoria());
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(EventoResponse.fromDomain(eventoServico.obter(id)));
 		} catch (IllegalStateException e) {
@@ -117,10 +118,11 @@ public class EventoController {
 			@RequestHeader("X-Usuario-Id") int usuarioId,
 			@RequestBody EditarEventoRequest req) {
 		try {
+			LocalDateTime aberturaPortoesEd = req.aberturaPortoes() != null ? req.aberturaPortoes() : req.dataHora();
 			eventoServico.editarEvento(
 					new EventoId(id), new UsuarioId(usuarioId), req.nome(), req.dataHora(),
 					req.local(), req.descricao(), req.capacidade(), req.imagemCapaUrl(),
-					req.prazoReembolsoDias(), req.aberturaPortoes(), req.categoria());
+					req.prazoReembolsoDias(), aberturaPortoesEd, req.categoria());
 			return ResponseEntity.ok(EventoResponse.fromDomain(eventoServico.obter(new EventoId(id))));
 		} catch (IllegalStateException e) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();

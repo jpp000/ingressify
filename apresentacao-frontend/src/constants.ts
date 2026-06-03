@@ -1,5 +1,3 @@
-export const USUARIO_ID = 1
-
 export const TAXA_SERVICO_PERCENTUAL = 0.125
 
 export const CATEGORIAS = [

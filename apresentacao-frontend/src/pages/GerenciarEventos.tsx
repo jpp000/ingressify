@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { eventoService, tipoIngressoService } from '../services/api'
 import Navbar from '../components/Navbar'
-import { USUARIO_ID, CATEGORIAS } from '../constants'
+import { CATEGORIAS } from '../constants'
+import { useAuth } from '../context/AuthContext'
 
 type Aba = 'meus-eventos' | 'criar-evento' | 'relatorios' | 'configuracoes'
 
@@ -48,6 +49,7 @@ const FORM_INICIAL: EventoForm = {
 
 export default function GerenciarEventos() {
   const location = useLocation()
+  const { usuario } = useAuth()
   const abaInicial: Aba = (location.state as { aba?: Aba } | null)?.aba ?? 'criar-evento'
 
   const [abaAtiva, setAbaAtiva] = useState<Aba>(abaInicial)
@@ -59,7 +61,8 @@ export default function GerenciarEventos() {
   const [imagemPreview, setImagemPreview] = useState<string | null>(null)
 
   const carregarEventos = () => {
-    eventoService.listar(USUARIO_ID).then(r => setEventos(r.data)).catch(() => {})
+    if (!usuario) return
+    eventoService.listar(usuario.id).then(r => setEventos(r.data)).catch(() => {})
   }
 
   useEffect(() => { carregarEventos() }, [])
@@ -89,16 +92,16 @@ export default function GerenciarEventos() {
         capacidade: Number(form.capacidade),
         imagemCapaUrl: form.imagemCapaUrl || null,
         prazoReembolsoDias: Number(form.prazoReembolsoDias),
-        aberturaPortoes: form.aberturaPortoes,
+        aberturaPortoes: form.aberturaPortoes || null,
         categoria: form.categoria || null,
       }
-      const res = await eventoService.criar(USUARIO_ID, dados)
+      const res = await eventoService.criar(usuario!.id, dados)
       const novoEventoId = res.data.id
 
       for (const tipo of tipos) {
         if (!tipo.nome.trim()) continue
         const precoNum = parseFloat(tipo.preco.replace(',', '.'))
-        await tipoIngressoService.criar(novoEventoId, USUARIO_ID, {
+        await tipoIngressoService.criar(novoEventoId, usuario!.id, {
           nome: tipo.nome,
           preco: isNaN(precoNum) ? 0 : precoNum,
           quantidade: Number(tipo.quantidade) || 0,
@@ -123,7 +126,7 @@ export default function GerenciarEventos() {
   const cancelarEvento = async (id: number) => {
     if (!confirm('Cancelar este evento? Todos os ingressos serão reembolsados.')) return
     try {
-      await eventoService.cancelar(id, USUARIO_ID)
+      await eventoService.cancelar(id, usuario!.id)
       setMsg('Evento cancelado.')
       carregarEventos()
     } catch {

@@ -4,89 +4,18 @@
 
 **Marketplace de revenda de ingressos — monólito modular com DDD**
 
-[![Java](https://img.shields.io/badge/Java-21%2B-orange?logo=openjdk)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-Vite-61DAFB?logo=react)](https://react.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-
+[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)](https://www.postgresql.org/)
 
 </div>
 
 ---
+
 [![Prototipo](https://img.shields.io/badge/Prot%C3%B3tipo-ff3737?style=for-the-badge&logo=Figma&logoColor=white)](https://stitch.withgoogle.com/preview/16366040039797702871?node-id=ad9461aa2ae847b9b6f2639d74895a54)
 [![Documentação](https://img.shields.io/badge/Documentação-ff3737?style=for-the-badge&logo=GoogleDocs&logoColor=white)](https://drive.google.com/drive/folders/1sPfKQZKRNiRfDLrPCzHwCgD-K8S7FFn2)
 [![Mapa de Historias](https://img.shields.io/badge/Mapa_de_Histórias-ff3737?style=for-the-badge&logo=Lucid&logoColor=white)](https://lucid.app/lucidspark/c012a823-f686-4f14-a4ff-758ffb78807a/edit?viewport_loc=-1201%2C-1477%2C4944%2C2459%2C0_0&invitationId=inv_d96d5d5a-eaf1-4d05-897a-97f6ac6f3451)
-
-
-
-## Sobre o projeto
-
-O **Ingressify** é uma plataforma de revenda de ingressos construída como monólito modular Maven seguindo **Domain-Driven Design (DDD)**. O sistema organiza o domínio em dois bounded contexts principais — **Marketplace** e **Financeiro** — compartilhando um kernel comum para tipos primitivos de identidade e valor monetário.
-
-A camada de aplicação orquestra as transações diretamente (sem barramento de eventos), mantendo rastreabilidade explícita dos fluxos de compra direta e revenda entre usuários.
-
----
-
-## Arquitetura
-
-```
-┌─────────────────────────────────────────────────┐
-│                 Domain Ingressify                │
-│                                                  │
-│   ┌──────────────┐        ┌──────────────────┐   │
-│   │  Marketplace │        │    Financeiro    │   │
-│   │              │        │                  │   │
-│   │  • Evento    │        │  • Pagamento     │   │
-│   │  • Ingresso  │        │  • Saldo         │   │
-│   │  • TipoIngr. │        │  • Transacao     │   │
-│   │  • Anuncio   │        │                  │   │
-│   │  • Pedido    │        │                  │   │
-│   └──────┬───────┘        └────────┬─────────┘   │
-│          │    Shared-Kernel        │              │
-│          └──────────┬──────────────┘              │
-│                     │                             │
-│            ┌────────┴────────┐                   │
-│            │  SharedKernel   │                   │
-│            │  • UsuarioId    │                   │
-│            │  • Dinheiro     │                   │
-│            └─────────────────┘                   │
-└─────────────────────────────────────────────────┘
-```
-
-### Módulos Maven
-
-| Módulo                    | Artefato                              | Responsabilidade                         |
-|---------------------------|---------------------------------------|------------------------------------------|
-| `parent/`                 | `ingressify-parent`                   | BOM — gerenciamento de dependências      |
-| `domain-shared/`          | `ingressify-domain-shared`            | Shared Kernel (UsuarioId, Dinheiro)      |
-| `domain-identidade/`      | `ingressify-domain-identidade`        | BC Identidade (Usuario, papéis, senha)   |
-| `domain-marketplace/`     | `ingressify-domain-marketplace`       | BC Marketplace (Evento, Ingresso, etc.)  |
-| `domain-financeiro/`      | `ingressify-domain-financeiro`        | BC Financeiro (Pagamento, Saldo)         |
-| `application/`            | `ingressify-application`              | Casos de uso (ServicoAplicacao, read models) |
-
-A camada **application** orquestra agregados entre bounded contexts (estilo sgb-2025-01): serviços `*ServicoAplicacao`, interfaces `*RepositorioAplicacao` para projeções de leitura e DTOs `*Resumo` / `*ResumoExpandido`, sem persistência concreta neste repositório.
-| `infrastructure/`         | `ingressify-infrastructure`           | JPA, Flyway, adaptadores externos        |
-| `presentation-backend/`   | `ingressify-presentation-backend`     | API REST (Spring Boot)                   |
-| `presentation-frontend/`  | —                                     | SPA React + Vite (fora do reactor Maven) |
-
----
-
-## Tech Stack
-
-**Backend**
-- Java 21 · Spring Boot 3 · Spring Data JPA · Spring Security
-- Flyway (migrações de banco) · PostgreSQL 18
-- Context Mapper (modelo CML do domínio)
-
-**Frontend**
-- React 18 · Vite · TypeScript
-
-**Testes**
-- JUnit 5 · Cucumber (BDD) — features por bounded context
-
-**Infraestrutura**
-- Docker · Docker Compose
 
 ---
 
@@ -94,127 +23,156 @@ A camada **application** orquestra agregados entre bounded contexts (estilo sgb-
 
 | Ferramenta | Versão mínima |
 |------------|---------------|
-| Java (JDK) | 21             |
-| Maven      | 3.9            |
-| Docker     | 24             |
-| Node.js    | 20             |
+| Docker     | 24            |
+| Node.js    | 20            |
+| npm        | 10            |
 
 ---
 
-## Como executar
+## Como executar (do zero)
 
-### 1. Subir o banco de dados
+### Passo 1 — Backend + Banco de Dados (Docker)
+
+Na pasta raiz do projeto (`ingressify/`):
 
 ```bash
-docker compose up -d postgres
+docker compose up -d --build
 ```
 
-PostgreSQL disponível em `localhost:5432` — database, usuário e senha: `ingressify`.
-
-### 2. Build do backend
+Aguarde até o container `ingressify-backend-1` ficar saudável (~30s). Para acompanhar os logs:
 
 ```bash
-mvn clean install
+docker compose logs -f backend
 ```
 
-### 3. Executar o backend
+Você deve ver `Started IngressifyApplication` quando estiver pronto.
+
+- Backend disponível em: `http://localhost:8080`
+- Banco PostgreSQL em: `localhost:5432` (user/senha/db: `ingressify`)
+
+---
+
+### Passo 2 — Frontend (local)
+
+Em outro terminal, na pasta `apresentacao-frontend/`:
 
 ```bash
-# A partir da raiz
-mvn -pl presentation-backend spring-boot:run -Dspring-boot.run.profiles=desenvolvimento
-```
-
-API disponível em: `http://localhost:8080/backend/`
-
-### 4. Executar o frontend
-
-```bash
-cd presentation-frontend
+cd apresentacao-frontend
 npm install
 npm run dev
 ```
 
-Frontend disponível em: `http://localhost:5173`
-
-> Defina `VITE_API_URL=http://localhost:8080` se necessário.
+Frontend disponível em: **http://localhost:3000**
 
 ---
 
-### Stack completa via Docker Compose
+## Fluxo de uso
 
-Para subir Postgres + backend + frontend de uma vez:
+1. Acesse `http://localhost:3000` — você será redirecionado para o **Login**
+2. Clique em **"Criar conta agora"** para cadastrar um usuário
+3. Escolha o papel: **Comprador** (compra ingressos) ou **Organizador** (cria eventos)
+4. Após cadastro, faça login — você será redirecionado para o dashboard correto
+
+---
+
+## Comandos úteis
+
+### Rebuildar após alterações no backend
 
 ```bash
-docker compose up
+docker compose build backend
+docker compose up -d backend
 ```
 
----
+> No PowerShell (Windows), use ponto e vírgula ao invés de `&&`:
+> ```powershell
+> docker compose build backend; docker compose up -d backend
+> ```
 
-## Bounded Contexts
-
-### Marketplace
-
-Gerencia o ciclo de vida de eventos, ingressos e anúncios de revenda.
-
-| Agregado        | Responsabilidade                                                  |
-|-----------------|-------------------------------------------------------------------|
-| `Evento`        | Criação, atualização e cancelamento de eventos                    |
-| `TipoIngresso`  | Lotes de ingressos com preço e controle de quantidade disponível  |
-| `Ingresso`      | Ingresso individual — transferência e ciclo de revenda            |
-| `AnuncioRevenda`| Publicação, reserva e conclusão de revendas entre usuários        |
-| `Pedido`        | Compra direta de ingresso (ainda não esgotado)                    |
-
-**Regras de negócio relevantes**
-- Revenda só é permitida quando os ingressos oficiais do evento estiverem esgotados
-- Um ingresso já anunciado não pode receber novo anúncio ativo
-- Apenas o proprietário do ingresso pode anunciá-lo
-
-### Financeiro
-
-Controla pagamentos, saldos e histórico de transações dos usuários.
-
-| Agregado    | Responsabilidade                                             |
-|-------------|--------------------------------------------------------------|
-| `Pagamento` | Fluxo PENDENTE → CONFIRMADO / REJEITADO por operação         |
-| `Saldo`     | Saldo por usuário com crédito e débito (lança se insuficiente)|
-| `Transacao` | Histórico imutável de movimentações (compra, venda, ajuste)  |
-
-### Shared Kernel
-
-Tipos primitivos compartilhados entre os dois bounded contexts:
-- `UsuarioId` — identificador de usuário
-- `Dinheiro` — valor monetário (`BigDecimal`)
-
----
-
-## Testes (BDD)
-
-Os testes são escritos em Gherkin e organizados por bounded context:
-
-```
-domain-marketplace/src/test/resources/features/marketplace/
-  ├── cadastrar_evento.feature
-  ├── ingresso.feature
-  ├── anuncio_revenda.feature
-  ├── realizar_compra.feature
-  └── tipo_ingresso.feature
-
-domain-financeiro/src/test/resources/features/financeiro/
-  ├── processar_pagamento.feature
-  ├── saldo.feature
-  └── transacao.feature
-```
-
-Para executar:
+### Parar tudo
 
 ```bash
+docker compose down
+```
+
+### Parar e apagar dados do banco
+
+```bash
+docker compose down -v
+```
+
+### Ver logs do backend
+
+```bash
+docker compose logs -f backend
+```
+
+---
+
+## Arquitetura
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     Ingressify                          │
+│                                                         │
+│  apresentacao-frontend/   →   React + Vite (porta 3000) │
+│  apresentacao-backend/    →   Spring Boot  (porta 8080) │
+│  aplicacao/               →   Casos de uso              │
+│  infraestrutura/          →   JPA, repositórios         │
+│  dominio-marketplace/     →   BC Marketplace            │
+│  dominio-financeiro/      →   BC Financeiro             │
+│  dominio-identidade/      →   BC Identidade             │
+│  dominio-compartilhado/   →   Shared Kernel             │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Módulos Maven
+
+| Módulo                    | Responsabilidade                              |
+|---------------------------|-----------------------------------------------|
+| `pai/`                    | BOM — gerenciamento de dependências           |
+| `dominio-compartilhado/`  | Shared Kernel (UsuarioId, Dinheiro)           |
+| `dominio-identidade/`     | BC Identidade (Usuario, papéis, senha)        |
+| `dominio-marketplace/`    | BC Marketplace (Evento, Ingresso, Anuncio...) |
+| `dominio-financeiro/`     | BC Financeiro (Pagamento, Saldo, Transacao)   |
+| `aplicacao/`              | Casos de uso (*ServicoAplicacao)              |
+| `infraestrutura/`         | JPA, Flyway, repositórios concretos           |
+| `apresentacao-backend/`   | API REST — controllers e DTOs                 |
+
+---
+
+## Endpoints principais
+
+| Método | Rota                              | Descrição                        |
+|--------|-----------------------------------|----------------------------------|
+| POST   | `/auth/login`                     | Login (retorna id, nome, papeis) |
+| POST   | `/auth/cadastro`                  | Cadastro (COMPRADOR/ORGANIZADOR) |
+| GET    | `/eventos/catalogo`               | Catálogo público de eventos      |
+| POST   | `/eventos`                        | Criar evento (Organizador)       |
+| POST   | `/ingressos/comprar`              | Comprar ingresso (Comprador)     |
+| GET    | `/meus-ingressos`                 | Listar ingressos do usuário      |
+| GET    | `/saldo`                          | Consultar saldo                  |
+| POST   | `/saldo/adicionar`                | Adicionar saldo                  |
+| GET    | `/transacoes`                     | Histórico de transações          |
+| GET    | `/revendas/anuncios`              | Marketplace de revendas          |
+
+---
+
+## Tech Stack
+
+**Backend:** Java 17 · Spring Boot 3.5 · Spring Data JPA · Flyway · PostgreSQL 16
+
+**Frontend:** React 18 · Vite · TypeScript · Axios · React Router v6
+
+**Infra:** Docker · Docker Compose
+
+**Padrões de Design:** Observer · Strategy · Template Method · Proxy · Iterator · Decorator
+
+---
+
+## Testes BDD
+
+```bash
+# Na raiz do projeto (requer Maven instalado localmente)
 mvn test
 ```
-
----
-
-## Modelo de Domínio (Context Mapper)
-
-O arquivo `ingressify.cml` na raiz do repositório descreve o mapa de contexto e todos os agregados em linguagem Context Mapper. Utilize a extensão [Context Mapper](https://contextmapper.org/) no VS Code ou IntelliJ para visualizar o diagrama gerado automaticamente.
-
----

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { saldoService } from '../services/api'
-import { USUARIO_ID, formatMoeda } from '../constants'
+import { formatMoeda } from '../constants'
+import { useAuth } from '../context/AuthContext'
 
 interface Transacao {
   id: number
@@ -13,6 +14,7 @@ interface Transacao {
 const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO'])
 
 export default function SaldoPage() {
+  const { usuario } = useAuth()
   const [saldo, setSaldo] = useState<number | null>(null)
   const [transacoes, setTransacoes] = useState<Transacao[]>([])
   const [deposito, setDeposito] = useState('')
@@ -20,8 +22,9 @@ export default function SaldoPage() {
   const [salvando, setSalvando] = useState(false)
 
   const carregarDados = () => {
-    saldoService.obter(USUARIO_ID).then(r => setSaldo(r.data.valor))
-    saldoService.transacoes(USUARIO_ID).then(r => setTransacoes(r.data))
+    if (!usuario) return
+    saldoService.obter(usuario.id).then(r => setSaldo(r.data.valor))
+    saldoService.transacoes(usuario.id).then(r => setTransacoes(r.data))
   }
 
   useEffect(() => { carregarDados() }, [])
@@ -31,7 +34,7 @@ export default function SaldoPage() {
     if (!valor || valor <= 0) { setMsg('Informe um valor positivo'); return }
     setSalvando(true)
     try {
-      await saldoService.adicionar(USUARIO_ID, valor)
+      await saldoService.adicionar(usuario!.id, valor)
       setMsg('Saldo adicionado com sucesso!')
       setDeposito('')
       carregarDados()

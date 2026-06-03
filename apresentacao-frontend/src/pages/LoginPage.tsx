@@ -1,16 +1,44 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { authService, setUsuarioId } from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
-  const [lembrar, setLembrar] = useState(false)
+  const [erro, setErro] = useState('')
+  const [carregando, setCarregando] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const mensagemSucesso = (location.state as { mensagem?: string } | null)?.mensagem
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    navigate('/')
+    setErro('')
+    if (!email.trim() || !senha) {
+      setErro('Email e senha são obrigatórios')
+      return
+    }
+    setCarregando(true)
+    try {
+      const res = await authService.login(email, senha)
+      const usuario = res.data as { id: number; nome: string; email: string; papeis: string[] }
+      login(usuario)
+      setUsuarioId(usuario.id)
+      if (usuario.papeis.includes('ORGANIZADOR')) {
+        navigate('/gerenciar')
+      } else {
+        navigate('/')
+      }
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { erro?: { mensagem?: string } } } }
+      setErro(e.response?.data?.erro?.mensagem ?? 'Email ou senha incorretos')
+    } finally {
+      setCarregando(false)
+    }
   }
 
   return (
@@ -36,13 +64,7 @@ export default function LoginPage() {
           opacity: 0.25,
         }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{
-            color: '#fff',
-            fontSize: 28,
-            fontWeight: 700,
-            lineHeight: 1.3,
-            marginBottom: 16,
-          }}>
+          <h2 style={{ color: '#fff', fontSize: 28, fontWeight: 700, lineHeight: 1.3, marginBottom: 16 }}>
             Sua entrada para momentos inesquecíveis.
           </h2>
           <p style={{ color: '#93c5fd', fontSize: 14, lineHeight: 1.6 }}>
@@ -67,14 +89,42 @@ export default function LoginPage() {
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>
             Bem-vindo de volta
           </h1>
-          <p style={{ color: '#64748b', fontSize: 14, marginBottom: 32 }}>
+          <p style={{ color: '#64748b', fontSize: 14, marginBottom: 28 }}>
             Por favor, insira seus dados de acesso.
           </p>
+
+          {mensagemSucesso && (
+            <div style={{
+              background: '#f0fdf4',
+              border: '1px solid #86efac',
+              borderRadius: 8,
+              padding: '12px 14px',
+              color: '#16a34a',
+              fontSize: 14,
+              marginBottom: 16,
+            }}>
+              {mensagemSucesso}
+            </div>
+          )}
+
+          {erro && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fca5a5',
+              borderRadius: 8,
+              padding: '12px 14px',
+              color: '#dc2626',
+              fontSize: 14,
+              marginBottom: 16,
+            }}>
+              {erro}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>
-                E-mail ou Usuário
+                E-mail
               </label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 16 }}>@</span>
@@ -92,7 +142,7 @@ export default function LoginPage() {
                     fontSize: 14,
                     color: '#1e293b',
                     outline: 'none',
-                    transition: 'border-color 0.15s',
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
@@ -103,7 +153,6 @@ export default function LoginPage() {
                 <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.8 }}>
                   Senha
                 </label>
-                <a href="#" style={{ fontSize: 13, color: '#1d4ed8', fontWeight: 500 }}>Esqueceu a senha?</a>
               </div>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 16 }}>🔒</span>
@@ -121,6 +170,7 @@ export default function LoginPage() {
                     fontSize: 14,
                     color: '#1e293b',
                     outline: 'none',
+                    boxSizing: 'border-box',
                   }}
                 />
                 <button
@@ -136,6 +186,7 @@ export default function LoginPage() {
                     color: '#94a3b8',
                     fontSize: 16,
                     padding: 0,
+                    cursor: 'pointer',
                   }}
                 >
                   {mostrarSenha ? '🙈' : '👁️'}
@@ -143,20 +194,11 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={lembrar}
-                onChange={e => setLembrar(e.target.checked)}
-                style={{ width: 16, height: 16, accentColor: '#1d4ed8' }}
-              />
-              <span style={{ fontSize: 14, color: '#475569' }}>Lembrar de mim</span>
-            </label>
-
             <button
               type="submit"
+              disabled={carregando}
               style={{
-                background: '#1d4ed8',
+                background: carregando ? '#93c5fd' : '#1d4ed8',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,
@@ -165,57 +207,17 @@ export default function LoginPage() {
                 fontWeight: 600,
                 width: '100%',
                 marginTop: 4,
+                cursor: carregando ? 'not-allowed' : 'pointer',
                 transition: 'background 0.15s',
               }}
             >
-              Entrar na conta
+              {carregando ? 'Entrando...' : 'Entrar na conta'}
             </button>
           </form>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
-            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-            <span style={{ color: '#94a3b8', fontSize: 12, whiteSpace: 'nowrap' }}>OU CONTINUE COM</span>
-            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-          </div>
-
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button style={{
-              flex: 1,
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              padding: '10px',
-              background: '#fff',
-              fontSize: 14,
-              fontWeight: 500,
-              color: '#1e293b',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-            }}>
-              <span style={{ fontWeight: 800 }}>G</span> Google
-            </button>
-            <button style={{
-              flex: 1,
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              padding: '10px',
-              background: '#fff',
-              fontSize: 14,
-              fontWeight: 500,
-              color: '#1e293b',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-            }}>
-              <span style={{ fontWeight: 800, color: '#1877f2' }}>f</span> Facebook
-            </button>
-          </div>
-
           <p style={{ textAlign: 'center', marginTop: 24, fontSize: 14, color: '#64748b' }}>
             Não tem uma conta?{' '}
-            <Link to="/" style={{ color: '#1d4ed8', fontWeight: 600 }}>
+            <Link to="/cadastro" style={{ color: '#1d4ed8', fontWeight: 600 }}>
               Criar conta agora
             </Link>
           </p>

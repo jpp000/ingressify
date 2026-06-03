@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ingressoService, saldoService } from '../services/api'
 import Navbar from '../components/Navbar'
-import { USUARIO_ID, TAXA_SERVICO_PERCENTUAL, formatMoeda, formatDataBadge } from '../constants'
+import { TAXA_SERVICO_PERCENTUAL, formatMoeda, formatDataBadge } from '../constants'
+import { useAuth } from '../context/AuthContext'
 
 interface Evento {
   id: number
@@ -32,6 +33,7 @@ interface LocationState {
 export default function RevisaoPedido() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { usuario } = useAuth()
   const state = location.state as LocationState | null
 
   const [cupom, setCupom] = useState('')
@@ -69,7 +71,7 @@ export default function RevisaoPedido() {
     setConfirmando(true)
     setErro('')
     try {
-      const saldoRes = await saldoService.obter(USUARIO_ID)
+      const saldoRes = await saldoService.obter(usuario!.id)
       const saldoAtual = Number(saldoRes.data.valor)
       if (saldoAtual < total) {
         setErro(`Saldo insuficiente. Seu saldo é ${formatMoeda(saldoAtual)}.`)
@@ -77,7 +79,7 @@ export default function RevisaoPedido() {
         return
       }
       for (const item of itens) {
-        await ingressoService.comprar(USUARIO_ID, {
+        await ingressoService.comprar(usuario!.id, {
           tipoIngressoId: item.tipoId,
           quantidade: item.quantidade,
         })

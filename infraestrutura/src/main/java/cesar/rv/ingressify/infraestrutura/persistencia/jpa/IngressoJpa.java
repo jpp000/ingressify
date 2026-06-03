@@ -1,5 +1,7 @@
 package cesar.rv.ingressify.infraestrutura.persistencia.jpa;
 
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,8 +23,8 @@ import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoId;
 public class IngressoJpa {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 
 	@Column(name = "tipo_ingresso_id", nullable = false)
 	private Integer tipoIngressoId;
@@ -60,7 +62,7 @@ public class IngressoJpa {
 				status, bloqueadoPorReembolso);
 	}
 
-	public Integer getId() { return id; }
+	public UUID getId() { return id; }
 	public Integer getTipoIngressoId() { return tipoIngressoId; }
 	public Integer getEventoId() { return eventoId; }
 	public Integer getProprietarioId() { return proprietarioId; }

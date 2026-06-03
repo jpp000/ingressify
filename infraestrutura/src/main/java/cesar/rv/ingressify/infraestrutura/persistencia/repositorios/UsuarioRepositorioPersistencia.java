@@ -19,7 +19,10 @@ public class UsuarioRepositorioPersistencia implements UsuarioRepositorio {
 
 	@Override
 	public void salvar(Usuario usuario) {
-		jpa.save(UsuarioJpa.fromDomain(usuario));
+		UsuarioJpa salvo = jpa.save(UsuarioJpa.fromDomain(usuario));
+		if (usuario.getId() == null) {
+			usuario.atribuirId(new UsuarioId(salvo.getId()));
+		}
 	}
 
 	@Override

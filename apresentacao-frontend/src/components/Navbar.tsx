@@ -2,7 +2,8 @@ import type { CSSProperties, KeyboardEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { saldoService } from '../services/api'
-import { USUARIO_ID, formatMoeda } from '../constants'
+import { formatMoeda } from '../constants'
+import { useAuth } from '../context/AuthContext'
 
 interface NavbarProps {
   variant?: 'default' | 'organizer' | 'minimal'
@@ -11,21 +12,27 @@ interface NavbarProps {
 export default function Navbar({ variant = 'default' }: NavbarProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const { usuario, logout, isOrganizador } = useAuth()
   const [saldo, setSaldo] = useState<number | null>(null)
   const [busca, setBusca] = useState('')
 
   const isWallet = pathname === '/meus-ingressos'
 
   useEffect(() => {
-    if (isWallet) {
-      saldoService.obter(USUARIO_ID).then(r => setSaldo(r.data.valor)).catch(() => {})
+    if (isWallet && usuario) {
+      saldoService.obter(usuario.id).then(r => setSaldo(r.data.valor)).catch(() => {})
     }
-  }, [isWallet])
+  }, [isWallet, usuario])
 
   const handleBusca = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && busca.trim()) {
       navigate(`/?busca=${encodeURIComponent(busca.trim())}`)
     }
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
   }
 
   const linkStyle = (active: boolean): CSSProperties => ({
@@ -36,6 +43,8 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
     borderBottom: active ? '2px solid #1d4ed8' : '2px solid transparent',
     transition: 'color 0.15s',
   })
+
+  const modoOrganizador = variant === 'organizer' || isOrganizador()
 
   return (
     <nav style={{
@@ -54,22 +63,22 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
         alignItems: 'center',
         gap: 24,
       }}>
-        <Link to="/" style={{ color: '#1e3a8a', fontWeight: 800, fontSize: 20, flexShrink: 0 }}>
+        <Link to={modoOrganizador ? '/gerenciar' : '/'} style={{ color: '#1e3a8a', fontWeight: 800, fontSize: 20, flexShrink: 0 }}>
           Ingressefy
         </Link>
 
         <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-          {variant === 'organizer' ? (
+          {modoOrganizador ? (
             <>
-              <Link to="/" style={linkStyle(false)}>Explorar</Link>
+              <Link to="/" style={linkStyle(pathname === '/')}>Explorar</Link>
               <Link to="/gerenciar" style={linkStyle(pathname.startsWith('/gerenciar'))}>Meus Eventos</Link>
             </>
           ) : (
             <>
               <Link to="/" style={linkStyle(pathname === '/')}>Explorar</Link>
               <Link to="/meus-ingressos" style={linkStyle(isWallet)}>Carteira</Link>
-              <span style={{ color: '#64748b', fontSize: 14 }}>Locais</span>
-              <span style={{ color: '#64748b', fontSize: 14 }}>Agenda</span>
+              <Link to="/revendas" style={linkStyle(pathname === '/revendas')}>Revendas</Link>
+              <Link to="/saldo" style={linkStyle(pathname === '/saldo')}>Saldo</Link>
             </>
           )}
         </div>
@@ -125,51 +134,49 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
           />
         </div>
 
-        <Link to="/gerenciar">
-          <button style={{
-            background: '#1d4ed8',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 24,
-            padding: '8px 20px',
-            fontSize: 14,
-            fontWeight: 600,
-          }}>
-            Criar Evento
-          </button>
-        </Link>
+        {modoOrganizador && (
+          <Link to="/gerenciar">
+            <button style={{
+              background: '#1d4ed8',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 24,
+              padding: '8px 20px',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}>
+              Criar Evento
+            </button>
+          </Link>
+        )}
 
-        <button style={{
-          background: 'none',
-          border: '1px solid #e2e8f0',
-          borderRadius: '50%',
-          width: 36,
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 16,
-          color: '#64748b',
-        }}>
-          🔔
-        </button>
-
-        <Link to="/login">
-          <button style={{
-            background: '#f1f5f9',
-            border: '1px solid #e2e8f0',
-            borderRadius: '50%',
-            width: 36,
-            height: 36,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 16,
-            color: '#64748b',
-          }}>
-            👤
-          </button>
-        </Link>
+        {usuario && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ fontSize: 13, color: '#475569', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {usuario.nome}
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Sair"
+              style={{
+                background: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+                borderRadius: '50%',
+                width: 36,
+                height: 36,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 16,
+                color: '#64748b',
+                cursor: 'pointer',
+              }}
+            >
+              🚪
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   )

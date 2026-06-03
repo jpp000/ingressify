@@ -2,6 +2,7 @@ package cesar.rv.ingressify.apresentacao.controller;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -42,7 +43,7 @@ public class RevendaController {
 	}
 
 	@PostMapping
-	public ResponseEntity<AnuncioRevendaResponse> criar(
+	public ResponseEntity<?> criar(
 			@RequestHeader("X-Usuario-Id") int usuarioId,
 			@RequestBody CriarAnuncioRequest req) {
 		if (req.ingressoIds() == null || req.ingressoIds().isEmpty()) {
@@ -59,7 +60,8 @@ public class RevendaController {
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(AnuncioRevendaResponse.fromDomain(anuncioServico.obter(anuncioId)));
 		} catch (IllegalStateException e) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body(Map.of("motivo", e.getMessage()));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		}

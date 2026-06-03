@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ingressoService, eventoService, tipoIngressoService, saldoService } from '../services/api'
 import Navbar from '../components/Navbar'
-import { USUARIO_ID, formatMoeda, formatDataBadge } from '../constants'
+import { formatMoeda, formatDataBadge } from '../constants'
+import { useAuth } from '../context/AuthContext'
 
 interface IngressoRaw {
   id: string
@@ -54,6 +55,7 @@ const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO'])
 
 export default function MeusIngressos() {
   const location = useLocation()
+  const { usuario } = useAuth()
   const state = location.state as { sucesso?: boolean } | null
 
   const [ingressos, setIngressos] = useState<IngressoEnriquecido[]>([])
@@ -65,10 +67,11 @@ export default function MeusIngressos() {
   const [msg, setMsg] = useState(state?.sucesso ? 'Compra realizada com sucesso! 🎉' : '')
 
   useEffect(() => {
+    if (!usuario) return
     Promise.all([
-      ingressoService.meus(USUARIO_ID),
-      saldoService.obter(USUARIO_ID),
-      saldoService.transacoes(USUARIO_ID),
+      ingressoService.meus(usuario.id),
+      saldoService.obter(usuario.id),
+      saldoService.transacoes(usuario.id),
     ]).then(async ([ingRes, saldoRes, transRes]) => {
       setSaldo(saldoRes.data.valor)
       setTransacoes(transRes.data)
@@ -116,7 +119,7 @@ export default function MeusIngressos() {
 
   const soliciarReembolso = async (id: string) => {
     try {
-      await ingressoService.reembolsar(id, USUARIO_ID)
+      await ingressoService.reembolsar(id, usuario!.id)
       setMsg('Reembolso solicitado com sucesso!')
       setIngressos(prev => prev.filter(e => e.ingresso.id !== id))
       setIngressoAberto(null)

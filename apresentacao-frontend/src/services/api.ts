@@ -13,6 +13,14 @@ export const setUsuarioId = (id: number) => {
   api.defaults.headers.common['X-Usuario-Id'] = id
 }
 
+// Autenticação
+export const authService = {
+  login: (email: string, senha: string) =>
+    api.post('/auth/login', { email, senha }),
+  cadastro: (nome: string, email: string, senha: string, papel: string) =>
+    api.post('/auth/cadastro', { nome, email, senha, papel }),
+}
+
 // Eventos
 export const eventoService = {
   listar: (usuarioId: number) =>

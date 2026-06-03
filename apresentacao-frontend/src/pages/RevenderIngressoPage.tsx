@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ingressoService, eventoService, tipoIngressoService, revendaService } from '../services/api'
 import Navbar from '../components/Navbar'
-import { USUARIO_ID, formatMoeda } from '../constants'
+import { formatMoeda } from '../constants'
+import { useAuth } from '../context/AuthContext'
 
 const TAXA_REVENDA = 0.10
 
@@ -31,6 +32,7 @@ interface TipoIngresso {
 export default function RevenderIngressoPage() {
   const { id: ingressoId } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { usuario } = useAuth()
 
   const [ingresso, setIngresso] = useState<Ingresso | null>(null)
   const [evento, setEvento] = useState<Evento | null>(null)
@@ -74,14 +76,14 @@ export default function RevenderIngressoPage() {
     setPublicando(true)
     setErro('')
     try {
-      await revendaService.criar(USUARIO_ID, {
+      await revendaService.criar(usuario!.id, {
         ingressoIds: [ingressoId],
         preco: precoNum,
       })
       navigate('/meus-ingressos', { state: { sucesso: true } })
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { message?: string } } }
-      setErro(err.response?.data?.message ?? 'Erro ao publicar anúncio.')
+      const err = e as { response?: { data?: { motivo?: string; message?: string } } }
+      setErro(err.response?.data?.motivo ?? err.response?.data?.message ?? 'Erro ao publicar anúncio.')
       setPublicando(false)
     }
   }

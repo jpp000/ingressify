@@ -33,7 +33,7 @@ public class EventoJpa {
 	@Column(name = "data_hora", nullable = false)
 	private LocalDateTime dataHora;
 
-	@Column(nullable = false)
+	@Column(nullable = false, columnDefinition = "TEXT")
 	private String local;
 
 	@Column(columnDefinition = "TEXT")
@@ -46,7 +46,7 @@ public class EventoJpa {
 	@Column(nullable = false)
 	private int capacidade;
 
-	@Column(name = "imagem_capa_url")
+	@Column(name = "imagem_capa_url", columnDefinition = "TEXT")
 	private String imagemCapaUrl;
 
 	@Column(name = "prazo_reembolso_dias", nullable = false)

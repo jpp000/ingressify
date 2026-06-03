@@ -38,7 +38,7 @@ public class UsuarioJpa {
 	@Column(name = "senha_hash", nullable = false)
 	private String senhaHash;
 
-	@Column(name = "foto_url")
+	@Column(name = "foto_url", columnDefinition = "TEXT")
 	private String fotoUrl;
 
 	private String cidade;

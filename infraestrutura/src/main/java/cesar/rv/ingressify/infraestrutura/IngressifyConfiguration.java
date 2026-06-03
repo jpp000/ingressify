@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import cesar.rv.ingressify.aplicacao.financeiro.extrato.ExtratoServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.identidade.usuario.UsuarioServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.anuncioRevenda.AnuncioRevendaServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.avaliacao.AvaliacaoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.catalogo.CatalogoServicoAplicacao;
@@ -186,6 +187,14 @@ public class IngressifyConfiguration {
 	@Bean
 	public UsuarioServico usuarioServico(UsuarioRepositorio usuarioRepositorio) {
 		return new UsuarioServico(usuarioRepositorio);
+	}
+
+	@Bean
+	public UsuarioServicoAplicacao usuarioServicoAplicacao(
+			UsuarioServico usuarioServico,
+			IngressoRepositorio ingressoRepositorio,
+			SaldoRepositorio saldoRepositorio) {
+		return new UsuarioServicoAplicacao(usuarioServico, ingressoRepositorio, saldoRepositorio);
 	}
 
 	@Bean
