@@ -289,6 +289,18 @@ public class MarketplaceFuncionalidade {
 			}
 			return resultado;
 		}
+
+		@Override
+		public List<AnuncioRevenda> pesquisarPorVendedor(UsuarioId vendedorId) {
+			List<AnuncioRevenda> resultado = new ArrayList<>();
+			for (AnuncioRevenda a : dados.values()) {
+				if (vendedorId.equals(a.getVendedor())
+						&& (a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO)) {
+					resultado.add(a);
+				}
+			}
+			return resultado;
+		}
 	}
 
 	static class PedidoRepositorioMemoria implements PedidoRepositorio {

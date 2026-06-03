@@ -10,6 +10,8 @@ public record AnuncioRevendaResponse(
 		int id,
 		List<String> ingressoIds,
 		int vendedorId,
+		Integer compradorId,
+		int eventoId,
 		BigDecimal preco,
 		StatusAnuncio status,
 		int quantidade) {
@@ -19,6 +21,8 @@ public record AnuncioRevendaResponse(
 				a.getId().getId(),
 				a.getIngressoIds().stream().map(i -> i.getId().toString()).toList(),
 				a.getVendedor().getId(),
+				a.getCompradorReservado() != null ? a.getCompradorReservado().getId() : null,
+				a.getEventoId().getId(),
 				a.getPreco().getValor(),
 				a.getStatus(),
 				a.getQuantidade());

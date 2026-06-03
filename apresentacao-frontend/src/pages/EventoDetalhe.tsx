@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { eventoService, tipoIngressoService, avaliacaoService } from '../services/api'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { eventoService, tipoIngressoService, avaliacaoService, revendaService } from '../services/api'
 import Navbar from '../components/Navbar'
 import { formatMoeda, formatDataBadge, corCategoria } from '../constants'
+import { useAuth } from '../context/AuthContext'
 
 interface Evento {
   id: number
@@ -31,6 +32,15 @@ interface Avaliacao {
   respostaOrganizador?: string
 }
 
+interface AnuncioRevenda {
+  id: number
+  preco: number
+  status: string
+  quantidade: number
+  vendedorId: number
+  compradorId: number | null
+}
+
 interface SelecaoIngresso {
   tipoId: number
   quantidade: number
@@ -39,25 +49,48 @@ interface SelecaoIngresso {
 export default function EventoDetalhe() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { usuario } = useAuth()
   const eventoId = Number(id)
 
   const [evento, setEvento] = useState<Evento | null>(null)
   const [tipos, setTipos] = useState<TipoIngresso[]>([])
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([])
+  const [revendas, setRevendas] = useState<AnuncioRevenda[]>([])
   const [selecoes, setSelecoes] = useState<Record<number, number>>({})
   const [carregando, setCarregando] = useState(true)
+  const [reservando, setReservando] = useState<number | null>(null)
+  const [msgRevenda, setMsgRevenda] = useState('')
 
   useEffect(() => {
     Promise.all([
       eventoService.detalhe(eventoId),
       tipoIngressoService.listar(eventoId),
       avaliacaoService.listar(eventoId),
-    ]).then(([evRes, tiposRes, avalRes]) => {
+      revendaService.listar(eventoId).catch(() => ({ data: [] })),
+    ]).then(([evRes, tiposRes, avalRes, revRes]) => {
       setEvento(evRes.data)
       setTipos(tiposRes.data)
       setAvaliacoes(avalRes.data)
+      setRevendas(revRes.data)
     }).finally(() => setCarregando(false))
   }, [eventoId])
+
+  const reservarRevenda = async (anuncioId: number) => {
+    if (!usuario) return
+    setReservando(anuncioId)
+    setMsgRevenda('')
+    try {
+      await revendaService.reservar(anuncioId, usuario.id)
+      setMsgRevenda('Ingresso reservado! Vá para o Marketplace para confirmar a compra.')
+      const r = await revendaService.listar(eventoId)
+      setRevendas(r.data)
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { motivo?: string } } }
+      setMsgRevenda(err.response?.data?.motivo ?? 'Erro ao reservar.')
+    } finally {
+      setReservando(null)
+    }
+  }
 
   const alterarQtd = (tipoId: number, delta: number) => {
     setSelecoes(prev => {
@@ -178,6 +211,75 @@ export default function EventoDetalhe() {
               </div>
             </div>
           </section>
+
+          {/* Marketplace de Revendas */}
+          {revendas.length > 0 && (
+            <section style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1e293b' }}>
+                  Revendas Disponíveis
+                  <span style={{ marginLeft: 8, fontSize: 14, fontWeight: 600, color: '#16a34a', background: '#f0fdf4', borderRadius: 20, padding: '2px 10px' }}>
+                    {revendas.filter(r => r.status === 'DISPONIVEL').length}
+                  </span>
+                </h2>
+                <Link to={`/revendas?eventoId=${eventoId}`} style={{ color: '#1d4ed8', fontSize: 13, fontWeight: 600 }}>
+                  Ver todas →
+                </Link>
+              </div>
+              {msgRevenda && (
+                <div style={{
+                  padding: '10px 14px', borderRadius: 8, marginBottom: 12,
+                  background: msgRevenda.includes('Erro') ? '#fef2f2' : '#f0fdf4',
+                  color: msgRevenda.includes('Erro') ? '#dc2626' : '#16a34a',
+                  fontSize: 13, fontWeight: 600,
+                }}>
+                  {msgRevenda}
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {revendas.filter(r => r.status === 'DISPONIVEL').slice(0, 3).map(r => (
+                  <div
+                    key={r.id}
+                    style={{
+                      background: '#fff', borderRadius: 12, padding: '14px 18px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                      display: 'flex', alignItems: 'center', gap: 14,
+                    }}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 8,
+                      background: '#f0fdf4', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: 18, flexShrink: 0,
+                    }}>
+                      🎟️
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: 700, color: '#1e293b', fontSize: 14 }}>
+                        {r.quantidade} ingresso(s)
+                      </p>
+                      <p style={{ fontSize: 12, color: '#64748b' }}>Vendedor #{r.vendedorId}</p>
+                    </div>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: '#1d4ed8' }}>
+                      {formatMoeda(r.preco)}
+                    </span>
+                    {usuario && r.vendedorId !== usuario.id && (
+                      <button
+                        onClick={() => reservarRevenda(r.id)}
+                        disabled={reservando === r.id}
+                        style={{
+                          padding: '8px 16px', background: '#16a34a',
+                          color: '#fff', border: 'none', borderRadius: 8,
+                          fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        }}
+                      >
+                        {reservando === r.id ? '...' : 'Reservar'}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Avaliações */}
           {avaliacoes.length > 0 && (

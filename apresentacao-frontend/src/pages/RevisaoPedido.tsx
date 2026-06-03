@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ingressoService, saldoService } from '../services/api'
 import Navbar from '../components/Navbar'
-import { TAXA_SERVICO_PERCENTUAL, formatMoeda, formatDataBadge } from '../constants'
+import { formatMoeda, formatDataBadge } from '../constants'
 import { useAuth } from '../context/AuthContext'
 
 interface Evento {
@@ -54,8 +54,7 @@ export default function RevisaoPedido() {
     return acc + (tipo ? Number(tipo.preco) * item.quantidade : 0)
   }, 0)
 
-  const taxaServico = subtotal * TAXA_SERVICO_PERCENTUAL
-  const total = subtotal + taxaServico - desconto
+  const total = subtotal - desconto
 
   const aplicarCupom = () => {
     if (cupom.toUpperCase() === 'BEMVINDO10') {
@@ -74,7 +73,7 @@ export default function RevisaoPedido() {
       const saldoRes = await saldoService.obter(usuario!.id)
       const saldoAtual = Number(saldoRes.data.valor)
       if (saldoAtual < total) {
-        setErro(`Saldo insuficiente. Seu saldo é ${formatMoeda(saldoAtual)}.`)
+        setErro(`Saldo insuficiente. Seu saldo é ${formatMoeda(saldoAtual)} e o valor cobrado é ${formatMoeda(total)}.`)
         setConfirmando(false)
         return
       }
@@ -150,11 +149,6 @@ export default function RevisaoPedido() {
                   </div>
                 )
               })}
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid #f1f5f9' }}>
-                <span style={{ fontSize: 14, color: '#64748b' }}>Taxa de Serviço</span>
-                <span style={{ fontSize: 14, color: '#64748b' }}>{formatMoeda(taxaServico)}</span>
-              </div>
 
               {desconto > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>

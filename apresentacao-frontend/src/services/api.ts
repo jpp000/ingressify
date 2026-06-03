@@ -75,6 +75,8 @@ export const saldoService = {
 
 // Revendas
 export const revendaService = {
+  meus: (usuarioId: number) =>
+    api.get('/revendas/anuncios/meus', { headers: { 'X-Usuario-Id': usuarioId } }),
   listar: (eventoId: number) =>
     api.get(`/revendas/anuncios?eventoId=${eventoId}`),
   detalhe: (id: number) => api.get(`/revendas/anuncios/${id}`),
@@ -82,6 +84,8 @@ export const revendaService = {
     api.post('/revendas/anuncios', dados, { headers: { 'X-Usuario-Id': usuarioId } }),
   reservar: (id: number, usuarioId: number) =>
     api.post(`/revendas/anuncios/${id}/reservar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  confirmar: (id: number, usuarioId: number) =>
+    api.post(`/revendas/anuncios/${id}/confirmar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
   cancelar: (id: number, usuarioId: number) =>
     api.delete(`/revendas/anuncios/${id}`, { headers: { 'X-Usuario-Id': usuarioId } }),
   alterarPreco: (id: number, usuarioId: number, preco: number) =>

@@ -74,6 +74,10 @@ public class AnuncioRevendaServicoAplicacao {
 		return anuncioRevendaRepositorio.pesquisarPorEvento(eventoId);
 	}
 
+	public List<AnuncioRevenda> listarPorVendedor(UsuarioId vendedorId) {
+		return anuncioRevendaRepositorio.pesquisarPorVendedor(vendedorId);
+	}
+
 	public AnuncioRevendaId anunciar(UsuarioId vendedorId, List<IngressoId> ingressoIds, BigDecimal precoRevenda) {
 		usuarioServico.podeCriarAnuncioRevenda(vendedorId);
 		IngressoId primeiro = ingressoIds.get(0);

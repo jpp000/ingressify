@@ -65,6 +65,8 @@ public class EventoController {
 					.body(EventoResponse.fromDomain(eventoServico.obter(id)));
 		} catch (IllegalStateException e) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.notFound().build();
 		}
 	}
 

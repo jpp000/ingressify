@@ -63,7 +63,7 @@ public class AnuncioRevendaServico {
 			i.marcarEmRevenda();
 			ingressoRepositorio.salvar(i);
 		}
-		AnuncioRevenda anuncio = new AnuncioRevenda(ingressoIds, vendedorId, preco);
+		AnuncioRevenda anuncio = new AnuncioRevenda(ingressoIds, vendedorId, preco, eventoRef);
 		anuncioRepositorio.salvar(anuncio);
 		return anuncio;
 	}

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevenda;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaId;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaRepositorio;
@@ -55,7 +56,16 @@ public class AnuncioRevendaRepositorioMemoria implements AnuncioRevendaRepositor
 	@Override
 	public List<AnuncioRevenda> pesquisarPorEvento(EventoId eventoId) {
 		return store.values().stream()
-				.filter(a -> a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO)
+				.filter(a -> eventoId.equals(a.getEventoId())
+						&& (a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO))
+				.toList();
+	}
+
+	@Override
+	public List<AnuncioRevenda> pesquisarPorVendedor(UsuarioId vendedorId) {
+		return store.values().stream()
+				.filter(a -> vendedorId.equals(a.getVendedor())
+						&& (a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO))
 				.toList();
 	}
 

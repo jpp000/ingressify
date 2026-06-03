@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ingressoService, eventoService, tipoIngressoService, saldoService } from '../services/api'
+import { ingressoService, eventoService, tipoIngressoService, saldoService, revendaService } from '../services/api'
 import Navbar from '../components/Navbar'
 import { formatMoeda, formatDataBadge } from '../constants'
 import { useAuth } from '../context/AuthContext'
@@ -36,6 +36,22 @@ interface IngressoEnriquecido {
   tipo: TipoIngresso
 }
 
+interface AnuncioRaw {
+  id: number
+  ingressoIds: string[]
+  vendedorId: number
+  compradorId: number | null
+  eventoId: number
+  preco: number
+  status: string
+  quantidade: number
+}
+
+interface AnuncioEnriquecido {
+  anuncio: AnuncioRaw
+  evento: Evento
+}
+
 interface Transacao {
   id: number
   tipo: string
@@ -59,10 +75,11 @@ export default function MeusIngressos() {
   const state = location.state as { sucesso?: boolean } | null
 
   const [ingressos, setIngressos] = useState<IngressoEnriquecido[]>([])
+  const [anuncios, setAnuncios] = useState<AnuncioEnriquecido[]>([])
   const [transacoes, setTransacoes] = useState<Transacao[]>([])
   const [saldo, setSaldo] = useState<number | null>(null)
   const [carregando, setCarregando] = useState(true)
-  const [abaAtiva, setAbaAtiva] = useState<'proximos' | 'encerrados'>('proximos')
+  const [abaAtiva, setAbaAtiva] = useState<'proximos' | 'encerrados' | 'revendas'>('proximos')
   const [ingressoAberto, setIngressoAberto] = useState<IngressoEnriquecido | null>(null)
   const [msg, setMsg] = useState(state?.sucesso ? 'Compra realizada com sucesso! 🎉' : '')
 
@@ -72,18 +89,26 @@ export default function MeusIngressos() {
       ingressoService.meus(usuario.id),
       saldoService.obter(usuario.id),
       saldoService.transacoes(usuario.id),
-    ]).then(async ([ingRes, saldoRes, transRes]) => {
+      revendaService.meus(usuario.id).catch(() => ({ data: [] })),
+    ]).then(async ([ingRes, saldoRes, transRes, anunciosRes]) => {
       setSaldo(saldoRes.data.valor)
       setTransacoes(transRes.data)
 
       const rawIngressos: IngressoRaw[] = ingRes.data
-      const eventoIdsUnicos = [...new Set(rawIngressos.map(i => i.eventoId))]
+      const rawAnuncios: AnuncioRaw[] = anunciosRes.data
+
+      const todosEventoIds = [
+        ...new Set([
+          ...rawIngressos.map(i => i.eventoId),
+          ...rawAnuncios.map(a => a.eventoId),
+        ]),
+      ]
 
       const eventosMap = new Map<number, Evento>()
       const tiposMap = new Map<number, TipoIngresso[]>()
 
       await Promise.all(
-        eventoIdsUnicos.map(async (eventoId) => {
+        todosEventoIds.map(async (eventoId) => {
           const [evRes, tiposRes] = await Promise.all([
             eventoService.detalhe(eventoId),
             tipoIngressoService.listar(eventoId),
@@ -104,7 +129,15 @@ export default function MeusIngressos() {
         return { ingresso: ing, evento: ev, tipo }
       })
 
+      const anunciosEnriquecidos: AnuncioEnriquecido[] = rawAnuncios.map(a => {
+        const ev = eventosMap.get(a.eventoId) ?? {
+          id: a.eventoId, nome: 'Evento', dataHora: '', local: '', status: 'ATIVO',
+        }
+        return { anuncio: a, evento: ev }
+      })
+
       setIngressos(enriquecidos)
+      setAnuncios(anunciosEnriquecidos)
     }).finally(() => setCarregando(false))
   }, [])
 
@@ -115,7 +148,7 @@ export default function MeusIngressos() {
   const encerrados = ingressos.filter(e =>
     e.evento.dataHora ? new Date(e.evento.dataHora) <= agora : false
   )
-  const lista = abaAtiva === 'proximos' ? proximos : encerrados
+  const lista = abaAtiva === 'proximos' ? proximos : abaAtiva === 'encerrados' ? encerrados : []
 
   const soliciarReembolso = async (id: string) => {
     try {
@@ -125,6 +158,38 @@ export default function MeusIngressos() {
       setIngressoAberto(null)
     } catch {
       setMsg('Erro ao solicitar reembolso.')
+    }
+  }
+
+  const cancelarAnuncioRevenda = async (ingressoItem: IngressoEnriquecido) => {
+    if (!confirm('Cancelar o anúncio? Seu ingresso voltará para a carteira.')) return
+    try {
+      const r = await revendaService.listar(ingressoItem.evento.id)
+      const anuncio = r.data.find((a: { ingressoIds: string[]; vendedorId: number }) =>
+        a.ingressoIds.includes(ingressoItem.ingresso.id) && a.vendedorId === usuario!.id
+      )
+      if (!anuncio) { setMsg('Anúncio não encontrado.'); return }
+      await revendaService.cancelar(anuncio.id, usuario!.id)
+      setMsg('Anúncio cancelado. Ingresso de volta na sua carteira!')
+      setIngressoAberto(null)
+      const ingRes = await ingressoService.meus(usuario!.id)
+      const rawIngressos: IngressoRaw[] = ingRes.data
+      const eventoIdsUnicos = [...new Set(rawIngressos.map(i => i.eventoId))]
+      const eventosMap = new Map<number, Evento>()
+      const tiposMap = new Map<number, TipoIngresso[]>()
+      await Promise.all(eventoIdsUnicos.map(async (eid) => {
+        const [evRes, tiposRes] = await Promise.all([eventoService.detalhe(eid), tipoIngressoService.listar(eid)])
+        eventosMap.set(eid, evRes.data)
+        tiposMap.set(eid, tiposRes.data)
+      }))
+      setIngressos(rawIngressos.map(ing => {
+        const ev = eventosMap.get(ing.eventoId) ?? { id: ing.eventoId, nome: 'Evento', dataHora: '', local: '', status: 'ATIVO' }
+        const tipos = tiposMap.get(ing.eventoId) ?? []
+        const tipo = tipos.find(t => t.id === ing.tipoIngressoId) ?? { id: ing.tipoIngressoId, nome: 'Ingresso', preco: 0 }
+        return { ingresso: ing, evento: ev, tipo }
+      }))
+    } catch {
+      setMsg('Erro ao cancelar anúncio.')
     }
   }
 
@@ -152,24 +217,30 @@ export default function MeusIngressos() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#1e293b' }}>Meus Ingressos</h1>
           <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 24, padding: 4 }}>
-            {(['proximos', 'encerrados'] as const).map(aba => (
+            {([
+              { id: 'proximos', label: 'Próximos' },
+              { id: 'encerrados', label: 'Encerrados' },
+              { id: 'revendas', label: `Em Revenda${anuncios.length > 0 ? ` (${anuncios.length})` : ''}` },
+            ] as const).map(aba => (
               <button
-                key={aba}
-                onClick={() => setAbaAtiva(aba)}
+                key={aba.id}
+                onClick={() => setAbaAtiva(aba.id)}
                 style={{
                   padding: '8px 20px',
                   borderRadius: 20,
                   border: 'none',
-                  background: abaAtiva === aba ? '#fff' : 'transparent',
-                  color: abaAtiva === aba ? '#1e293b' : '#64748b',
-                  fontWeight: abaAtiva === aba ? 700 : 400,
+                  background: abaAtiva === aba.id ? '#fff' : 'transparent',
+                  color: abaAtiva === aba.id
+                    ? aba.id === 'revendas' ? '#b45309' : '#1e293b'
+                    : '#64748b',
+                  fontWeight: abaAtiva === aba.id ? 700 : 400,
                   fontSize: 14,
-                  boxShadow: abaAtiva === aba ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                  boxShadow: abaAtiva === aba.id ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
               >
-                {aba === 'proximos' ? 'Próximos' : 'Encerrados'}
+                {aba.label}
               </button>
             ))}
           </div>
@@ -177,6 +248,32 @@ export default function MeusIngressos() {
 
         {carregando ? (
           <div style={{ textAlign: 'center', padding: '64px 0', color: '#94a3b8' }}>Carregando ingressos...</div>
+        ) : abaAtiva === 'revendas' ? (
+          anuncios.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '64px 0', color: '#94a3b8' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🏷️</div>
+              <p>Você não tem ingressos anunciados no momento.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 40 }}>
+              {anuncios.map(a => (
+                <CardAnuncio
+                  key={a.anuncio.id}
+                  item={a}
+                  onCancelar={async () => {
+                    if (!confirm('Cancelar o anúncio? Seu ingresso voltará para a carteira.')) return
+                    try {
+                      await revendaService.cancelar(a.anuncio.id, usuario!.id)
+                      setMsg('Anúncio cancelado. Ingresso de volta na sua carteira!')
+                      setAnuncios(prev => prev.filter(x => x.anuncio.id !== a.anuncio.id))
+                    } catch {
+                      setMsg('Erro ao cancelar anúncio.')
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          )
         ) : lista.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '64px 0', color: '#94a3b8' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🎟️</div>
@@ -312,9 +409,15 @@ export default function MeusIngressos() {
               <span style={{ color: '#64748b' }}>Status</span>
               <span style={{
                 fontWeight: 700,
-                color: ingressoAberto.ingresso.status === 'ATIVO' ? '#16a34a' : '#94a3b8',
+                color: ingressoAberto.ingresso.status === 'ATIVO' ? '#16a34a'
+                  : ingressoAberto.ingresso.status === 'EM_REVENDA' ? '#f59e0b'
+                  : ingressoAberto.ingresso.status === 'REVENDIDO' ? '#7c3aed'
+                  : '#94a3b8',
               }}>
-                {ingressoAberto.ingresso.status}
+                {ingressoAberto.ingresso.status === 'ATIVO' ? 'Ativo'
+                  : ingressoAberto.ingresso.status === 'EM_REVENDA' ? 'Em Revenda'
+                  : ingressoAberto.ingresso.status === 'REVENDIDO' ? 'Revendido'
+                  : ingressoAberto.ingresso.status}
               </span>
             </div>
 
@@ -333,10 +436,131 @@ export default function MeusIngressos() {
                 </button>
               </div>
             )}
+
+            {ingressoAberto.ingresso.status === 'EM_REVENDA' && (
+              <div>
+                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '10px 14px', marginBottom: 10 }}>
+                  <p style={{ fontSize: 13, color: '#92400e', fontWeight: 600 }}>
+                    Este ingresso está anunciado no marketplace.
+                  </p>
+                  <p style={{ fontSize: 12, color: '#78716c', marginTop: 4 }}>
+                    Aguardando um comprador. Você pode cancelar o anúncio a qualquer momento.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <Link to={`/revendas?eventoId=${ingressoAberto.evento.id}`} style={{ flex: 1 }}>
+                    <button style={{ width: '100%', background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                      Ver Anúncio
+                    </button>
+                  </Link>
+                  <button
+                    onClick={() => cancelarAnuncioRevenda(ingressoAberto)}
+                    style={{ flex: 1, background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Cancelar Anúncio
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
     </>
+  )
+}
+
+function CardAnuncio({ item, onCancelar }: { item: AnuncioEnriquecido; onCancelar: () => void }) {
+  const { dia, mes } = item.evento.dataHora
+    ? formatDataBadge(item.evento.dataHora)
+    : { dia: '--', mes: '---' }
+
+  const imagemEvento = item.evento.imagemCapaUrl ||
+    'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&q=60'
+
+  const reservado = item.anuncio.status === 'RESERVADO'
+
+  return (
+    <div style={{
+      background: '#fff',
+      borderRadius: 16,
+      overflow: 'hidden',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+      display: 'flex',
+      border: reservado ? '1.5px solid #fde68a' : '1.5px solid transparent',
+    }}>
+      {/* Imagem */}
+      <div style={{ position: 'relative', width: 140, flexShrink: 0 }}>
+        <img src={imagemEvento} alt={item.evento.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{
+          position: 'absolute', top: 10, left: 10,
+          background: 'rgba(0,0,0,0.7)', color: '#fff',
+          borderRadius: 6, padding: '3px 8px', textAlign: 'center', minWidth: 36,
+        }}>
+          <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>{dia}</div>
+          <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.5 }}>{mes}</div>
+        </div>
+      </div>
+
+      {/* Conteúdo */}
+      <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+          <span style={{
+            background: reservado ? '#fffbeb' : '#f0fdf4',
+            color: reservado ? '#b45309' : '#16a34a',
+            fontSize: 11, fontWeight: 700,
+            padding: '3px 10px', borderRadius: 20,
+            textTransform: 'uppercase', letterSpacing: 0.5,
+          }}>
+            {reservado ? 'Reservado' : 'Disponível'}
+          </span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#1d4ed8' }}>
+            {formatMoeda(item.anuncio.preco)}
+          </span>
+        </div>
+
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 4, lineHeight: 1.3 }}>
+          {item.evento.nome}
+        </h3>
+        <p style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>📍 {item.evento.local}</p>
+        <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+          🎟️ {item.anuncio.quantidade} ingresso{item.anuncio.quantidade !== 1 ? 's' : ''}
+        </p>
+
+        {reservado && (
+          <div style={{
+            background: '#fffbeb', border: '1px solid #fde68a',
+            borderRadius: 8, padding: '6px 10px', marginBottom: 10,
+            fontSize: 12, color: '#92400e',
+          }}>
+            Reservado por um comprador — aguardando confirmação de pagamento.
+          </div>
+        )}
+
+        <div style={{ marginTop: 'auto', display: 'flex', gap: 10 }}>
+          <Link to={`/revendas?eventoId=${item.evento.id}`} style={{ flex: 1 }}>
+            <button style={{
+              width: '100%', background: '#fffbeb', color: '#b45309',
+              border: '1px solid #fde68a', borderRadius: 10,
+              padding: '8px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}>
+              Ver Anúncio
+            </button>
+          </Link>
+          {!reservado && (
+            <button
+              onClick={onCancelar}
+              style={{
+                flex: 1, background: '#fef2f2', color: '#ef4444',
+                border: 'none', borderRadius: 10,
+                padding: '8px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 

@@ -24,6 +24,7 @@ import cesar.rv.ingressify.apresentacao.dto.AnuncioRevendaResponse;
 import cesar.rv.ingressify.apresentacao.dto.CriarAnuncioRequest;
 import cesar.rv.ingressify.apresentacao.dto.DenunciaRequest;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
+import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevenda;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaId;
 import cesar.rv.ingressify.dominio.marketplace.denuncia.MotivoDenuncia;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
@@ -65,6 +66,17 @@ public class RevendaController {
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		}
+	}
+
+	@GetMapping("/meus")
+	public ResponseEntity<List<AnuncioRevendaResponse>> meus(
+			@RequestHeader("X-Usuario-Id") int usuarioId) {
+		List<AnuncioRevendaResponse> resp = anuncioServico
+				.listarPorVendedor(new UsuarioId(usuarioId))
+				.stream()
+				.map(AnuncioRevendaResponse::fromDomain)
+				.toList();
+		return ResponseEntity.ok(resp);
 	}
 
 	@GetMapping
@@ -132,6 +144,25 @@ public class RevendaController {
 			anuncioServico.reservar(new AnuncioRevendaId(id), new UsuarioId(usuarioId));
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(AnuncioRevendaResponse.fromDomain(anuncioServico.obter(new AnuncioRevendaId(id))));
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
+	@PostMapping("/{id}/confirmar")
+	public ResponseEntity<AnuncioRevendaResponse> confirmar(
+			@PathVariable int id,
+			@RequestHeader("X-Usuario-Id") int usuarioId) {
+		try {
+			AnuncioRevenda anuncio = anuncioServico.obter(new AnuncioRevendaId(id));
+			if (anuncio.getCompradorReservado() == null
+					|| anuncio.getCompradorReservado().getId() != usuarioId) {
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+			}
+			anuncioServico.confirmarCompra(new AnuncioRevendaId(id));
+			return ResponseEntity.ok(AnuncioRevendaResponse.fromDomain(anuncioServico.obter(new AnuncioRevendaId(id))));
 		} catch (IllegalStateException e) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();
 		} catch (IllegalArgumentException e) {

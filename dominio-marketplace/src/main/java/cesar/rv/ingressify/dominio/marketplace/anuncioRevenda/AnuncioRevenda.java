@@ -9,6 +9,7 @@ import org.apache.commons.lang3.Validate;
 
 import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
+import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoId;
 
 public class AnuncioRevenda {
@@ -16,21 +17,24 @@ public class AnuncioRevenda {
 	private AnuncioRevendaId id;
 	private final List<IngressoId> ingressoIds;
 	private final int quantidade;
+	private EventoId eventoId;
 	private UsuarioId vendedor;
 	private Dinheiro preco;
 	private UsuarioId compradorReservado;
 	private StatusAnuncio status;
 	private UUID correlacaoPagamento;
 
-	public AnuncioRevenda(List<IngressoId> ingressoIds, UsuarioId vendedor, Dinheiro preco) {
+	public AnuncioRevenda(List<IngressoId> ingressoIds, UsuarioId vendedor, Dinheiro preco, EventoId eventoId) {
 		Validate.notEmpty(ingressoIds, "ingressoIds");
 		Validate.isTrue(unicos(ingressoIds) == ingressoIds.size(), "ingressos duplicados no anúncio");
-		this.ingressoIds = new ArrayList<>(ingressoIds);
-		this.quantidade = this.ingressoIds.size();
 		Validate.notNull(vendedor, "vendedor");
 		Validate.notNull(preco, "preco");
+		Validate.notNull(eventoId, "eventoId");
+		this.ingressoIds = new ArrayList<>(ingressoIds);
+		this.quantidade = this.ingressoIds.size();
 		this.vendedor = vendedor;
 		this.preco = preco;
+		this.eventoId = eventoId;
 		this.status = StatusAnuncio.DISPONIVEL;
 	}
 
@@ -39,12 +43,13 @@ public class AnuncioRevenda {
 	}
 
 	public AnuncioRevenda(AnuncioRevendaId id, List<IngressoId> ingressoIds, UsuarioId vendedor, Dinheiro preco,
-			UsuarioId compradorReservado, StatusAnuncio status, UUID correlacaoPagamento) {
+			EventoId eventoId, UsuarioId compradorReservado, StatusAnuncio status, UUID correlacaoPagamento) {
 		Validate.notNull(id, "id");
 		Validate.notEmpty(ingressoIds, "ingressoIds");
 		Validate.isTrue(unicos(ingressoIds) == ingressoIds.size(), "ingressos duplicados no anúncio");
 		Validate.notNull(vendedor, "vendedor");
 		Validate.notNull(preco, "preco");
+		Validate.notNull(eventoId, "eventoId");
 		Validate.notNull(status, "status");
 
 		this.id = id;
@@ -52,6 +57,7 @@ public class AnuncioRevenda {
 		this.quantidade = this.ingressoIds.size();
 		this.vendedor = vendedor;
 		this.preco = preco;
+		this.eventoId = eventoId;
 		this.compradorReservado = compradorReservado;
 		this.status = status;
 		this.correlacaoPagamento = correlacaoPagamento;
@@ -133,5 +139,9 @@ public class AnuncioRevenda {
 
 	public UUID getCorrelacaoPagamento() {
 		return correlacaoPagamento;
+	}
+
+	public EventoId getEventoId() {
+		return eventoId;
 	}
 }
