@@ -72,7 +72,7 @@ const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO'])
 export default function MeusIngressos() {
   const location = useLocation()
   const { usuario } = useAuth()
-  const state = location.state as { sucesso?: boolean } | null
+  const state = location.state as { sucesso?: boolean; anuncioPublicado?: boolean } | null
 
   const [ingressos, setIngressos] = useState<IngressoEnriquecido[]>([])
   const [anuncios, setAnuncios] = useState<AnuncioEnriquecido[]>([])
@@ -81,7 +81,10 @@ export default function MeusIngressos() {
   const [carregando, setCarregando] = useState(true)
   const [abaAtiva, setAbaAtiva] = useState<'proximos' | 'encerrados' | 'revendas'>('proximos')
   const [ingressoAberto, setIngressoAberto] = useState<IngressoEnriquecido | null>(null)
-  const [msg, setMsg] = useState(state?.sucesso ? 'Compra realizada com sucesso! 🎉' : '')
+  const [msg, setMsg] = useState(
+    state?.anuncioPublicado ? 'Anúncio publicado com sucesso! 🎉' :
+    state?.sucesso ? 'Compra realizada com sucesso! 🎉' : ''
+  )
 
   useEffect(() => {
     if (!usuario) return

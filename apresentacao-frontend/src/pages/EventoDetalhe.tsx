@@ -17,12 +17,25 @@ interface Evento {
   categoria?: string
 }
 
+interface Lote {
+  id: number
+  numero: number
+  nome: string
+  preco: number
+  quantidadeTotal: number
+  quantidadeDisponivel: number
+  dataInicio?: string
+  dataFim?: string
+  ativo: boolean
+}
+
 interface TipoIngresso {
   id: number
   nome: string
   preco: number
   quantidadeDisponivel: number
   descricao?: string
+  lotes?: Lote[]
 }
 
 interface Avaliacao {
@@ -92,11 +105,19 @@ export default function EventoDetalhe() {
     }
   }
 
+  const loteAtivoParaTipo = (tipo: TipoIngresso) =>
+    tipo.lotes?.find(l => l.ativo) ?? null
+
+  const maxParaTipo = (tipo: TipoIngresso) => {
+    const lote = loteAtivoParaTipo(tipo)
+    return lote ? lote.quantidadeDisponivel : tipo.quantidadeDisponivel
+  }
+
   const alterarQtd = (tipoId: number, delta: number) => {
     setSelecoes(prev => {
       const atual = prev[tipoId] ?? 0
       const tipo = tipos.find(t => t.id === tipoId)
-      const max = tipo?.quantidadeDisponivel ?? 0
+      const max = tipo ? maxParaTipo(tipo) : 0
       const nova = Math.max(0, Math.min(max, atual + delta))
       return { ...prev, [tipoId]: nova }
     })
@@ -322,12 +343,19 @@ export default function EventoDetalhe() {
                 {tipos.map(t => {
                   const qtd = selecoes[t.id] ?? 0
                   const esgotado = t.quantidadeDisponivel === 0
+                  const lote = loteAtivoParaTipo(t)
+                  const max = maxParaTipo(t)
                   return (
                     <div key={t.id} style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: 16 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                         <div>
                           <p style={{ fontWeight: 700, color: '#1e293b', fontSize: 15 }}>{t.nome}</p>
                           <p style={{ color: '#1d4ed8', fontWeight: 700, fontSize: 14 }}>{formatMoeda(t.preco)}</p>
+                          {lote && (
+                            <p style={{ fontSize: 11, color: '#7c3aed', background: '#f5f3ff', display: 'inline-block', padding: '2px 8px', borderRadius: 12, marginTop: 3 }}>
+                              {lote.nome} · {lote.quantidadeDisponivel} restante{lote.quantidadeDisponivel !== 1 ? 's' : ''}
+                            </p>
+                          )}
                           {t.descricao && (
                             <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>ℹ️ {t.descricao}</p>
                           )}
@@ -354,10 +382,10 @@ export default function EventoDetalhe() {
                             <span style={{ fontWeight: 700, fontSize: 16, minWidth: 20, textAlign: 'center' }}>{qtd}</span>
                             <button
                               onClick={() => alterarQtd(t.id, 1)}
-                              disabled={qtd >= t.quantidadeDisponivel}
+                              disabled={qtd >= max}
                               style={{
                                 width: 28, height: 28, borderRadius: '50%',
-                                border: 'none', background: qtd >= t.quantidadeDisponivel ? '#e2e8f0' : '#1d4ed8',
+                                border: 'none', background: qtd >= max ? '#e2e8f0' : '#1d4ed8',
                                 color: '#fff', fontSize: 18, fontWeight: 700,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                               }}

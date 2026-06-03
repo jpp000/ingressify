@@ -78,6 +78,10 @@ public class AnuncioRevendaServicoAplicacao {
 		return anuncioRevendaRepositorio.pesquisarPorVendedor(vendedorId);
 	}
 
+	public List<AnuncioRevenda> listarTodos() {
+		return anuncioRevendaRepositorio.listarTodos();
+	}
+
 	public AnuncioRevendaId anunciar(UsuarioId vendedorId, List<IngressoId> ingressoIds, BigDecimal precoRevenda) {
 		usuarioServico.podeCriarAnuncioRevenda(vendedorId);
 		IngressoId primeiro = ingressoIds.get(0);
@@ -105,6 +109,7 @@ public class AnuncioRevendaServicoAplicacao {
 		}
 		Pagamento pagamento = pagamentoServico.obterPorCorrelacao(a.getCorrelacaoPagamento())
 				.orElseThrow(() -> new IllegalStateException("pagamento não encontrado"));
+		saldoServico.debitar(comprador, pagamento.getValor());
 		pagamentoServico.confirmar(pagamento.getId());
 		Pagamento.Divisao divisao = pagamento.dividir(new BigDecimal("0.10"));
 		saldoServico.creditar(a.getVendedor(), divisao.vendedor());

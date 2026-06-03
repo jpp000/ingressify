@@ -58,7 +58,6 @@ public class AnuncioRevendaServico {
 				throw new IllegalStateException("ingresso já possui anúncio ativo");
 			}
 		}
-		validarEsgotamentoVendaOficial(eventoRef);
 		for (Ingresso i : ingressos) {
 			i.marcarEmRevenda();
 			ingressoRepositorio.salvar(i);

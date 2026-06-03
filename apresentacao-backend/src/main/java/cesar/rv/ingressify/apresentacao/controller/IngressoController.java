@@ -39,7 +39,7 @@ public class IngressoController {
 	}
 
 	@PostMapping("/ingressos/comprar")
-	public ResponseEntity<List<IngressoResponse>> comprar(
+	public ResponseEntity<?> comprar(
 			@RequestHeader("X-Usuario-Id") int usuarioId,
 			@RequestBody CompraIngressoRequest req) {
 		if (req.tipoIngressoId() <= 0) {
@@ -56,7 +56,8 @@ public class IngressoController {
 					.toList();
 			return ResponseEntity.status(HttpStatus.CREATED).body(resp);
 		} catch (IllegalStateException e) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body(java.util.Map.of("motivo", e.getMessage()));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		}

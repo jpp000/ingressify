@@ -111,6 +111,12 @@ public class TipoIngresso {
 		int novo = quantidadeDisponivel + qtd;
 		Validate.isTrue(novo <= quantidadeTotal, "devolução excede total");
 		this.quantidadeDisponivel = novo;
+		if (!lotes.isEmpty()) {
+			lotes.stream()
+					.filter(l -> l.getQuantidadeDisponivel() < l.getQuantidadeTotal())
+					.min(Comparator.comparingInt(Lote::getNumero))
+					.ifPresent(l -> l.devolver(qtd));
+		}
 	}
 
 	public TipoIngressoId getId() {

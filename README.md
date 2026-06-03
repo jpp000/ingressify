@@ -48,7 +48,9 @@ docker compose logs -f backend
 Você deve ver `Started IngressifyApplication` quando estiver pronto.
 
 - Backend disponível em: `http://localhost:8080`
-- Banco PostgreSQL em: `localhost:5432` (user/senha/db: `ingressify`)
+- Banco PostgreSQL em: `localhost:5433` (user/senha/db: `ingressify`)
+
+> Os dados persistem entre restarts do backend. Para apagar tudo e recomeçar do zero: `docker compose down -v`
 
 ---
 
@@ -143,18 +145,24 @@ docker compose logs -f backend
 
 ## Endpoints principais
 
-| Método | Rota                              | Descrição                        |
-|--------|-----------------------------------|----------------------------------|
-| POST   | `/auth/login`                     | Login (retorna id, nome, papeis) |
-| POST   | `/auth/cadastro`                  | Cadastro (COMPRADOR/ORGANIZADOR) |
-| GET    | `/eventos/catalogo`               | Catálogo público de eventos      |
-| POST   | `/eventos`                        | Criar evento (Organizador)       |
-| POST   | `/ingressos/comprar`              | Comprar ingresso (Comprador)     |
-| GET    | `/meus-ingressos`                 | Listar ingressos do usuário      |
-| GET    | `/saldo`                          | Consultar saldo                  |
-| POST   | `/saldo/adicionar`                | Adicionar saldo                  |
-| GET    | `/transacoes`                     | Histórico de transações          |
-| GET    | `/revendas/anuncios`              | Marketplace de revendas          |
+| Método | Rota                                    | Descrição                              |
+|--------|-----------------------------------------|----------------------------------------|
+| POST   | `/auth/login`                           | Login (retorna id, nome, papeis)       |
+| POST   | `/auth/cadastro`                        | Cadastro (COMPRADOR/ORGANIZADOR)       |
+| GET    | `/eventos/catalogo`                     | Catálogo público de eventos            |
+| POST   | `/eventos`                              | Criar evento (Organizador)             |
+| POST   | `/ingressos/comprar`                    | Comprar ingresso (Comprador)           |
+| GET    | `/meus-ingressos`                       | Listar ingressos do usuário            |
+| GET    | `/saldo`                                | Consultar saldo                        |
+| POST   | `/saldo/adicionar`                      | Adicionar saldo                        |
+| GET    | `/transacoes`                           | Histórico de transações                |
+| GET    | `/revendas/anuncios`                    | Todos os anúncios ativos (marketplace) |
+| GET    | `/revendas/anuncios?eventoId={id}`      | Anúncios filtrados por evento          |
+| GET    | `/revendas/anuncios/meus`               | Meus anúncios de revenda               |
+| POST   | `/revendas/anuncios`                    | Criar anúncio de revenda               |
+| POST   | `/revendas/anuncios/{id}/reservar`      | Reservar ingresso de revenda           |
+| POST   | `/revendas/anuncios/{id}/confirmar`     | Confirmar compra de revenda            |
+| DELETE | `/revendas/anuncios/{id}`               | Cancelar anúncio de revenda            |
 
 ---
 

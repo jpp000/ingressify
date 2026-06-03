@@ -80,7 +80,7 @@ export default function RevenderIngressoPage() {
         ingressoIds: [ingressoId],
         preco: precoNum,
       })
-      navigate('/meus-ingressos', { state: { sucesso: true } })
+      navigate('/meus-ingressos', { state: { anuncioPublicado: true } })
     } catch (e: unknown) {
       const err = e as { response?: { data?: { motivo?: string; message?: string } } }
       setErro(err.response?.data?.motivo ?? err.response?.data?.message ?? 'Erro ao publicar anúncio.')

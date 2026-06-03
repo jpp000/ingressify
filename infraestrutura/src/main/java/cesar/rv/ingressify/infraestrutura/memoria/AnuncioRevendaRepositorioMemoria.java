@@ -69,6 +69,13 @@ public class AnuncioRevendaRepositorioMemoria implements AnuncioRevendaRepositor
 				.toList();
 	}
 
+	@Override
+	public List<AnuncioRevenda> listarTodos() {
+		return store.values().stream()
+				.filter(a -> a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO)
+				.toList();
+	}
+
 	public void limpar() {
 		store.clear();
 		sequencia.set(1);

@@ -301,6 +301,17 @@ public class MarketplaceFuncionalidade {
 			}
 			return resultado;
 		}
+
+		@Override
+		public List<AnuncioRevenda> listarTodos() {
+			List<AnuncioRevenda> resultado = new ArrayList<>();
+			for (AnuncioRevenda a : dados.values()) {
+				if (a.getStatus() == StatusAnuncio.DISPONIVEL || a.getStatus() == StatusAnuncio.RESERVADO) {
+					resultado.add(a);
+				}
+			}
+			return resultado;
+		}
 	}
 
 	static class PedidoRepositorioMemoria implements PedidoRepositorio {

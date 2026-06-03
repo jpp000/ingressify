@@ -85,8 +85,8 @@ export default function RevisaoPedido() {
       }
       navigate('/meus-ingressos', { state: { sucesso: true } })
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { message?: string } } }
-      setErro(err.response?.data?.message ?? 'Erro ao confirmar compra. Verifique seu saldo.')
+      const err = e as { response?: { data?: { motivo?: string; message?: string } } }
+      setErro(err.response?.data?.motivo ?? err.response?.data?.message ?? 'Erro ao confirmar compra.')
       setConfirmando(false)
     }
   }
@@ -222,20 +222,17 @@ export default function RevisaoPedido() {
                 </div>
               </div>
 
-              {/* Info saldo suficiente */}
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ color: '#16a34a', fontSize: 16 }}>✅</span>
-                  <p style={{ fontWeight: 700, fontSize: 13, color: '#15803d' }}>Saldo Suficiente</p>
+              {erro ? (
+                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
+                  <p style={{ fontSize: 13, color: '#ef4444', fontWeight: 600 }}>{erro}</p>
                 </div>
-                <p style={{ fontSize: 12, color: '#16a34a' }}>
-                  O saldo da sua carteira cobre o custo total.
-                </p>
-              </div>
-
-              {erro && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                  <p style={{ fontSize: 13, color: '#ef4444' }}>{erro}</p>
+              ) : (
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ color: '#16a34a', fontSize: 16 }}>✅</span>
+                    <p style={{ fontWeight: 700, fontSize: 13, color: '#15803d' }}>Saldo Suficiente</p>
+                  </div>
+                  <p style={{ fontSize: 12, color: '#16a34a' }}>O saldo da sua carteira cobre o custo total.</p>
                 </div>
               )}
 

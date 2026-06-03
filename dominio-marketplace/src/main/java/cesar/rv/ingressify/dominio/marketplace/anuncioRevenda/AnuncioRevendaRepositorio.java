@@ -21,4 +21,6 @@ public interface AnuncioRevendaRepositorio {
 	List<AnuncioRevenda> pesquisarPorEvento(EventoId eventoId);
 
 	List<AnuncioRevenda> pesquisarPorVendedor(UsuarioId vendedorId);
+
+	List<AnuncioRevenda> listarTodos();
 }

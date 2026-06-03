@@ -82,15 +82,10 @@ public class RevendaController {
 	@GetMapping
 	public ResponseEntity<List<AnuncioRevendaResponse>> listar(
 			@RequestParam(required = false) Integer eventoId) {
-		if (eventoId == null) {
-			return ResponseEntity.badRequest().build();
-		}
-		List<AnuncioRevendaResponse> resp = anuncioServico
-				.listarPorEvento(new EventoId(eventoId))
-				.stream()
-				.map(AnuncioRevendaResponse::fromDomain)
-				.toList();
-		return ResponseEntity.ok(resp);
+		List<AnuncioRevenda> anuncios = eventoId != null
+				? anuncioServico.listarPorEvento(new EventoId(eventoId))
+				: anuncioServico.listarTodos();
+		return ResponseEntity.ok(anuncios.stream().map(AnuncioRevendaResponse::fromDomain).toList());
 	}
 
 	@GetMapping("/{id}")
@@ -137,7 +132,7 @@ public class RevendaController {
 	}
 
 	@PostMapping("/{id}/reservar")
-	public ResponseEntity<AnuncioRevendaResponse> reservar(
+	public ResponseEntity<?> reservar(
 			@PathVariable int id,
 			@RequestHeader("X-Usuario-Id") int usuarioId) {
 		try {
@@ -145,14 +140,15 @@ public class RevendaController {
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(AnuncioRevendaResponse.fromDomain(anuncioServico.obter(new AnuncioRevendaId(id))));
 		} catch (IllegalStateException e) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body(Map.of("motivo", e.getMessage()));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.notFound().build();
 		}
 	}
 
 	@PostMapping("/{id}/confirmar")
-	public ResponseEntity<AnuncioRevendaResponse> confirmar(
+	public ResponseEntity<?> confirmar(
 			@PathVariable int id,
 			@RequestHeader("X-Usuario-Id") int usuarioId) {
 		try {
@@ -164,7 +160,8 @@ public class RevendaController {
 			anuncioServico.confirmarCompra(new AnuncioRevendaId(id));
 			return ResponseEntity.ok(AnuncioRevendaResponse.fromDomain(anuncioServico.obter(new AnuncioRevendaId(id))));
 		} catch (IllegalStateException e) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body(Map.of("motivo", e.getMessage()));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.notFound().build();
 		}

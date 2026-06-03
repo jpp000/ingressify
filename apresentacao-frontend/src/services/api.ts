@@ -77,6 +77,8 @@ export const saldoService = {
 export const revendaService = {
   meus: (usuarioId: number) =>
     api.get('/revendas/anuncios/meus', { headers: { 'X-Usuario-Id': usuarioId } }),
+  todos: () =>
+    api.get('/revendas/anuncios'),
   listar: (eventoId: number) =>
     api.get(`/revendas/anuncios?eventoId=${eventoId}`),
   detalhe: (id: number) => api.get(`/revendas/anuncios/${id}`),
