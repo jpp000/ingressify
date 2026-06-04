@@ -38,6 +38,12 @@ export const eventoService = {
     api.delete(`/eventos/${id}`, { headers: { 'X-Usuario-Id': usuarioId } })
 }
 
+// Analytics
+export const analyticsService = {
+  obter: (eventoId: number, usuarioId: number) =>
+    api.get(`/eventos/${eventoId}/analytics`, { headers: { 'X-Usuario-Id': usuarioId } }),
+}
+
 // Tipos de Ingresso
 export const tipoIngressoService = {
   listar: (eventoId: number) => api.get(`/eventos/${eventoId}/tipos-ingresso`),

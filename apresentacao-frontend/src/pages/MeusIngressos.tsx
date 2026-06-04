@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ingressoService, eventoService, tipoIngressoService, saldoService, revendaService } from '../services/api'
+import { ingressoService, eventoService, tipoIngressoService, saldoService, revendaService, avaliacaoService } from '../services/api'
 import Navbar from '../components/Navbar'
 import { formatMoeda, formatDataBadge } from '../constants'
 import { useAuth } from '../context/AuthContext'
@@ -81,6 +81,7 @@ export default function MeusIngressos() {
   const [carregando, setCarregando] = useState(true)
   const [abaAtiva, setAbaAtiva] = useState<'proximos' | 'encerrados' | 'revendas'>('proximos')
   const [ingressoAberto, setIngressoAberto] = useState<IngressoEnriquecido | null>(null)
+  const [avaliacaoAberta, setAvaliacaoAberta] = useState<IngressoEnriquecido | null>(null)
   const [msg, setMsg] = useState(
     state?.anuncioPublicado ? 'Anúncio publicado com sucesso! 🎉' :
     state?.sucesso ? 'Compra realizada com sucesso! 🎉' : ''
@@ -364,6 +365,16 @@ export default function MeusIngressos() {
         )}
       </div>
 
+      {/* Modal Avaliação */}
+      {avaliacaoAberta && (
+        <ModalAvaliacao
+          item={avaliacaoAberta}
+          usuarioId={usuario!.id}
+          onFechar={() => setAvaliacaoAberta(null)}
+          onSucesso={() => { setAvaliacaoAberta(null); setMsg('Avaliação enviada com sucesso! Obrigado pelo feedback.') }}
+        />
+      )}
+
       {/* Modal Ver Ingresso */}
       {ingressoAberto && (
         <div
@@ -436,6 +447,18 @@ export default function MeusIngressos() {
                   style={{ flex: 1, background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Reembolsar
+                </button>
+              </div>
+            )}
+
+            {/* Botão Avaliar — disponível após o evento */}
+            {ingressoAberto.evento.dataHora && new Date(ingressoAberto.evento.dataHora) < new Date() && ingressoAberto.evento.status !== 'CANCELADO' && (
+              <div style={{ marginTop: 10 }}>
+                <button
+                  onClick={() => { setIngressoAberto(null); setAvaliacaoAberta(ingressoAberto) }}
+                  style={{ width: '100%', background: '#fef9c3', color: '#854d0e', border: '1px solid #fde047', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  ⭐ Avaliar Evento
                 </button>
               </div>
             )}
@@ -608,18 +631,30 @@ function CardIngresso({ item, onVerIngresso }: { item: IngressoEnriquecido; onVe
       {/* Conteúdo */}
       <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-          <span style={{
-            background: corTipo + '20',
-            color: corTipo,
-            fontSize: 11,
-            fontWeight: 700,
-            padding: '3px 10px',
-            borderRadius: 20,
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
-          }}>
-            {item.tipo.nome}
-          </span>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{
+              background: corTipo + '20',
+              color: corTipo,
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 20,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+            }}>
+              {item.tipo.nome}
+            </span>
+            {item.ingresso.status === 'EM_REVENDA' && (
+              <span style={{
+                background: '#fffbeb', color: '#b45309',
+                fontSize: 10, fontWeight: 700,
+                padding: '2px 8px', borderRadius: 20,
+                border: '1px solid #fde68a',
+              }}>
+                Em Revenda
+              </span>
+            )}
+          </div>
           <span style={{ fontSize: 18, color: '#94a3b8', cursor: 'pointer' }} title="QR Code">⊞</span>
         </div>
 
@@ -659,6 +694,117 @@ function CardIngresso({ item, onVerIngresso }: { item: IngressoEnriquecido; onVe
             }}
           >
             Ver Ingresso
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal de Avaliação ───────────────────────────────────────────────────────
+
+function ModalAvaliacao({ item, usuarioId, onFechar, onSucesso }: {
+  item: IngressoEnriquecido
+  usuarioId: number
+  onFechar: () => void
+  onSucesso: () => void
+}) {
+  const [nota, setNota] = useState(0)
+  const [hover, setHover] = useState(0)
+  const [comentario, setComentario] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const enviar = async () => {
+    if (nota === 0) { setErro('Selecione uma nota de 1 a 5 estrelas.'); return }
+    setEnviando(true)
+    setErro('')
+    try {
+      await avaliacaoService.avaliar(item.evento.id, usuarioId, { nota, comentario: comentario.trim() || null })
+      onSucesso()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } }
+      setErro(err.response?.data?.message ?? 'Erro ao enviar avaliação. Tente novamente.')
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 24 }}
+      onClick={e => { if (e.target === e.currentTarget) onFechar() }}
+    >
+      <div style={{ background: '#fff', borderRadius: 20, padding: 32, maxWidth: 440, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>Avaliar Evento</h3>
+          <button onClick={onFechar} style={{ background: 'none', border: 'none', fontSize: 20, color: '#94a3b8', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <div style={{ background: '#f8fafc', borderRadius: 12, padding: '12px 16px', marginBottom: 20 }}>
+          <p style={{ fontWeight: 700, fontSize: 15, color: '#1e293b' }}>{item.evento.nome}</p>
+          <p style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+            {item.evento.dataHora ? new Date(item.evento.dataHora).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''} · {item.evento.local}
+          </p>
+        </div>
+
+        {/* Seletor de estrelas */}
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 10 }}>
+            Sua nota <span style={{ color: '#ef4444' }}>*</span>
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[1, 2, 3, 4, 5].map(i => (
+              <button
+                key={i}
+                onClick={() => setNota(i)}
+                onMouseEnter={() => setHover(i)}
+                onMouseLeave={() => setHover(0)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 36, lineHeight: 1,
+                  color: i <= (hover || nota) ? '#f59e0b' : '#e2e8f0',
+                  transition: 'color 0.1s',
+                }}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          {nota > 0 && (
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>
+              {['', 'Muito ruim', 'Ruim', 'Regular', 'Bom', 'Excelente'][nota]}
+            </p>
+          )}
+        </div>
+
+        {/* Comentário */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>
+            Comentário <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional)</span>
+          </label>
+          <textarea
+            value={comentario}
+            onChange={e => setComentario(e.target.value)}
+            placeholder="Conte como foi sua experiência no evento..."
+            rows={3}
+            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, color: '#1e293b', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        {erro && (
+          <p style={{ fontSize: 13, color: '#ef4444', marginBottom: 14, fontWeight: 600 }}>{erro}</p>
+        )}
+
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onFechar} style={{ flex: 1, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            Cancelar
+          </button>
+          <button
+            onClick={enviar}
+            disabled={enviando || nota === 0}
+            style={{ flex: 2, background: nota > 0 ? '#1d4ed8' : '#e2e8f0', color: nota > 0 ? '#fff' : '#94a3b8', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: nota > 0 ? 'pointer' : 'default' }}
+          >
+            {enviando ? 'Enviando...' : 'Enviar Avaliação'}
           </button>
         </div>
       </div>

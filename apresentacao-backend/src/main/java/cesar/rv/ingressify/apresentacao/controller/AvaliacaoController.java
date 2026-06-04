@@ -1,6 +1,7 @@
 package cesar.rv.ingressify.apresentacao.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,19 +32,19 @@ public class AvaliacaoController {
 	}
 
 	@PostMapping
-	public ResponseEntity<Void> avaliar(
+	public ResponseEntity<?> avaliar(
 			@PathVariable int eventoId,
 			@RequestHeader("X-Usuario-Id") int usuarioId,
 			@RequestBody CriarAvaliacaoRequest req) {
 		if (req.nota() < 1 || req.nota() > 5) {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().body(Map.of("message", "A nota deve ser entre 1 e 5."));
 		}
 		try {
 			avaliacaoServico.avaliar(new EventoId(eventoId), new UsuarioId(usuarioId),
 					req.nota(), req.comentario());
 			return ResponseEntity.status(HttpStatus.CREATED).build();
 		} catch (IllegalStateException e) {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.notFound().build();
 		}

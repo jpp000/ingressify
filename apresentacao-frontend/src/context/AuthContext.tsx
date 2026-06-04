@@ -22,7 +22,7 @@ const STORAGE_KEY = 'ingressify_usuario'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<UsuarioLogado | null>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY)
+      const saved = sessionStorage.getItem(STORAGE_KEY)
       return saved ? (JSON.parse(saved) as UsuarioLogado) : null
     } catch {
       return null
@@ -31,12 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (u: UsuarioLogado) => {
     setUsuario(u)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u))
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(u))
   }
 
   const logout = () => {
     setUsuario(null)
-    localStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem(STORAGE_KEY)
   }
 
   const isOrganizador = () => usuario?.papeis?.includes('ORGANIZADOR') ?? false

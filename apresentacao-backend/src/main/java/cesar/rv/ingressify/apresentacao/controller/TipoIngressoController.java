@@ -2,6 +2,7 @@ package cesar.rv.ingressify.apresentacao.controller;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -36,17 +37,19 @@ public class TipoIngressoController {
 	}
 
 	@PostMapping
-	public ResponseEntity<TipoIngressoResponse> criar(
+	public ResponseEntity<?> criar(
 			@PathVariable int eventoId,
 			@RequestHeader("X-Usuario-Id") int usuarioId,
 			@RequestBody CriarTipoIngressoRequest req) {
 		if (req.nome() == null || req.nome().isBlank()) {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().body(Map.of("message", "Nome do tipo de ingresso é obrigatório."));
 		}
 		boolean temLotes = req.lotes() != null && !req.lotes().isEmpty();
 		if (!temLotes) {
-			if (req.preco() == null || req.preco().signum() <= 0) return ResponseEntity.badRequest().build();
-			if (req.quantidade() <= 0) return ResponseEntity.badRequest().build();
+			if (req.preco() == null || req.preco().signum() <= 0)
+				return ResponseEntity.badRequest().body(Map.of("message", "Preço deve ser maior que zero quando não há lotes."));
+			if (req.quantidade() <= 0)
+				return ResponseEntity.badRequest().body(Map.of("message", "Quantidade deve ser maior que zero quando não há lotes."));
 		}
 		try {
 			List<CriarLoteDto> lotesDto = temLotes
@@ -61,9 +64,9 @@ public class TipoIngressoController {
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(TipoIngressoResponse.fromDomain(tipoIngressoServico.obter(id)));
 		} catch (IllegalStateException e) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
 		} catch (IllegalArgumentException e) {
-			return ResponseEntity.notFound().build();
+			return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
 		}
 	}
 
