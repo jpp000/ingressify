@@ -25,13 +25,18 @@ if ($logs -match "Started IngressifyApplication") {
     Write-Host "  $DOCKER logs ingressify-backend-1" -ForegroundColor Gray
 }
 
-# 2. Sobe Frontend
-Write-Host "`n[2/2] Subindo frontend (npm run dev)..." -ForegroundColor Yellow
-$env:PATH = "$NODE_PATH;" + $env:PATH
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c","set PATH=$NODE_PATH;%PATH% && cd apresentacao-frontend && npm run dev" -WindowStyle Normal
+# 2. Sobe Frontend com hot reload (Vite no Docker)
+Write-Host "`n[2/2] Subindo frontend com hot reload (Docker)..." -ForegroundColor Yellow
+& $DOCKER compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build frontend
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Erro ao subir frontend. Verifique os logs:" -ForegroundColor Red
+    Write-Host "  $DOCKER compose logs frontend" -ForegroundColor Gray
+    exit 1
+}
 
 Write-Host "`n=== Stack iniciada ===" -ForegroundColor Cyan
-Write-Host "  Frontend:  http://localhost:3000" -ForegroundColor Green
+Write-Host "  Frontend:  http://localhost:3000 (hot reload ao salvar)" -ForegroundColor Green
 Write-Host "  Backend:   http://localhost:8080" -ForegroundColor Green
-Write-Host "  Banco:     localhost:5432 (ingressify/ingressify)" -ForegroundColor Green
+Write-Host "  Banco:     localhost:5433 (ingressify/ingressify)" -ForegroundColor Green
 Write-Host "`nPara parar: docker compose down" -ForegroundColor Gray
+Write-Host "Para rebuild do backend ao salvar: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --watch" -ForegroundColor Gray

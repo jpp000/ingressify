@@ -10,6 +10,7 @@ services:
       - "5433:5432"
     volumes:
       - ingressify_pg_data:/var/lib/postgresql/data
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ingressify -d ingressify"]
       interval: 3s
@@ -34,6 +35,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
       APP_CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+    restart: always
 
   frontend:
     build:
@@ -43,6 +45,7 @@ services:
       - backend
     ports:
       - "3000:80"
+    restart: always
 
 volumes:
   ingressify_pg_data:

@@ -54,17 +54,32 @@ Você deve ver `Started IngressifyApplication` quando estiver pronto.
 
 ---
 
-### Passo 2 — Frontend (local)
+### Passo 2 — Frontend com hot reload (recomendado)
 
-Em outro terminal, na pasta `apresentacao-frontend/`:
+Na pasta raiz, com o backend já rodando:
+
+```bash
+./start-dev.sh
+```
+
+Ou manualmente:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build --watch
+```
+
+O frontend recarrega automaticamente ao salvar arquivos em `apresentacao-frontend/`.
+Alterações no backend disparam rebuild automático do container (pode levar ~1 min).
+
+Frontend disponível em: **http://localhost:3000**
+
+#### Alternativa — Frontend local (sem Docker)
 
 ```bash
 cd apresentacao-frontend
 npm install
 npm run dev
 ```
-
-Frontend disponível em: **http://localhost:3000**
 
 ---
 

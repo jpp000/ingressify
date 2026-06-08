@@ -72,6 +72,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
             <>
               <Link to="/" style={linkStyle(pathname === '/')}>Explorar</Link>
               <Link to="/gerenciar" style={linkStyle(pathname.startsWith('/gerenciar'))}>Meus Eventos</Link>
+              <Link to="/sorteios" style={linkStyle(pathname === '/sorteios')}>Sorteios</Link>
             </>
           ) : (
             <>
@@ -79,6 +80,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
               <Link to="/meus-ingressos" style={linkStyle(isWallet)}>Carteira</Link>
               <Link to="/revendas" style={linkStyle(pathname === '/revendas')}>Revendas</Link>
               <Link to="/saldo" style={linkStyle(pathname === '/saldo')}>Saldo</Link>
+              <Link to="/sorteios" style={linkStyle(pathname === '/sorteios')}>Sorteios</Link>
             </>
           )}
         </div>
