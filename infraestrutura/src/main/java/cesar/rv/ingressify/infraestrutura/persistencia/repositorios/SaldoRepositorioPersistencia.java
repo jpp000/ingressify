@@ -1,7 +1,10 @@
 package cesar.rv.ingressify.infraestrutura.persistencia.repositorios;
 
+import java.math.BigDecimal;
+
 import org.springframework.stereotype.Repository;
 
+import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
 import cesar.rv.ingressify.dominio.financeiro.saldo.Saldo;
 import cesar.rv.ingressify.dominio.financeiro.saldo.SaldoRepositorio;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
@@ -26,6 +29,10 @@ public class SaldoRepositorioPersistencia implements SaldoRepositorio {
 	public Saldo obter(UsuarioId usuario) {
 		return jpa.findByUsuarioId(usuario.getId())
 				.map(SaldoJpa::toDomain)
-				.orElseThrow(() -> new IllegalArgumentException("Saldo não encontrado para usuário: " + usuario));
+				.orElseGet(() -> {
+					Saldo novo = new Saldo(usuario, new Dinheiro(BigDecimal.ZERO));
+					salvar(novo);
+					return novo;
+				});
 	}
 }

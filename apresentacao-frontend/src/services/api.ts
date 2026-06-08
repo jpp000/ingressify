@@ -134,3 +134,45 @@ export const feedService = {
   fixar: (eventoId: number, postId: number, usuarioId: number) =>
     api.post(`/eventos/${eventoId}/posts/${postId}/fixar`, {}, { headers: { 'X-Usuario-Id': usuarioId } })
 }
+
+// Sorteios
+export const sorteioService = {
+  listarPorEvento: (eventoId: number) =>
+    api.get('/sorteios', { params: { eventoId } }),
+  obter: (id: number) =>
+    api.get(`/sorteios/${id}`),
+  criar: (usuarioId: number, dados: object) =>
+    api.post('/sorteios', dados, { headers: { 'X-Usuario-Id': usuarioId } }),
+  abrir: (id: number, usuarioId: number) =>
+    api.post(`/sorteios/${id}/abrir`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  encerrarInscricoes: (id: number, usuarioId: number) =>
+    api.post(`/sorteios/${id}/encerrar-inscricoes`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  inscrever: (id: number, usuarioId: number) =>
+    api.post(`/sorteios/${id}/inscrever`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  sortear: (id: number) =>
+    api.post(`/sorteios/${id}/sortear`),
+  confirmar: (id: number, usuarioId: number) =>
+    api.post(`/sorteios/${id}/confirmar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  cancelar: (id: number, usuarioId: number) =>
+    api.post(`/sorteios/${id}/cancelar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  listarInscricoes: (id: number) =>
+    api.get(`/sorteios/${id}/inscricoes`),
+}
+
+// Mapa de Assentos
+export const mapaAssentosService = {
+  obterPorEvento: (eventoId: number) =>
+    api.get('/mapas-assentos', { params: { eventoId } }),
+  listarAssentos: (mapaId: number) =>
+    api.get(`/mapas-assentos/${mapaId}/assentos`),
+  criar: (usuarioId: number, dados: object) =>
+    api.post('/mapas-assentos', dados, { headers: { 'X-Usuario-Id': usuarioId } }),
+  reservar: (mapaId: number, usuarioId: number, assentoIds: number[]) =>
+    api.post(`/mapas-assentos/${mapaId}/reservar`, { assentoIds },
+      { headers: { 'X-Usuario-Id': usuarioId } }),
+  confirmar: (mapaId: number, usuarioId: number, assentoIds: number[]) =>
+    api.post(`/mapas-assentos/${mapaId}/confirmar`, { assentoIds },
+      { headers: { 'X-Usuario-Id': usuarioId } }),
+  liberarExpirados: (mapaId: number) =>
+    api.post(`/mapas-assentos/${mapaId}/liberar-expirados`),
+}

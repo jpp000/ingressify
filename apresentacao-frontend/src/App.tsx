@@ -11,6 +11,8 @@ import GerenciarEventos from './pages/GerenciarEventos'
 import RevendasPage from './pages/RevendasPage'
 import RevisaoPedido from './pages/RevisaoPedido'
 import RevenderIngressoPage from './pages/RevenderIngressoPage'
+import SorteioPage from './pages/SorteioPage'
+import MapaAssentosPage from './pages/MapaAssentosPage'
 
 export default function App() {
   return (
@@ -42,6 +44,12 @@ export default function App() {
         } />
         <Route path="/revender/:id" element={
           <RotaProtegida papelRequerido="COMPRADOR"><RevenderIngressoPage /></RotaProtegida>
+        } />
+        <Route path="/sorteios" element={
+          <RotaProtegida><SorteioPage /></RotaProtegida>
+        } />
+        <Route path="/mapa-assentos" element={
+          <RotaProtegida><MapaAssentosPage /></RotaProtegida>
         } />
 
         <Route path="*" element={<Navigate to="/login" replace />} />

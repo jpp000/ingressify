@@ -3,6 +3,7 @@ package cesar.rv.ingressify.apresentacao.controller;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,20 +41,20 @@ public class EventoController {
 	}
 
 	@PostMapping
-	public ResponseEntity<EventoResponse> criar(
+	public ResponseEntity<?> criar(
 			@RequestHeader("X-Usuario-Id") int usuarioId,
 			@RequestBody CriarEventoRequest req) {
 		if (req.nome() == null || req.nome().isBlank()) {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().body(Map.of("message", "Nome do evento é obrigatório."));
 		}
 		if (req.dataHora() == null || req.dataHora().isBefore(LocalDateTime.now())) {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().body(Map.of("message", "Data e hora do evento devem ser futuras."));
 		}
 		if (req.local() == null || req.local().isBlank()) {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().body(Map.of("message", "Local do evento é obrigatório."));
 		}
 		if (req.capacidade() <= 0) {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().body(Map.of("message", "Capacidade do evento deve ser maior que zero."));
 		}
 		try {
 			LocalDateTime aberturaPortoes = req.aberturaPortoes() != null ? req.aberturaPortoes() : req.dataHora();
@@ -64,9 +65,9 @@ public class EventoController {
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(EventoResponse.fromDomain(eventoServico.obter(id)));
 		} catch (IllegalStateException e) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
 		} catch (IllegalArgumentException e) {
-			return ResponseEntity.notFound().build();
+			return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
 		}
 	}
 

@@ -2,7 +2,6 @@ package cesar.rv.ingressify.infraestrutura;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 import cesar.rv.ingressify.aplicacao.financeiro.extrato.ExtratoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.identidade.usuario.UsuarioServicoAplicacao;
@@ -16,9 +15,12 @@ import cesar.rv.ingressify.aplicacao.marketplace.denuncia.DenunciaServicoAplicac
 import cesar.rv.ingressify.aplicacao.marketplace.evento.EventoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.feed.FeedServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.ingresso.IngressoServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.MapaAssentosServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.padroes.estrategia.SorteioAleatorioEstrategia;
 import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.ObservadorCancelamento;
 import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.PublicadorEvento;
 import cesar.rv.ingressify.aplicacao.marketplace.reembolso.ReembolsoServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.sorteio.SorteioServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.tipoIngresso.TipoIngressoServicoAplicacao;
 import cesar.rv.ingressify.dominio.financeiro.pagamento.PagamentoRepositorio;
 import cesar.rv.ingressify.dominio.financeiro.pagamento.PagamentoServico;
@@ -31,6 +33,12 @@ import cesar.rv.ingressify.dominio.identidade.usuario.UsuarioRepositorio;
 import cesar.rv.ingressify.dominio.identidade.usuario.UsuarioServico;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaServico;
+import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentosRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentosServico;
+import cesar.rv.ingressify.dominio.marketplace.sorteio.InscricaoSorteioRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.sorteio.SorteioRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.sorteio.SorteioServico;
+import cesar.rv.ingressify.dominio.padroes.estrategia.EstrategiaSorteio;
 import cesar.rv.ingressify.dominio.marketplace.avaliacao.AvaliacaoRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.avaliacao.AvaliacaoServico;
 import cesar.rv.ingressify.dominio.marketplace.checkin.CheckinServico;
@@ -51,71 +59,16 @@ import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoReposito
 import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoServico;
 import cesar.rv.ingressify.dominio.padroes.proxy.UsuarioServicoProxy;
 import cesar.rv.ingressify.dominio.padroes.proxy.VerificadorBloqueioRevenda;
-import cesar.rv.ingressify.infraestrutura.memoria.AnuncioRevendaRepositorioMemoria;
-import cesar.rv.ingressify.infraestrutura.memoria.AvaliacaoRepositorioMemoria;
-import cesar.rv.ingressify.infraestrutura.memoria.ComentarioRepositorioMemoria;
-import cesar.rv.ingressify.infraestrutura.memoria.DenunciaRepositorioMemoria;
 import cesar.rv.ingressify.infraestrutura.memoria.PagamentoRepositorioMemoria;
-import cesar.rv.ingressify.infraestrutura.memoria.PedidoRepositorioMemoria;
-import cesar.rv.ingressify.infraestrutura.memoria.PostagemRepositorioMemoria;
-import cesar.rv.ingressify.infraestrutura.memoria.RegistroCheckinRepositorioMemoria;
-import cesar.rv.ingressify.infraestrutura.memoria.SaldoRepositorioMemoria;
-import cesar.rv.ingressify.infraestrutura.memoria.SolicitacaoReembolsoRepositorioMemoria;
 
 @Configuration
 public class IngressifyConfiguration {
 
-	// ── Repositórios em memória ──────────────────────────────────────────────
-
-	@Bean
-	@Primary
-	public SaldoRepositorio saldoRepositorio() {
-		return new SaldoRepositorioMemoria();
-	}
+	// ── Repositórios em memória (apenas Pagamento — sem gateway real) ────────
 
 	@Bean
 	public PagamentoRepositorio pagamentoRepositorio() {
 		return new PagamentoRepositorioMemoria();
-	}
-
-	@Bean
-	public AnuncioRevendaRepositorio anuncioRevendaRepositorio() {
-		return new AnuncioRevendaRepositorioMemoria();
-	}
-
-	@Bean
-	public AvaliacaoRepositorio avaliacaoRepositorio() {
-		return new AvaliacaoRepositorioMemoria();
-	}
-
-	@Bean
-	public DenunciaRepositorio denunciaRepositorio() {
-		return new DenunciaRepositorioMemoria();
-	}
-
-	@Bean
-	public PostagemRepositorio postagemRepositorio() {
-		return new PostagemRepositorioMemoria();
-	}
-
-	@Bean
-	public ComentarioRepositorio comentarioRepositorio() {
-		return new ComentarioRepositorioMemoria();
-	}
-
-	@Bean
-	public RegistroCheckinRepositorio registroCheckinRepositorio() {
-		return new RegistroCheckinRepositorioMemoria();
-	}
-
-	@Bean
-	public SolicitacaoReembolsoRepositorio solicitacaoReembolsoRepositorio() {
-		return new SolicitacaoReembolsoRepositorioMemoria();
-	}
-
-	@Bean
-	public PedidoRepositorio pedidoRepositorio() {
-		return new PedidoRepositorioMemoria();
 	}
 
 	// ── Serviços de domínio ──────────────────────────────────────────────────
@@ -372,5 +325,37 @@ public class IngressifyConfiguration {
 			AvaliacaoRepositorio avaliacaoRepositorio) {
 		return new AnalyticsServicoAplicacao(eventoRepositorio, ingressoRepositorio,
 				tipoIngressoRepositorio, avaliacaoRepositorio);
+	}
+
+	// ── Sorteio de Ingressos ─────────────────────────────────────────────────
+
+	@Bean
+	public EstrategiaSorteio estrategiaSorteio() {
+		return new SorteioAleatorioEstrategia();
+	}
+
+	@Bean
+	public SorteioServico sorteioServico(SorteioRepositorio sorteioRepositorio,
+			InscricaoSorteioRepositorio inscricaoSorteioRepositorio) {
+		return new SorteioServico(sorteioRepositorio, inscricaoSorteioRepositorio);
+	}
+
+	@Bean
+	public SorteioServicoAplicacao sorteioServicoAplicacao(SorteioServico sorteioServico,
+			InscricaoSorteioRepositorio inscricaoSorteioRepositorio,
+			EstrategiaSorteio estrategiaSorteio) {
+		return new SorteioServicoAplicacao(sorteioServico, inscricaoSorteioRepositorio, estrategiaSorteio);
+	}
+
+	// ── Mapa de Assentos ─────────────────────────────────────────────────────
+
+	@Bean
+	public MapaAssentosServico mapaAssentosServico(MapaAssentosRepositorio mapaAssentosRepositorio) {
+		return new MapaAssentosServico(mapaAssentosRepositorio);
+	}
+
+	@Bean
+	public MapaAssentosServicoAplicacao mapaAssentosServicoAplicacao(MapaAssentosServico mapaAssentosServico) {
+		return new MapaAssentosServicoAplicacao(mapaAssentosServico);
 	}
 }

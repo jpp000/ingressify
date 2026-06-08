@@ -164,7 +164,7 @@ export default function GerenciarEventos() {
         if (lotesValidos.length === 0)
           msgs.push(`${prefix}adicione pelo menos um lote com nome e quantidade preenchidos.`)
 
-        lotesValidos.forEach((lote, j) => {
+        lotesValidos.forEach(lote => {
           const preco = parseFloat(lote.preco.replace(',', '.'))
           if (isNaN(preco) || preco <= 0)
             msgs.push(`${prefix}Lote "${lote.nome}": preço deve ser maior que zero.`)
@@ -221,7 +221,7 @@ export default function GerenciarEventos() {
         const qtdTotal = Number(tipo.quantidadeTotal) || lotesValidos.reduce((s, l) => s + (Number(l.quantidade) || 0), 0)
         const precoBase = parseFloat((lotesValidos[0]?.preco ?? '0').replace(',', '.')) || 0
 
-        await tipoIngressoService.criar(novoEventoId, usuario!.id, {
+        await tipoIngressoService.criar(novoEventoId!, usuario!.id, {
           nome: tipo.nome,
           preco: precoBase,
           quantidade: qtdTotal,
@@ -248,7 +248,8 @@ export default function GerenciarEventos() {
         try { await eventoService.remover(novoEventoId, usuario!.id) } catch { /* ignore */ }
       }
       const e = err as { response?: { data?: { message?: string } } }
-      const mensagemErro = e.response?.data?.message ?? 'Erro ao criar tipos de ingresso.'
+      const fallback = novoEventoId === null ? 'Erro ao criar evento. Verifique os dados preenchidos.' : 'Erro ao criar tipos de ingresso.'
+      const mensagemErro = e.response?.data?.message ?? fallback
       setErros([`Evento não foi publicado. ${mensagemErro}`])
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
@@ -809,7 +810,7 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
 
     if (lotesValidos.length === 0) erros.push('Adicione pelo menos um lote com nome e quantidade preenchidos.')
 
-    lotesValidos.forEach((lote, i) => {
+    lotesValidos.forEach(lote => {
       const preco = parseFloat(lote.preco.replace(',', '.'))
       if (isNaN(preco) || preco <= 0)
         erros.push(`Lote "${lote.nome}": preço deve ser maior que zero.`)
