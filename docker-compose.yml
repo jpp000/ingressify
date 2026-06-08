@@ -35,5 +35,14 @@ services:
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
       APP_CORS_ORIGINS: http://localhost:3000,http://localhost:5173
 
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
 volumes:
   ingressify_pg_data:
