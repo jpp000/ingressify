@@ -47,6 +47,13 @@ public class DenunciaRepositorioMemoria implements DenunciaRepositorio {
 				.toList();
 	}
 
+	@Override
+	public List<Denuncia> pesquisarTodas() {
+		return store.values().stream()
+				.sorted((a, b) -> b.getCriadaEm().compareTo(a.getCriadaEm()))
+				.toList();
+	}
+
 	public void limpar() {
 		store.clear();
 		sequencia.set(1);

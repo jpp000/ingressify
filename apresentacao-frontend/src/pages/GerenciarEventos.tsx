@@ -307,7 +307,7 @@ export default function GerenciarEventos() {
 
   return (
     <>
-      <Navbar variant="organizer" />
+      <Navbar />
       <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
 
         <aside style={{ width: 220, background: '#fff', borderRight: '1px solid #e2e8f0', padding: '24px 0', flexShrink: 0 }}>
@@ -445,10 +445,30 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
                   👥 Cap: {ev.capacidade}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Link to={`/eventos/${ev.id}`}>
                   <button style={{ background: '#eff6ff', color: '#1d4ed8', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                     Ver Detalhes
+                  </button>
+                </Link>
+                <Link to={`/sorteios?eventoId=${ev.id}`}>
+                  <button style={{ background: '#f0fdf4', color: '#16a34a', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Sorteios
+                  </button>
+                </Link>
+                <Link to={`/mapa-assentos?eventoId=${ev.id}`}>
+                  <button style={{ background: '#f5f3ff', color: '#7c3aed', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Mapa
+                  </button>
+                </Link>
+                <Link to={`/check-in?eventoId=${ev.id}`}>
+                  <button style={{ background: '#f0f9ff', color: '#0284c7', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Check-in
+                  </button>
+                </Link>
+                <Link to={`/eventos/${ev.id}`}>
+                  <button style={{ background: '#fffbeb', color: '#b45309', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Revendas
                   </button>
                 </Link>
                 {ev.status === 'ATIVO' && (

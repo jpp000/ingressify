@@ -12,4 +12,6 @@ public interface DenunciaSpringDataRepository extends JpaRepository<DenunciaJpa,
 	boolean existsByAnuncioIdAndDenuncianteId(Integer anuncioId, Integer denuncianteId);
 
 	List<DenunciaJpa> findByStatus(StatusDenuncia status);
+
+	List<DenunciaJpa> findAllByOrderByCriadaEmDesc();
 }

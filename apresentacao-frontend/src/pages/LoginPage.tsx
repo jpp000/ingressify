@@ -25,11 +25,17 @@ export default function LoginPage() {
     setCarregando(true)
     try {
       const res = await authService.login(email, senha)
-      const usuario = res.data as { id: number; nome: string; email: string; papeis: string[] }
+      const raw = res.data as { id: number; nome: string; email: string; papeis: string[] | Record<string, string> }
+      const papeis = Array.isArray(raw.papeis) ? raw.papeis : Object.values(raw.papeis ?? {})
+      const usuario = { ...raw, papeis }
       login(usuario)
       setUsuarioId(usuario.id)
-      if (usuario.papeis.includes('ORGANIZADOR')) {
+      if (papeis.includes('ADMIN')) {
+        navigate('/denuncias')
+      } else if (papeis.includes('ORGANIZADOR')) {
         navigate('/gerenciar')
+      } else if (papeis.includes('OPERADOR_PORTA')) {
+        navigate('/check-in')
       } else {
         navigate('/')
       }

@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type CSSProperties, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { eventoService } from '../services/api'
 import Navbar from '../components/Navbar'
 import { CATEGORIAS, formatMoeda, formatDataBadge, corCategoria } from '../constants'
+import { useAuth } from '../context/AuthContext'
 
 interface EventoCatalogo {
   id: number
@@ -18,6 +19,7 @@ interface EventoCatalogo {
 }
 
 export default function CatalogoPage() {
+  const { isComprador, isOrganizador, isOperadorPorta } = useAuth()
   const [searchParams] = useSearchParams()
   const [eventos, setEventos] = useState<EventoCatalogo[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -117,6 +119,20 @@ export default function CatalogoPage() {
               Buscar
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* Acesso rápido */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600, marginRight: 4 }}>Acesso rápido:</span>
+          <Link to="/sorteios" style={chipStyle('#16a34a')}>🎲 Sorteios</Link>
+          {isComprador() && <Link to="/revendas" style={chipStyle('#d97706')}>🔄 Revendas</Link>}
+          {isComprador() && <Link to="/meus-ingressos" style={chipStyle('#1d4ed8')}>🎟️ Carteira</Link>}
+          {isComprador() && <Link to="/saldo" style={chipStyle('#0284c7')}>💳 Saldo</Link>}
+          <Link to="/mapa-assentos" style={chipStyle('#7c3aed')}>💺 Mapa de Assentos</Link>
+          {isOrganizador() && <Link to="/gerenciar" style={chipStyle('#1e3a8a')}>📅 Meus Eventos</Link>}
+          {(isOrganizador() || isOperadorPorta()) && <Link to="/check-in" style={chipStyle('#0f766e')}>🎫 Check-in</Link>}
         </div>
       </div>
 
@@ -223,6 +239,19 @@ export default function CatalogoPage() {
       </div>
     </>
   )
+}
+
+function chipStyle(cor: string): CSSProperties {
+  return {
+    background: `${cor}11`,
+    border: `1px solid ${cor}44`,
+    color: cor,
+    borderRadius: 20,
+    padding: '6px 14px',
+    fontSize: 13,
+    fontWeight: 600,
+    textDecoration: 'none',
+  }
 }
 
 function CardDestaque({ evento, getImagem }: { evento: EventoCatalogo; getImagem: (e: EventoCatalogo) => string }) {

@@ -7,11 +7,18 @@ import cesar.rv.ingressify.dominio.padroes.estrategia.ReembolsoNaoPermitidoExcep
 
 public class ReembolsoVoluntarioEstrategia implements EstrategiaReembolso {
 
+	private final int prazoReembolsoDias;
+
+	public ReembolsoVoluntarioEstrategia(int prazoReembolsoDias) {
+		this.prazoReembolsoDias = prazoReembolsoDias;
+	}
+
 	@Override
 	public void validar(LocalDateTime dataCompra, LocalDateTime dataEvento) {
 		LocalDateTime agora = LocalDateTime.now();
-		if (dataCompra.isBefore(agora.minusDays(7))) {
-			throw new ReembolsoNaoPermitidoException("prazo de reembolso expirado: compra há mais de 7 dias");
+		if (dataCompra.isBefore(agora.minusDays(prazoReembolsoDias))) {
+			throw new ReembolsoNaoPermitidoException(
+					"prazo de reembolso expirado: compra há mais de " + prazoReembolsoDias + " dias");
 		}
 		if (!dataEvento.isAfter(agora.plusHours(48))) {
 			throw new ReembolsoNaoPermitidoException("evento ocorre em menos de 48 horas");

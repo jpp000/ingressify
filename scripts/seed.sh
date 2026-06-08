@@ -5,34 +5,55 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 FRESH=false
-if [[ "${1:-}" == "--fresh" ]]; then
-  FRESH=true
+DEV=false
+SEED_ONLY=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --fresh) FRESH=true ;;
+    --dev) DEV=true ;;
+    --seed-only) SEED_ONLY=true ;;
+    *)
+      echo "Uso: $0 [--fresh] [--dev] [--seed-only]"
+      exit 1
+      ;;
+  esac
+done
+
+COMPOSE=(docker compose -f docker-compose.yml)
+if $DEV; then
+  COMPOSE+=(-f docker-compose.dev.yml)
 fi
 
 if $FRESH; then
   echo ">> Resetando banco (docker compose down -v)..."
-  docker compose down -v
+  "${COMPOSE[@]}" down -v
 fi
 
 echo ">> Subindo Postgres..."
-docker compose up -d postgres
+"${COMPOSE[@]}" up -d postgres
 
 echo ">> Aguardando Postgres ficar healthy..."
-until docker compose exec -T postgres pg_isready -U ingressify -d ingressify >/dev/null 2>&1; do
+until "${COMPOSE[@]}" exec -T postgres pg_isready -U ingressify -d ingressify >/dev/null 2>&1; do
   sleep 1
 done
 
 echo ">> Rebuild do backend (inclui o seeder)..."
-docker compose build backend
+"${COMPOSE[@]}" build backend
 
 echo ">> Populando banco com dados de demonstração..."
-docker compose run --rm --no-deps \
+"${COMPOSE[@]}" run --rm --no-deps \
   -e SPRING_PROFILES_ACTIVE=desenvolvimento,seed \
   -e SEED_EXIT=true \
   backend
 
+if $SEED_ONLY; then
+  echo ">> Seed concluído."
+  exit 0
+fi
+
 echo ">> Subindo stack completa..."
-docker compose up -d
+"${COMPOSE[@]}" up -d
 
 echo ""
 echo "Seed concluído! Acesse:"

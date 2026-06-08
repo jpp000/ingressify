@@ -1,10 +1,12 @@
 package cesar.rv.ingressify.aplicacao.marketplace.denuncia;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.apache.commons.lang3.Validate;
 
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
+import cesar.rv.ingressify.dominio.identidade.usuario.Papel;
 import cesar.rv.ingressify.dominio.identidade.usuario.UsuarioServico;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevenda;
 import cesar.rv.ingressify.dominio.marketplace.anuncioRevenda.AnuncioRevendaId;
@@ -36,6 +38,11 @@ public class DenunciaServicoAplicacao {
 		this.usuarioServico = usuarioServico;
 	}
 
+	public List<Denuncia> listar(UsuarioId solicitanteId) {
+		exigirAdmin(solicitanteId);
+		return denunciaServico.pesquisarTodas();
+	}
+
 	public DenunciaId denunciar(AnuncioRevendaId anuncioId, UsuarioId denuncianteId, MotivoDenuncia motivo,
 			String descricao) {
 		AnuncioRevenda a = anuncioRevendaRepositorio.obter(anuncioId);
@@ -46,7 +53,8 @@ public class DenunciaServicoAplicacao {
 		return d.getId();
 	}
 
-	public void decidir(DenunciaId denunciaId, DecisaoModeracao decisao) {
+	public void decidir(DenunciaId denunciaId, DecisaoModeracao decisao, UsuarioId moderadorId) {
+		exigirAdmin(moderadorId);
 		LocalDateTime agora = LocalDateTime.now();
 		switch (decisao) {
 		case ARQUIVADA -> denunciaServico.decidir(denunciaId, decisao, agora);
@@ -63,6 +71,12 @@ public class DenunciaServicoAplicacao {
 			anuncioRevendaServico.cancelar(d.getAnuncioId());
 			denunciaServico.decidir(denunciaId, decisao, agora);
 		}
+		}
+	}
+
+	private void exigirAdmin(UsuarioId usuarioId) {
+		if (!usuarioServico.obter(usuarioId).temPapel(Papel.ADMIN)) {
+			throw new IllegalStateException("acesso restrito a administradores");
 		}
 	}
 }

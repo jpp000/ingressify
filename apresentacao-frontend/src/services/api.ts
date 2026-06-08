@@ -102,6 +102,14 @@ export const revendaService = {
     api.post(`/revendas/anuncios/${id}/denunciar`, dados, { headers: { 'X-Usuario-Id': usuarioId } })
 }
 
+// Denúncias (moderação)
+export const denunciaService = {
+  listar: (usuarioId: number) =>
+    api.get('/denuncias', { headers: { 'X-Usuario-Id': usuarioId } }),
+  decidir: (id: number, usuarioId: number, decisao: string) =>
+    api.post(`/denuncias/${id}/decidir`, { decisao }, { headers: { 'X-Usuario-Id': usuarioId } }),
+}
+
 // Avaliações
 export const avaliacaoService = {
   listar: (eventoId: number) => api.get(`/eventos/${eventoId}/avaliacoes`),

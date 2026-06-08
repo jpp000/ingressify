@@ -2,41 +2,22 @@
 # Uso: .\start-dev.ps1
 
 $DOCKER = "C:\Program Files\Docker\Docker\resources\bin\docker.exe"
-$NODE_PATH = "C:\nvm4w\nodejs"
+$COMPOSE = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
 
-Write-Host "=== Ingressify Dev ===" -ForegroundColor Cyan
+Write-Host "=== Ingressify Dev (hot reload) ===" -ForegroundColor Cyan
 
-# 1. Sobe PostgreSQL + Backend via Docker
-Write-Host "`n[1/2] Subindo backend (Docker Compose)..." -ForegroundColor Yellow
-& $DOCKER compose up -d
+# 1. Seed do banco
+Write-Host "`n[1/2] Populando banco (seed)..." -ForegroundColor Yellow
+& bash ./scripts/seed.sh --dev --seed-only
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Erro ao rodar seed." -ForegroundColor Red
+    exit 1
+}
+
+# 2. Stack com hot reload
+Write-Host "`n[2/2] Subindo stack com hot reload..." -ForegroundColor Yellow
+& $DOCKER compose @COMPOSE up --build --watch
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Erro ao subir Docker. Verifique se o Docker Desktop esta rodando." -ForegroundColor Red
     exit 1
 }
-
-Write-Host "Aguardando backend inicializar (20s)..." -ForegroundColor Gray
-Start-Sleep -Seconds 20
-
-$logs = & $DOCKER logs ingressify-backend-1 2>&1 | Select-Object -Last 5
-if ($logs -match "Started IngressifyApplication") {
-    Write-Host "Backend OK - http://localhost:8080" -ForegroundColor Green
-} else {
-    Write-Host "Backend ainda iniciando ou com erro. Verifique:" -ForegroundColor Yellow
-    Write-Host "  $DOCKER logs ingressify-backend-1" -ForegroundColor Gray
-}
-
-# 2. Sobe Frontend com hot reload (Vite no Docker)
-Write-Host "`n[2/2] Subindo frontend com hot reload (Docker)..." -ForegroundColor Yellow
-& $DOCKER compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build frontend
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Erro ao subir frontend. Verifique os logs:" -ForegroundColor Red
-    Write-Host "  $DOCKER compose logs frontend" -ForegroundColor Gray
-    exit 1
-}
-
-Write-Host "`n=== Stack iniciada ===" -ForegroundColor Cyan
-Write-Host "  Frontend:  http://localhost:3000 (hot reload ao salvar)" -ForegroundColor Green
-Write-Host "  Backend:   http://localhost:8080" -ForegroundColor Green
-Write-Host "  Banco:     localhost:5433 (ingressify/ingressify)" -ForegroundColor Green
-Write-Host "`nPara parar: docker compose down" -ForegroundColor Gray
-Write-Host "Para rebuild do backend ao salvar: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --watch" -ForegroundColor Gray

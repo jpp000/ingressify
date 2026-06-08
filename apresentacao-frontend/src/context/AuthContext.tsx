@@ -13,6 +13,8 @@ interface AuthContextValue {
   logout: () => void
   isOrganizador: () => boolean
   isComprador: () => boolean
+  isOperadorPorta: () => boolean
+  isAdmin: () => boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -23,15 +25,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<UsuarioLogado | null>(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY)
-      return saved ? (JSON.parse(saved) as UsuarioLogado) : null
+      if (!saved) return null
+      const parsed = JSON.parse(saved) as UsuarioLogado
+      return {
+        ...parsed,
+        papeis: Array.isArray(parsed.papeis) ? parsed.papeis : Object.values(parsed.papeis ?? {}),
+      }
     } catch {
       return null
     }
   })
 
   const login = (u: UsuarioLogado) => {
-    setUsuario(u)
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(u))
+    const normalizado = {
+      ...u,
+      papeis: Array.isArray(u.papeis) ? u.papeis : Object.values(u.papeis ?? {}),
+    }
+    setUsuario(normalizado)
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(normalizado))
   }
 
   const logout = () => {
@@ -41,9 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isOrganizador = () => usuario?.papeis?.includes('ORGANIZADOR') ?? false
   const isComprador = () => usuario?.papeis?.includes('COMPRADOR') ?? false
+  const isOperadorPorta = () => usuario?.papeis?.includes('OPERADOR_PORTA') ?? false
+  const isAdmin = () => usuario?.papeis?.includes('ADMIN') ?? false
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout, isOrganizador, isComprador }}>
+    <AuthContext.Provider value={{ usuario, login, logout, isOrganizador, isComprador, isOperadorPorta, isAdmin }}>
       {children}
     </AuthContext.Provider>
   )

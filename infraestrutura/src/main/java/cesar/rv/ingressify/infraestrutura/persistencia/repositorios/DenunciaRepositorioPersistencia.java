@@ -48,4 +48,11 @@ public class DenunciaRepositorioPersistencia implements DenunciaRepositorio {
 				.map(DenunciaJpa::toDomain)
 				.toList();
 	}
+
+	@Override
+	public List<Denuncia> pesquisarTodas() {
+		return jpa.findAllByOrderByCriadaEmDesc().stream()
+				.map(DenunciaJpa::toDomain)
+				.toList();
+	}
 }

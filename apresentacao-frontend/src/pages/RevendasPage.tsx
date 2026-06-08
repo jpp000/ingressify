@@ -26,6 +26,13 @@ interface Evento {
 
 type ActionState = { type: 'idle' } | { type: 'loading'; id: number } | { type: 'success'; id: number; msg: string } | { type: 'error'; id: number; msg: string }
 
+const MOTIVOS_DENUNCIA = [
+  { value: 'PRECO_ABUSIVO', label: 'Preço abusivo' },
+  { value: 'INGRESSO_SUSPEITO', label: 'Ingresso suspeito' },
+  { value: 'COMPORTAMENTO_INADEQUADO', label: 'Comportamento inadequado' },
+  { value: 'OUTRO', label: 'Outro' },
+]
+
 export default function RevendasPage() {
   const { usuario } = useAuth()
   const [searchParams] = useSearchParams()
@@ -37,6 +44,9 @@ export default function RevendasPage() {
   const [carregando, setCarregando] = useState(true)
   const [msgGlobal, setMsgGlobal] = useState('')
   const [action, setAction] = useState<ActionState>({ type: 'idle' })
+  const [denunciaAberta, setDenunciaAberta] = useState<number | null>(null)
+  const [denunciaForm, setDenunciaForm] = useState({ motivo: 'PRECO_ABUSIVO', descricao: '' })
+  const [denunciando, setDenunciando] = useState(false)
 
   const carregar = async () => {
     setCarregando(true)
@@ -115,6 +125,25 @@ export default function RevendasPage() {
     } catch (e: unknown) {
       const err = e as { response?: { data?: { motivo?: string } } }
       setAction({ type: 'error', id: anuncioId, msg: err.response?.data?.motivo ?? 'Erro ao confirmar.' })
+    }
+  }
+
+  const denunciar = async (anuncioId: number) => {
+    if (!usuario) return
+    setDenunciando(true)
+    try {
+      await revendaService.denunciar(anuncioId, usuario.id, {
+        motivo: denunciaForm.motivo,
+        descricao: denunciaForm.descricao.trim() || 'Denúncia registrada pelo comprador.',
+      })
+      setDenunciaAberta(null)
+      setDenunciaForm({ motivo: 'PRECO_ABUSIVO', descricao: '' })
+      setAction({ type: 'success', id: anuncioId, msg: 'Denúncia enviada com sucesso. Nossa equipe irá analisar.' })
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { motivo?: string } } }
+      setAction({ type: 'error', id: anuncioId, msg: err.response?.data?.motivo ?? 'Erro ao enviar denúncia.' })
+    } finally {
+      setDenunciando(false)
     }
   }
 
@@ -260,12 +289,78 @@ export default function RevendasPage() {
                       action={action}
                       onReservar={reservar}
                       onCancelar={cancelar}
+                      onDenunciar={id => setDenunciaAberta(id)}
                       currentUserId={usuario?.id}
                     />
                   ))}
                 </div>
               )}
             </section>
+
+            {/* Modal de denúncia */}
+            {denunciaAberta !== null && (
+              <div style={{
+                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
+              }}>
+                <div style={{
+                  background: '#fff', borderRadius: 16, padding: 28,
+                  width: '100%', maxWidth: 440, margin: 16,
+                  boxShadow: '0 16px 48px rgba(0,0,0,0.2)',
+                }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>
+                    🚨 Denunciar Anúncio
+                  </h3>
+                  <label style={{ display: 'block', fontSize: 13, color: '#64748b', marginBottom: 6 }}>Motivo</label>
+                  <select
+                    value={denunciaForm.motivo}
+                    onChange={e => setDenunciaForm(f => ({ ...f, motivo: e.target.value }))}
+                    style={{
+                      width: '100%', padding: '10px 14px', marginBottom: 14,
+                      border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14,
+                    }}
+                  >
+                    {MOTIVOS_DENUNCIA.map(m => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </select>
+                  <label style={{ display: 'block', fontSize: 13, color: '#64748b', marginBottom: 6 }}>Descrição (opcional)</label>
+                  <textarea
+                    value={denunciaForm.descricao}
+                    onChange={e => setDenunciaForm(f => ({ ...f, descricao: e.target.value }))}
+                    placeholder="Descreva o problema..."
+                    rows={3}
+                    style={{
+                      width: '100%', padding: '10px 14px', marginBottom: 20,
+                      border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14,
+                      resize: 'vertical', fontFamily: 'inherit', outline: 'none',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => { setDenunciaAberta(null); setDenunciaForm({ motivo: 'PRECO_ABUSIVO', descricao: '' }) }}
+                      style={{
+                        background: '#f1f5f9', color: '#64748b', border: 'none',
+                        borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => denunciar(denunciaAberta)}
+                      disabled={denunciando}
+                      style={{
+                        background: '#dc2626', color: '#fff', border: 'none',
+                        borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600,
+                        cursor: denunciando ? 'wait' : 'pointer',
+                      }}
+                    >
+                      {denunciando ? 'Enviando...' : 'Enviar Denúncia'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Reservados */}
             {reservados.length > 0 && (
@@ -296,7 +391,7 @@ export default function RevendasPage() {
 }
 
 function AnuncioCard({
-  anuncio, evento, isMeu, action, currentUserId, onReservar, onCancelar,
+  anuncio, evento, isMeu, action, currentUserId, onReservar, onCancelar, onDenunciar,
 }: {
   anuncio: Anuncio
   evento?: Evento
@@ -305,6 +400,7 @@ function AnuncioCard({
   currentUserId?: number
   onReservar?: (id: number) => void
   onCancelar?: (id: number) => void
+  onDenunciar?: (id: number) => void
 }) {
   const isLoading = action.type === 'loading' && action.id === anuncio.id
   const reservado = anuncio.status === 'RESERVADO'
@@ -364,17 +460,32 @@ function AnuncioCard({
           {formatMoeda(anuncio.preco)}
         </span>
         {!reservado && !isMeu && onReservar && currentUserId && (
-          <button
-            onClick={() => onReservar(anuncio.id)}
-            disabled={isLoading}
-            style={{
-              padding: '8px 20px', background: isLoading ? '#86efac' : '#16a34a',
-              color: '#fff', border: 'none', borderRadius: 8,
-              fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }}
-          >
-            {isLoading ? '...' : 'Reservar'}
-          </button>
+          <>
+            <button
+              onClick={() => onReservar(anuncio.id)}
+              disabled={isLoading}
+              style={{
+                padding: '8px 20px', background: isLoading ? '#86efac' : '#16a34a',
+                color: '#fff', border: 'none', borderRadius: 8,
+                fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              {isLoading ? '...' : 'Reservar'}
+            </button>
+            {onDenunciar && (
+              <button
+                onClick={() => onDenunciar(anuncio.id)}
+                title="Denunciar anúncio"
+                style={{
+                  padding: '8px 12px', background: '#fef2f2',
+                  color: '#dc2626', border: 'none', borderRadius: 8,
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                🚨
+              </button>
+            )}
+          </>
         )}
         {isMeu && !reservado && onCancelar && (
           <button

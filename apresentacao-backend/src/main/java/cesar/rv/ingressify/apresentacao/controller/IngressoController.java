@@ -104,16 +104,14 @@ public class IngressoController {
 	}
 
 	@PostMapping("/ingressos/{id}/reembolsar")
-	public ResponseEntity<Void> reembolsar(
+	public ResponseEntity<?> reembolsar(
 			@PathVariable String id,
 			@RequestHeader("X-Usuario-Id") int usuarioId) {
 		try {
 			reembolsoServico.solicitar(new IngressoId(UUID.fromString(id)), new UsuarioId(usuarioId));
 			return ResponseEntity.accepted().build();
-		} catch (ReembolsoNaoPermitidoException e) {
-			return ResponseEntity.badRequest().build();
-		} catch (IllegalStateException e) {
-			return ResponseEntity.badRequest().build();
+		} catch (ReembolsoNaoPermitidoException | IllegalStateException e) {
+			return ResponseEntity.badRequest().body(java.util.Map.of("motivo", e.getMessage()));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.notFound().build();
 		}

@@ -68,9 +68,9 @@ public class ReembolsoServicoAplicacao {
 		this.transacaoServico = transacaoServico;
 	}
 
-	private EstrategiaReembolso selecionarEstrategia(MotivoReembolso motivo) {
+	private EstrategiaReembolso selecionarEstrategia(MotivoReembolso motivo, int prazoReembolsoDias) {
 		return switch (motivo) {
-			case VOLUNTARIO -> new ReembolsoVoluntarioEstrategia();
+			case VOLUNTARIO -> new ReembolsoVoluntarioEstrategia(prazoReembolsoDias);
 			case EVENTO_CANCELADO -> new ReembolsoCancelamentoEstrategia();
 		};
 	}
@@ -90,13 +90,14 @@ public class ReembolsoServicoAplicacao {
 		TipoIngresso tipo = tipoIngressoRepositorio.obter(ingresso.getTipoIngressoId());
 		Evento evento = eventoRepositorio.obter(ingresso.getEventoId());
 		LocalDateTime agora = LocalDateTime.now();
-		Pedido pedidoMaisRecente = pedidoRepositorio
+		LocalDateTime dataCompra = pedidoRepositorio
 				.pesquisarPorCompradorETipoIngressoOrdenadoDesc(solicitanteId, tipo.getId())
 				.stream()
 				.findFirst()
-				.orElseThrow(() -> new IllegalStateException("pedido não encontrado para o ingresso"));
-		selecionarEstrategia(MotivoReembolso.VOLUNTARIO)
-				.validar(pedidoMaisRecente.getCriadaEm(), evento.getDataHora());
+				.map(Pedido::getCriadaEm)
+				.orElse(agora);
+		selecionarEstrategia(MotivoReembolso.VOLUNTARIO, evento.getPrazoReembolsoDias())
+				.validar(dataCompra, evento.getDataHora());
 		ingresso.bloquearParaReembolso();
 		ingressoServico.salvar(ingresso);
 		SolicitacaoReembolso solicitacao = new SolicitacaoReembolso(ingressoId, solicitanteId, MotivoReembolso.VOLUNTARIO,

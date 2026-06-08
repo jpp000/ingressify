@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
+import SeletorEvento from '../components/SeletorEvento'
 import { api } from '../services/api'
 
 interface Sorteio {
@@ -147,7 +148,7 @@ export default function SorteioPage() {
               Inscreva-se para concorrer a ingressos por sorteio justo
             </p>
           </div>
-          {ehOrganizador && !criando && (
+          {ehOrganizador && eventoId && !criando && (
             <button
               onClick={() => setCriando(true)}
               style={{
@@ -171,7 +172,7 @@ export default function SorteioPage() {
         )}
 
         {/* Formulário de criação (organizador) */}
-        {criando && (
+        {criando && eventoId && (
           <form onSubmit={criarSorteio} style={{
             background: '#f8fafc', border: '1px solid #e2e8f0',
             borderRadius: 12, padding: 24, marginBottom: 32
@@ -230,7 +231,14 @@ export default function SorteioPage() {
         )}
 
         {/* Lista de sorteios */}
-        {carregando ? (
+        {!eventoId ? (
+          <SeletorEvento
+            titulo="Selecione o evento"
+            descricao="Escolha um evento para ver ou participar dos sorteios de ingressos."
+            rotaDestino="/sorteios"
+            icone="🎲"
+          />
+        ) : carregando ? (
           <p style={{ color: '#64748b', textAlign: 'center', padding: 40 }}>Carregando sorteios...</p>
         ) : sorteios.length === 0 ? (
           <div style={{

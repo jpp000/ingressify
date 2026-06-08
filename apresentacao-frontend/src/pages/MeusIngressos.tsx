@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import axios from 'axios'
 import { Link, useLocation } from 'react-router-dom'
 import { ingressoService, eventoService, tipoIngressoService, saldoService, revendaService, avaliacaoService } from '../services/api'
 import Navbar from '../components/Navbar'
@@ -68,6 +69,11 @@ const TIPO_LABELS: Record<string, string> = {
 }
 
 const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO'])
+
+const podeSolicitarReembolso = (dataHora?: string) => {
+  if (!dataHora) return true
+  return new Date(dataHora).getTime() - Date.now() > 48 * 60 * 60 * 1000
+}
 
 export default function MeusIngressos() {
   const location = useLocation()
@@ -160,8 +166,11 @@ export default function MeusIngressos() {
       setMsg('Reembolso solicitado com sucesso!')
       setIngressos(prev => prev.filter(e => e.ingresso.id !== id))
       setIngressoAberto(null)
-    } catch {
-      setMsg('Erro ao solicitar reembolso.')
+    } catch (err) {
+      const motivo = axios.isAxiosError(err) && typeof err.response?.data?.motivo === 'string'
+        ? err.response.data.motivo
+        : null
+      setMsg(motivo ?? 'Erro ao solicitar reembolso.')
     }
   }
 
@@ -436,18 +445,36 @@ export default function MeusIngressos() {
             </div>
 
             {ingressoAberto.ingresso.status === 'ATIVO' && !ingressoAberto.ingresso.bloqueadoPorReembolso && (
-              <div style={{ display: 'flex', gap: 10 }}>
-                <Link to={`/revender/${ingressoAberto.ingresso.id}`} style={{ flex: 1 }}>
-                  <button style={{ width: '100%', background: '#eff6ff', color: '#1d4ed8', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                    Revender
+              <div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <Link to={`/revender/${ingressoAberto.ingresso.id}`} style={{ flex: 1 }}>
+                    <button style={{ width: '100%', background: '#eff6ff', color: '#1d4ed8', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                      Revender
+                    </button>
+                  </Link>
+                  <button
+                    onClick={() => soliciarReembolso(ingressoAberto.ingresso.id)}
+                    disabled={!podeSolicitarReembolso(ingressoAberto.evento.dataHora)}
+                    style={{
+                      flex: 1,
+                      background: podeSolicitarReembolso(ingressoAberto.evento.dataHora) ? '#fef2f2' : '#f1f5f9',
+                      color: podeSolicitarReembolso(ingressoAberto.evento.dataHora) ? '#ef4444' : '#94a3b8',
+                      border: 'none',
+                      borderRadius: 10,
+                      padding: '12px',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: podeSolicitarReembolso(ingressoAberto.evento.dataHora) ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    Reembolsar
                   </button>
-                </Link>
-                <button
-                  onClick={() => soliciarReembolso(ingressoAberto.ingresso.id)}
-                  style={{ flex: 1, background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Reembolsar
-                </button>
+                </div>
+                {!podeSolicitarReembolso(ingressoAberto.evento.dataHora) && (
+                  <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8, textAlign: 'center' }}>
+                    Reembolso indisponível: o evento ocorre em menos de 48 horas.
+                  </p>
+                )}
               </div>
             )}
 

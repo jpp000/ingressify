@@ -14,4 +14,6 @@ public interface DenunciaRepositorio {
 	boolean existePorAnuncioEDenunciante(AnuncioRevendaId anuncioId, UsuarioId denuncianteId);
 
 	List<Denuncia> pesquisarPendentes();
+
+	List<Denuncia> pesquisarTodas();
 }

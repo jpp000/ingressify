@@ -13,6 +13,8 @@ import RevisaoPedido from './pages/RevisaoPedido'
 import RevenderIngressoPage from './pages/RevenderIngressoPage'
 import SorteioPage from './pages/SorteioPage'
 import MapaAssentosPage from './pages/MapaAssentosPage'
+import CheckInPage from './pages/CheckInPage'
+import DenunciasPage from './pages/DenunciasPage'
 
 export default function App() {
   return (
@@ -50,6 +52,12 @@ export default function App() {
         } />
         <Route path="/mapa-assentos" element={
           <RotaProtegida><MapaAssentosPage /></RotaProtegida>
+        } />
+        <Route path="/check-in" element={
+          <RotaProtegida><CheckInPage /></RotaProtegida>
+        } />
+        <Route path="/denuncias" element={
+          <RotaProtegida papelRequerido="ADMIN"><DenunciasPage /></RotaProtegida>
         } />
 
         <Route path="*" element={<Navigate to="/login" replace />} />

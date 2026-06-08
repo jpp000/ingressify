@@ -1,6 +1,7 @@
 package cesar.rv.ingressify.dominio.marketplace.denuncia;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.apache.commons.lang3.Validate;
 
@@ -34,5 +35,9 @@ public class DenunciaServico {
 
 	public Denuncia obter(DenunciaId id) {
 		return repositorio.obter(id);
+	}
+
+	public List<Denuncia> pesquisarTodas() {
+		return repositorio.pesquisarTodas();
 	}
 }

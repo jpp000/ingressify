@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
+import SeletorEvento from '../components/SeletorEvento'
 import { api } from '../services/api'
 
 interface Assento {
@@ -153,7 +154,7 @@ export default function MapaAssentosPage() {
               Selecione seu(s) assento(s) e garanta sua posição
             </p>
           </div>
-          {ehOrganizador && !mapa && !criando && (
+          {ehOrganizador && eventoId && !mapa && !criando && (
             <button onClick={() => setCriando(true)} style={{
               background: '#1d4ed8', color: '#fff', border: 'none',
               borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 600
@@ -230,7 +231,14 @@ export default function MapaAssentosPage() {
           </div>
         )}
 
-        {carregando ? (
+        {!eventoId ? (
+          <SeletorEvento
+            titulo="Selecione o evento"
+            descricao="Escolha um evento para visualizar ou reservar assentos."
+            rotaDestino="/mapa-assentos"
+            icone="💺"
+          />
+        ) : carregando ? (
           <p style={{ color: '#64748b', textAlign: 'center', padding: 40 }}>Carregando mapa...</p>
         ) : !mapa ? (
           <div style={{

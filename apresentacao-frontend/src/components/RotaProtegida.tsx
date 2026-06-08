@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 
 interface Props {
   children: ReactNode
-  papelRequerido?: 'ORGANIZADOR' | 'COMPRADOR'
+  papelRequerido?: 'ORGANIZADOR' | 'COMPRADOR' | 'ADMIN'
 }
 
 export default function RotaProtegida({ children, papelRequerido }: Props) {
