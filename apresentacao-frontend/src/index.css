@@ -272,11 +272,11 @@ hr { height: 1px; background: var(--border); border: 0; }
 .brand b { color: var(--brand-strong); font-weight: 700; }
 .brand__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 3px; align-self: center; }
 
-.nav-primary { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; }
+.nav-primary { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .nav-link {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 14px; border-radius: var(--r-pill);
-  font-size: 0.9375rem; font-weight: 500; color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 8px 13px; border-radius: var(--r-pill);
+  font-size: 0.9375rem; font-weight: 500; color: var(--ink-2); border: 0; background: transparent; cursor: pointer;
   transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
 }
 .nav-link:hover { background: var(--surface-2); color: var(--ink); }
@@ -313,6 +313,10 @@ hr { height: 1px; background: var(--border); border: 0; }
 
 .icon-btn { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: var(--r-pill); background: var(--surface-2); border: 1px solid var(--border); color: var(--ink-2); flex-shrink: 0; transition: all var(--dur-1) var(--ease); }
 .icon-btn:hover { color: var(--ink); border-color: var(--ink-muted); }
+
+.topbar__cta { flex-shrink: 0; }
+/* em telas mais estreitas, o botão "Criar evento" vira só ícone */
+@media (max-width: 1140px) { .topbar__cta .nav-link__t { display: none; } .topbar__cta .btn { width: 40px; padding: 0; } }
 
 /* bottom nav (mobile) */
 .bottomnav { display: none; }

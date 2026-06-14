@@ -12,7 +12,8 @@ const ROTAS = JSON.parse(process.env.ROTAS || '[["/","catalogo"],["/meus-ingress
 
 const browser = await chromium.launch()
 
-for (const vp of [{ w: 1280, h: 900, tag: 'desktop' }, { w: 390, h: 844, tag: 'mobile' }]) {
+const VPS = JSON.parse(process.env.VPS || '[{"w":1280,"h":900,"tag":"desktop"},{"w":390,"h":844,"tag":"mobile"}]')
+for (const vp of VPS) {
   const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 2 })
   const page = await ctx.newPage()
   if (!process.env.NOLOGIN) {
