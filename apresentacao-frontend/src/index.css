@@ -454,6 +454,32 @@ hr { height: 1px; background: var(--border); border: 0; }
 .org-reply { margin-top: 10px; padding: 10px 14px; background: var(--surface-2); border-radius: var(--r-md); font-size: 0.9rem; }
 
 /* ============================================================
+   Carteira de ingressos / modais
+   ============================================================ */
+.tcard { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow var(--dur-2) var(--ease), transform var(--dur-2) var(--ease); }
+.tcard:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.tcard--alert { border-color: var(--warn); }
+.tcard__side { width: 116px; flex-shrink: 0; position: relative; display: grid; place-items: center; color: oklch(1 0 0 / 0.5);
+  background: linear-gradient(150deg, var(--brand) 0%, oklch(0.4 0.16 285) 100%); }
+.tcard__body { flex: 1; padding: var(--sp-4); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tcard__foot { margin-top: auto; padding-top: var(--sp-3); display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+
+.modal-backdrop { position: fixed; inset: 0; background: oklch(0.2 0.03 285 / 0.5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); display: grid; place-items: center; z-index: var(--z-modal); padding: var(--sp-4); }
+.modal { background: var(--surface); border-radius: var(--r-xl); padding: var(--sp-6); max-width: 440px; width: 100%; box-shadow: var(--shadow-lg); animation: fade-up var(--dur-2) var(--ease) both; max-height: 92vh; overflow-y: auto; }
+.modal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-4); }
+.modal__x { width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: var(--surface-2); border-radius: 50%; color: var(--ink-2); }
+.modal__x:hover { background: var(--surface-3); color: var(--ink); }
+.qr { background: var(--ink); border-radius: var(--r-md); padding: var(--sp-5); text-align: center; }
+.qr__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; max-width: 150px; margin: 0 auto; }
+.qr__grid div { aspect-ratio: 1; border-radius: 1px; }
+.qr__code { color: oklch(0.7 0.02 285); font-size: 0.7rem; margin-top: 12px; font-family: ui-monospace, monospace; letter-spacing: 0.1em; }
+.kv { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.9375rem; }
+.kv + .kv { border-top: 1px solid var(--border); }
+.star-btn { background: none; border: 0; cursor: pointer; color: var(--border-strong); padding: 2px; line-height: 0; transition: color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease); }
+.star-btn:hover { transform: scale(1.1); }
+.star-btn--on { color: var(--warn); }
+
+/* ============================================================
    Auth (login / cadastro)
    ============================================================ */
 .auth { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; }
