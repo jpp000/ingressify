@@ -1,168 +1,108 @@
 import { useEffect, useState } from 'react'
+import { Plus, RotateCcw, Ticket, ArrowDownLeft, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { saldoService } from '../services/api'
 import { formatMoeda } from '../constants'
 import { useAuth } from '../context/AuthContext'
 
-interface Transacao {
-  id: number
-  tipo: string
-  valor: number
-  data: string
-}
+interface Transacao { id: number; tipo: string; valor: number; data: string }
 
 const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO'])
+const RAPIDOS = [50, 100, 200]
+
+const LABEL: Record<string, string> = {
+  DEPOSITO: 'Recarga de saldo', COMPRA: 'Compra de ingresso', VENDA: 'Venda (revenda)',
+  REEMBOLSO: 'Reembolso', TRANSFERENCIA: 'Transferência', AJUSTE_SALDO: 'Ajuste de saldo',
+}
 
 export default function SaldoPage() {
   const { usuario } = useAuth()
   const [saldo, setSaldo] = useState<number | null>(null)
   const [transacoes, setTransacoes] = useState<Transacao[]>([])
   const [deposito, setDeposito] = useState('')
-  const [msg, setMsg] = useState('')
+  const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null)
   const [salvando, setSalvando] = useState(false)
 
-  const carregarDados = () => {
+  const carregar = () => {
     if (!usuario) return
     saldoService.obter(usuario.id).then(r => setSaldo(r.data.valor))
     saldoService.transacoes(usuario.id).then(r => setTransacoes(r.data))
   }
-
-  useEffect(() => { carregarDados() }, [])
+  useEffect(() => { carregar() }, [])
 
   const adicionar = async () => {
     const valor = parseFloat(deposito.replace(',', '.'))
-    if (!valor || valor <= 0) { setMsg('Informe um valor positivo'); return }
+    if (!valor || valor <= 0) { setMsg({ ok: false, texto: 'Informe um valor positivo' }); return }
     setSalvando(true)
     try {
       await saldoService.adicionar(usuario!.id, valor)
-      setMsg('Saldo adicionado com sucesso!')
+      setMsg({ ok: true, texto: `${formatMoeda(valor)} adicionados à sua carteira` })
       setDeposito('')
-      carregarDados()
+      carregar()
     } catch {
-      setMsg('Erro ao adicionar saldo')
-    } finally {
-      setSalvando(false)
-    }
+      setMsg({ ok: false, texto: 'Erro ao adicionar saldo' })
+    } finally { setSalvando(false) }
   }
 
   return (
     <>
       <Navbar />
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 24px' }}>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1e293b', marginBottom: 24 }}>Minha Carteira</h1>
-
-        {/* Card saldo */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)',
-          borderRadius: 20,
-          padding: '28px 32px',
-          color: '#fff',
-          marginBottom: 28,
-          boxShadow: '0 8px 24px rgba(29,78,216,0.3)',
-        }}>
-          <p style={{ fontSize: 13, opacity: 0.8, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>
-            Saldo Disponível
-          </p>
-          <p style={{ fontSize: 40, fontWeight: 800, letterSpacing: -1 }}>
-            {saldo !== null ? formatMoeda(saldo) : '---'}
-          </p>
+      <div className="app-container page page--narrow">
+        <div className="page-head">
+          <h1>Minha carteira</h1>
+          <p className="secondary">Adicione saldo e acompanhe suas movimentações.</p>
         </div>
 
-        {/* Depositar */}
-        <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 28 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 16 }}>Adicionar Saldo</h2>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontWeight: 600 }}>R$</span>
-              <input
-                type="text"
-                placeholder="0,00"
-                value={deposito}
-                onChange={e => setDeposito(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px 12px 44px',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 10,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  outline: 'none',
-                  color: '#1e293b',
-                }}
-              />
+        <div className="wallet" style={{ marginBottom: 'var(--sp-5)' }}>
+          <div className="wallet__label">SALDO DISPONÍVEL</div>
+          <div className="wallet__value">{saldo !== null ? formatMoeda(saldo) : '—'}</div>
+        </div>
+
+        <div className="surface surface--pad" style={{ marginBottom: 'var(--sp-5)' }}>
+          <h2 style={{ fontSize: '1.15rem', marginBottom: 'var(--sp-4)' }}>Adicionar saldo</h2>
+          <div className="row wrap" style={{ gap: 'var(--sp-2)', marginBottom: 'var(--sp-3)' }}>
+            {RAPIDOS.map(v => (
+              <button key={v} className="chip" onClick={() => setDeposito(String(v))}>+ {formatMoeda(v)}</button>
+            ))}
+          </div>
+          <div className="row" style={{ gap: 'var(--sp-3)' }}>
+            <div className="input-group grow">
+              <span style={{ position: 'absolute', left: 14, color: 'var(--ink-muted)', fontWeight: 600 }}>R$</span>
+              <input className="input" style={{ paddingLeft: 42, fontWeight: 600 }} inputMode="decimal" placeholder="0,00" value={deposito} onChange={e => setDeposito(e.target.value)} />
             </div>
-            <button
-              onClick={adicionar}
-              disabled={salvando}
-              style={{
-                background: salvando ? '#93c5fd' : '#16a34a',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 10,
-                padding: '12px 28px',
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: salvando ? 'default' : 'pointer',
-              }}
-            >
-              {salvando ? 'Depositando...' : 'Depositar'}
+            <button className="btn" onClick={adicionar} disabled={salvando}>
+              <Plus size={18} />{salvando ? 'Depositando…' : 'Depositar'}
             </button>
           </div>
           {msg && (
-            <p style={{ marginTop: 10, fontSize: 13, color: msg.includes('sucesso') ? '#16a34a' : '#ef4444', fontWeight: 600 }}>
-              {msg}
-            </p>
+            <div className={`auth-alert ${msg.ok ? 'auth-alert--ok' : 'auth-alert--err'}`} style={{ marginTop: 'var(--sp-3)', marginBottom: 0 }}>
+              {msg.ok ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}{msg.texto}
+            </div>
           )}
         </div>
 
-        {/* Extrato */}
-        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>Extrato</h2>
+        <div className="surface" style={{ overflow: 'hidden' }}>
+          <div style={{ padding: 'var(--sp-4) var(--sp-5)', borderBottom: '1px solid var(--border)' }}>
+            <h2 style={{ fontSize: '1.15rem' }}>Extrato</h2>
           </div>
           {transacoes.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '32px 0', color: '#94a3b8', fontSize: 14 }}>
-              Nenhuma movimentação.
-            </p>
-          ) : (
-            transacoes.map((t, i) => (
-              <div
-                key={t.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                  padding: '14px 24px',
-                  borderBottom: i < transacoes.length - 1 ? '1px solid #f8fafc' : 'none',
-                }}
-              >
-                <div style={{
-                  width: 40, height: 40,
-                  background: TIPO_POSITIVO.has(t.tipo) ? '#f0fdf4' : '#eff6ff',
-                  borderRadius: 10,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 18, flexShrink: 0,
-                }}>
-                  {t.tipo === 'DEPOSITO' ? '➕' : t.tipo === 'REEMBOLSO' ? '↩️' : '🎟️'}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: '#1e293b' }}>
-                    {t.tipo === 'DEPOSITO' ? 'Recarga de Saldo' : t.tipo === 'COMPRA' ? 'Compra de Ingresso' : t.tipo}
-                  </p>
-                  <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+            <div className="empty"><Ticket size={36} /><p className="muted">Nenhuma movimentação ainda.</p></div>
+          ) : transacoes.map(t => {
+            const positivo = TIPO_POSITIVO.has(t.tipo)
+            const Ico = t.tipo === 'DEPOSITO' ? ArrowDownLeft : t.tipo === 'REEMBOLSO' ? RotateCcw : positivo ? ArrowDownLeft : ArrowUpRight
+            return (
+              <div key={t.id} className="list-row">
+                <div className={`list-ico ${positivo ? 'list-ico--in' : 'list-ico--out'}`}><Ico size={20} /></div>
+                <div className="grow">
+                  <div style={{ fontWeight: 600 }}>{LABEL[t.tipo] ?? t.tipo}</div>
+                  <div className="muted" style={{ fontSize: '0.8125rem' }}>
                     {t.data ? new Date(t.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : ''}
-                  </p>
+                  </div>
                 </div>
-                <span style={{
-                  fontWeight: 700,
-                  fontSize: 15,
-                  color: TIPO_POSITIVO.has(t.tipo) ? '#16a34a' : '#1e293b',
-                }}>
-                  {TIPO_POSITIVO.has(t.tipo) ? '+' : '-'}{formatMoeda(Math.abs(t.valor))}
-                </span>
+                <span className={positivo ? 'amt-in' : 'amt-out'}>{positivo ? '+' : '−'}{formatMoeda(Math.abs(t.valor))}</span>
               </div>
-            ))
-          )}
+            )
+          })}
         </div>
       </div>
     </>

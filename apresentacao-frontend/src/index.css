@@ -342,6 +342,34 @@ hr { height: 1px; background: var(--border); border: 0; }
 /* ============================================================
    Página: utilidades compartilhadas
    ============================================================ */
+.two-col { display: grid; grid-template-columns: 1fr 360px; gap: var(--sp-5); align-items: start; }
+@media (max-width: 860px) { .two-col { grid-template-columns: 1fr; } }
+.sticky-side { position: sticky; top: calc(var(--nav-h) + 16px); }
+@media (max-width: 860px) { .sticky-side { position: static; } }
+.sum-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); }
+.sum-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: var(--sp-4); border-top: 1px solid var(--border); margin-top: var(--sp-4); }
+
+.page { padding-block: var(--sp-6) var(--sp-8); }
+.page--narrow { max-width: 860px; }
+.page--mid { max-width: 1040px; }
+.page-head { margin-bottom: var(--sp-5); }
+.page-head h1 { margin-bottom: 4px; }
+
+.wallet { position: relative; overflow: hidden; border-radius: var(--r-xl); padding: clamp(24px, 4vw, 34px); color: oklch(0.98 0.01 285);
+  background: radial-gradient(120% 120% at 85% 0%, oklch(0.6 0.2 300 / 0.85) 0%, transparent 55%), linear-gradient(150deg, oklch(0.46 0.19 285) 0%, oklch(0.3 0.13 285) 100%); box-shadow: var(--shadow-lg); }
+.wallet::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(oklch(1 0 0 / 0.07) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.6; }
+.wallet > * { position: relative; z-index: 1; }
+.wallet__label { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.02em; opacity: 0.82; }
+.wallet__value { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.2rem, 6vw, 3rem); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+.list-row { display: flex; align-items: center; gap: 14px; padding: 14px var(--sp-5); }
+.list-row + .list-row { border-top: 1px solid var(--border); }
+.list-ico { width: 42px; height: 42px; border-radius: var(--r-md); display: grid; place-items: center; flex-shrink: 0; }
+.list-ico--in { background: var(--success-soft); color: oklch(0.45 0.12 150); }
+.list-ico--out { background: var(--brand-soft); color: var(--brand-strong); }
+.amt-in { color: oklch(0.45 0.13 150); font-weight: 700; font-variant-numeric: tabular-nums; }
+.amt-out { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+
 .empty { text-align: center; padding: var(--sp-8) var(--sp-4); color: var(--ink-2); }
 .empty svg { color: var(--ink-muted); margin-bottom: var(--sp-3); }
 .empty h3 { margin-bottom: 4px; }
