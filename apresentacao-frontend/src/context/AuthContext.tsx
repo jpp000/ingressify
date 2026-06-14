@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const parsed = JSON.parse(saved) as UsuarioLogado
       return {
         ...parsed,
-        papeis: Array.isArray(parsed.papeis) ? parsed.papeis : Object.values(parsed.papeis ?? {}),
+        papeis: Array.isArray(parsed.papeis) ? parsed.papeis : (Object.values(parsed.papeis ?? {}) as string[]),
       }
     } catch {
       return null
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (u: UsuarioLogado) => {
     const normalizado = {
       ...u,
-      papeis: Array.isArray(u.papeis) ? u.papeis : Object.values(u.papeis ?? {}),
+      papeis: Array.isArray(u.papeis) ? u.papeis : (Object.values(u.papeis ?? {}) as string[]),
     }
     setUsuario(normalizado)
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(normalizado))

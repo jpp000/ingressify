@@ -31,17 +31,17 @@ public class ReembolsoFuncionalidade {
 
 	private final EstrategiaReembolso estrategiaCancelamento = (dc, de) -> {};
 
-	@Given("a compra foi feita há {int} dias")
+	@Given("a compra foi feita há {int} dia(s)")
 	public void compraMadeAgoDias(int dias) {
 		dataCompra = LocalDateTime.now().minusDays(dias);
 	}
 
-	@And("o evento ocorre em {int} dias")
+	@And("o evento ocorre em {int} dia(s)")
 	public void eventoEmDias(int dias) {
 		dataEvento = LocalDateTime.now().plusDays(dias);
 	}
 
-	@And("o evento ocorre em {int} horas")
+	@And("o evento ocorre em {int} hora(s)")
 	public void eventoEmHoras(int horas) {
 		dataEvento = LocalDateTime.now().plusHours(horas);
 	}

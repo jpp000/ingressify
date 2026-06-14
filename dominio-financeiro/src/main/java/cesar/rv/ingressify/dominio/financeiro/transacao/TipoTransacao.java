@@ -5,5 +5,6 @@ public enum TipoTransacao {
 	VENDA,
 	TRANSFERENCIA,
 	AJUSTE_SALDO,
-	REEMBOLSO
+	REEMBOLSO,
+	DEPOSITO
 }

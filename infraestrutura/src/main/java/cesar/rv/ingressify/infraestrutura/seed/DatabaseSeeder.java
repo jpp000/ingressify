@@ -210,8 +210,14 @@ public class DatabaseSeeder implements ApplicationRunner {
 			sorteioServico.inscrever(sorteio, compradores.get(i));
 		}
 
-		List<IngressoId> ingressosPedro = compraServico.comprar(pedro, camarote, 2);
-		AnuncioRevendaId anuncio = anuncioRevendaServico.anunciar(pedro, List.of(ingressosPedro.get(0)),
+		EventoId esgotado = criarEvento(maria, "Indie Rock Night — Lotado",
+				agora.plusDays(15), "Tato Coletivo", "Casa lotada: venda oficial encerrada.",
+				2, "Música", agora.plusDays(15).minusHours(2));
+		TipoIngressoId esgotadoTipo = criarTipoDireto(esgotado, "Pista", new BigDecimal("160.00"), 0, 2);
+		Ingresso ingressoRevenda = new Ingresso(esgotadoTipo, esgotado, pedro);
+		ingressoServico.salvar(ingressoRevenda);
+		ingressoServico.salvar(new Ingresso(esgotadoTipo, esgotado, pedro));
+		AnuncioRevendaId anuncio = anuncioRevendaServico.anunciar(pedro, List.of(ingressoRevenda.getId()),
 				new BigDecimal("320.00"));
 		denunciaServico.denunciar(anuncio, ana, MotivoDenuncia.PRECO_ABUSIVO,
 				"Preço muito acima do valor original do ingresso.");

@@ -37,7 +37,10 @@ public class ExtratoServicoAplicacao {
 	public void adicionarSaldo(UsuarioId usuarioId, BigDecimal valor) {
 		Validate.notNull(valor, "valor");
 		Validate.isTrue(valor.signum() > 0, "valor deve ser positivo");
-		saldoServico.creditar(usuarioId, new Dinheiro(valor));
+		Dinheiro quantia = new Dinheiro(valor);
+		saldoServico.creditar(usuarioId, quantia);
+		transacaoServico.registrar(new Transacao(usuarioId, TipoTransacao.DEPOSITO, quantia,
+				LocalDateTime.now(), UUID.randomUUID()));
 	}
 
 	public ColecaoTransacoes colecaoPorUsuario(UsuarioId usuarioId) {
