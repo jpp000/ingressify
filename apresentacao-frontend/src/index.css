@@ -425,6 +425,35 @@ hr { height: 1px; background: var(--border); border: 0; }
 .evcard__foot { margin-top: auto; padding-top: 4px; }
 
 /* ============================================================
+   Detalhe do evento
+   ============================================================ */
+.ev-hero { position: relative; min-height: 300px; display: flex; align-items: flex-end; overflow: hidden; color: oklch(0.98 0.01 285); }
+.ev-hero__bg { position: absolute; inset: 0; }
+.ev-hero__bg img { width: 100%; height: 100%; object-fit: cover; }
+.ev-hero__ico { position: absolute; right: 6%; top: 50%; transform: translateY(-50%); color: oklch(1 0 0 / 0.12); }
+.ev-hero__scrim { position: absolute; inset: 0; background: linear-gradient(0deg, oklch(0.18 0.04 285 / 0.92) 0%, oklch(0.18 0.04 285 / 0.25) 55%, transparent 100%); }
+.ev-hero__inner { position: relative; z-index: 1; padding-block: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-3); }
+.ev-hero__title { color: oklch(0.99 0.005 285); font-size: clamp(1.8rem, 4vw, 3rem); max-width: 20ch; }
+.ev-hero__meta { display: flex; flex-wrap: wrap; gap: var(--sp-4); color: oklch(0.92 0.02 285); font-size: 0.95rem; }
+.ev-hero__meta span { display: inline-flex; align-items: center; gap: 7px; }
+
+.ctx-links { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+.ticket-row { padding: var(--sp-4) 0; }
+.ticket-row + .ticket-row { border-top: 1px solid var(--border); }
+.stepper { display: inline-flex; align-items: center; gap: var(--sp-3); }
+.qty-btn { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink); flex-shrink: 0; }
+.qty-btn:disabled { color: var(--border-strong); cursor: not-allowed; }
+.qty-btn--add { border-color: transparent; background: var(--brand); color: var(--brand-contrast); }
+.qty-btn--add:disabled { background: var(--surface-3); color: var(--ink-muted); }
+.qty-val { min-width: 22px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.post { padding: var(--sp-4); }
+.post--fix { background: var(--brand-soft); border-radius: var(--r-md); }
+.review-stars { display: inline-flex; gap: 2px; color: var(--warn); }
+.org-reply { margin-top: 10px; padding: 10px 14px; background: var(--surface-2); border-radius: var(--r-md); font-size: 0.9rem; }
+
+/* ============================================================
    Auth (login / cadastro)
    ============================================================ */
 .auth { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; }
