@@ -95,7 +95,7 @@ export default function RevenderIngressoPage() {
     return (
       <>
         <Navbar />
-        <div style={{ textAlign: 'center', padding: '80px 0', color: '#94a3b8' }}>Carregando...</div>
+        <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--ink-muted)' }}>Carregando...</div>
       </>
     )
   }
@@ -113,8 +113,8 @@ export default function RevenderIngressoPage() {
     <>
       <Navbar />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#1e293b', marginBottom: 6 }}>Revender meu Ingresso</h1>
-        <p style={{ color: '#64748b', fontSize: 14, marginBottom: 36 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', marginBottom: 6 }}>Revender meu Ingresso</h1>
+        <p style={{ color: 'var(--ink-2)', fontSize: 14, marginBottom: 36 }}>
           Configure os detalhes da sua oferta para o festival.
         </p>
 
@@ -144,26 +144,26 @@ export default function RevenderIngressoPage() {
               <div style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   {evento?.categoria && (
-                    <span style={{ background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase' }}>
+                    <span style={{ background: 'var(--brand-soft)', color: 'var(--brand-strong)', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase' }}>
                       {evento.categoria}
                     </span>
                   )}
                   {tipo && (
-                    <span style={{ fontSize: 13, color: '#64748b' }}>
-                      Preço Original <strong style={{ color: '#1e293b' }}>{formatMoeda(tipo.preco)}</strong>
+                    <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>
+                      Preço Original <strong style={{ color: 'var(--ink)' }}>{formatMoeda(tipo.preco)}</strong>
                     </span>
                   )}
                 </div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 12 }}>{evento?.nome}</h2>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 12 }}>{evento?.nome}</h2>
                 <div style={{ display: 'flex', gap: 24 }}>
                   <div>
-                    <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>Localização</p>
-                    <p style={{ fontSize: 13, color: '#1e293b', fontWeight: 600 }}>📍 {evento?.local}</p>
+                    <p style={{ fontSize: 11, color: 'var(--ink-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>Localização</p>
+                    <p style={{ fontSize: 13, color: 'var(--ink)', fontWeight: 600 }}>📍 {evento?.local}</p>
                   </div>
                   {tipo && (
                     <div>
-                      <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>Setor</p>
-                      <p style={{ fontSize: 13, color: '#1e293b', fontWeight: 600 }}>🎟️ {tipo.nome}</p>
+                      <p style={{ fontSize: 11, color: 'var(--ink-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>Setor</p>
+                      <p style={{ fontSize: 13, color: 'var(--ink)', fontWeight: 600 }}>🎟️ {tipo.nome}</p>
                     </div>
                   )}
                 </div>
@@ -174,21 +174,21 @@ export default function RevenderIngressoPage() {
             <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                 <span style={{ fontSize: 24 }}>🛡️</span>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>Revenda Segura</h3>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>Revenda Segura</h3>
               </div>
-              <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6, marginBottom: 14 }}>
+              <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 14 }}>
                 Para garantir uma experiência justa, seguimos regras rigorosas de{' '}
-                <span style={{ color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer' }}>transparência</span>{' '}
+                <span style={{ color: 'var(--brand-strong)', textDecoration: 'underline', cursor: 'pointer' }}>transparência</span>{' '}
                 e{' '}
-                <span style={{ color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer' }}>segurança</span>.
+                <span style={{ color: 'var(--brand-strong)', textDecoration: 'underline', cursor: 'pointer' }}>segurança</span>.
               </p>
               <ul style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
                   'Sua revenda só será publicada se os ingressos oficiais estiverem esgotados.',
-                  'O pagamento é garantido e processado via Ingressefy Pay.',
+                  'O pagamento é garantido e processado via Ingressify Pay.',
                   'O novo ingresso é gerado automaticamente para o comprador, invalidando o seu anterior.',
                 ].map((item, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: '#475569' }}>
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'var(--ink-2)' }}>
                     <span style={{ color: '#16a34a', fontSize: 16, flexShrink: 0, marginTop: 1 }}>✅</span>
                     {item}
                   </li>
@@ -200,14 +200,14 @@ export default function RevenderIngressoPage() {
           {/* Coluna direita */}
           <div style={{ width: 340, flexShrink: 0 }}>
             <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 20 }}>Configuração de Preço</h3>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Configuração de Preço</h3>
 
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
                   Novo Preço de Venda
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 15, fontWeight: 600 }}>R$</span>
+                  <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-2)', fontSize: 15, fontWeight: 600 }}>R$</span>
                   <input
                     type="text"
                     value={preco}
@@ -216,39 +216,39 @@ export default function RevenderIngressoPage() {
                     style={{
                       width: '100%',
                       padding: '16px 16px 16px 48px',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid var(--border)',
                       borderRadius: 10,
                       fontSize: 22,
                       fontWeight: 700,
-                      color: '#1e293b',
+                      color: 'var(--ink)',
                       outline: 'none',
                     }}
                   />
                 </div>
-                <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8 }}>
+                <p style={{ fontSize: 12, color: 'var(--ink-muted)', marginTop: 8 }}>
                   💡 Dica: Preços próximos ao original vendem 3x mais rápido.
                 </p>
               </div>
 
               {/* Breakdown */}
-              <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px 16px' }}>
+              <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, color: '#64748b' }}>Seu Preço de Venda</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{formatMoeda(precoNum)}</span>
+                  <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>Seu Preço de Venda</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{formatMoeda(precoNum)}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: 13, color: '#64748b' }}>
-                    Taxa de Serviço <span style={{ fontSize: 11, color: '#94a3b8' }}>ℹ️</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>
+                    Taxa de Serviço <span style={{ fontSize: 11, color: 'var(--ink-muted)' }}>ℹ️</span>
                   </span>
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#ef4444' }}>- {formatMoeda(taxaReais)} (10%)</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     Você Receberá
                   </span>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: 11, color: '#94a3b8' }}>Estimativa de depósito</p>
-                    <p style={{ fontSize: 20, fontWeight: 800, color: '#1d4ed8' }}>{formatMoeda(voceRecebe)}</p>
+                    <p style={{ fontSize: 11, color: 'var(--ink-muted)' }}>Estimativa de depósito</p>
+                    <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand-strong)' }}>{formatMoeda(voceRecebe)}</p>
                   </div>
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function RevenderIngressoPage() {
               disabled={publicando || precoNum <= 0}
               style={{
                 width: '100%',
-                background: publicando || precoNum <= 0 ? '#93c5fd' : '#1d4ed8',
+                background: publicando || precoNum <= 0 ? '#93c5fd' : 'var(--brand-strong)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 12,
@@ -283,15 +283,15 @@ export default function RevenderIngressoPage() {
               ↑ {publicando ? 'Publicando...' : 'Publicar para Revenda'}
             </button>
 
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>
+            <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--ink-muted)', lineHeight: 1.5 }}>
               Ao clicar em publicar, você concorda com os{' '}
-              <span style={{ color: '#1d4ed8', cursor: 'pointer' }}>Termos de Revenda</span>.
+              <span style={{ color: 'var(--brand-strong)', cursor: 'pointer' }}>Termos de Revenda</span>.
             </p>
 
             {ingresso && (
               <button
                 onClick={() => navigate('/meus-ingressos')}
-                style={{ width: '100%', background: 'none', border: 'none', color: '#94a3b8', fontSize: 13, marginTop: 12, cursor: 'pointer' }}
+                style={{ width: '100%', background: 'none', border: 'none', color: 'var(--ink-muted)', fontSize: 13, marginTop: 12, cursor: 'pointer' }}
               >
                 ← Voltar aos meus ingressos
               </button>

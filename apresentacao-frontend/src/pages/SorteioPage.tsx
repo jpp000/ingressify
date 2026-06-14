@@ -27,19 +27,19 @@ interface InscricaoSorteio {
 }
 
 const statusLabel: Record<string, { label: string; cor: string }> = {
-  CONFIGURADO:       { label: 'Configurado',        cor: '#64748b' },
+  CONFIGURADO:       { label: 'Configurado',        cor: 'var(--ink-2)' },
   INSCRICOES_ABERTAS:{ label: 'Inscrições Abertas', cor: '#16a34a' },
   AGUARDANDO_SORTEIO:{ label: 'Aguardando Sorteio', cor: '#d97706' },
-  SORTEADO:          { label: 'Sorteado',           cor: '#2563eb' },
-  ENCERRADO:         { label: 'Encerrado',          cor: '#1e293b' },
+  SORTEADO:          { label: 'Sorteado',           cor: 'var(--brand)' },
+  ENCERRADO:         { label: 'Encerrado',          cor: 'var(--ink)' },
   CANCELADO:         { label: 'Cancelado',          cor: '#dc2626' },
 }
 
 const inscricaoLabel: Record<string, { label: string; cor: string }> = {
-  INSCRITO:     { label: 'Inscrito',          cor: '#64748b' },
+  INSCRITO:     { label: 'Inscrito',          cor: 'var(--ink-2)' },
   CONTEMPLADO:  { label: '🏆 Contemplado',   cor: '#16a34a' },
   LISTA_ESPERA: { label: '⏳ Lista de Espera', cor: '#d97706' },
-  CONFIRMADO:   { label: '✅ Confirmado',    cor: '#2563eb' },
+  CONFIRMADO:   { label: '✅ Confirmado',    cor: 'var(--brand)' },
   EXPIRADO:     { label: 'Expirado',          cor: '#dc2626' },
   CANCELADO:    { label: 'Cancelado',         cor: '#dc2626' },
 }
@@ -141,10 +141,10 @@ export default function SorteioPage() {
         {/* Cabeçalho */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>
               🎟️ Sorteio de Ingressos
             </h1>
-            <p style={{ color: '#64748b', marginTop: 4 }}>
+            <p style={{ color: 'var(--ink-2)', marginTop: 4 }}>
               Inscreva-se para concorrer a ingressos por sorteio justo
             </p>
           </div>
@@ -152,7 +152,7 @@ export default function SorteioPage() {
             <button
               onClick={() => setCriando(true)}
               style={{
-                background: '#1d4ed8', color: '#fff', border: 'none',
+                background: 'var(--brand-strong)', color: '#fff', border: 'none',
                 borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 600
               }}>
               + Criar Sorteio
@@ -174,7 +174,7 @@ export default function SorteioPage() {
         {/* Formulário de criação (organizador) */}
         {criando && eventoId && (
           <form onSubmit={criarSorteio} style={{
-            background: '#f8fafc', border: '1px solid #e2e8f0',
+            background: 'var(--surface-2)', border: '1px solid var(--border)',
             borderRadius: 12, padding: 24, marginBottom: 32
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Novo Sorteio</h2>
@@ -186,28 +186,28 @@ export default function SorteioPage() {
                 { label: 'Horas para Confirmação', field: 'prazoConfirmacaoHoras', type: 'number' },
               ].map(({ label, field, type }) => (
                 <label key={field} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 13, color: '#475569', fontWeight: 500 }}>{label}</span>
+                  <span style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 500 }}>{label}</span>
                   <input
                     type={type}
                     value={(form as any)[field]}
                     onChange={e => setForm(prev => ({ ...prev, [field]: e.target.value }))}
                     required
                     style={{
-                      padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1',
+                      padding: '8px 12px', borderRadius: 6, border: '1px solid var(--ink-muted)',
                       fontSize: 14, outline: 'none'
                     }}
                   />
                 </label>
               ))}
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: '1 / -1' }}>
-                <span style={{ fontSize: 13, color: '#475569', fontWeight: 500 }}>Prazo para Inscrições</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 500 }}>Prazo para Inscrições</span>
                 <input
                   type="datetime-local"
                   value={form.prazoInscricao}
                   onChange={e => setForm(prev => ({ ...prev, prazoInscricao: e.target.value }))}
                   required
                   style={{
-                    padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1',
+                    padding: '8px 12px', borderRadius: 6, border: '1px solid var(--ink-muted)',
                     fontSize: 14, outline: 'none'
                   }}
                 />
@@ -221,7 +221,7 @@ export default function SorteioPage() {
                 Criar Sorteio
               </button>
               <button type="button" onClick={() => setCriando(false)} style={{
-                background: '#e2e8f0', color: '#475569', border: 'none',
+                background: 'var(--border)', color: 'var(--ink-2)', border: 'none',
                 borderRadius: 8, padding: '10px 20px', cursor: 'pointer'
               }}>
                 Cancelar
@@ -239,25 +239,25 @@ export default function SorteioPage() {
             icone="🎲"
           />
         ) : carregando ? (
-          <p style={{ color: '#64748b', textAlign: 'center', padding: 40 }}>Carregando sorteios...</p>
+          <p style={{ color: 'var(--ink-2)', textAlign: 'center', padding: 40 }}>Carregando sorteios...</p>
         ) : sorteios.length === 0 ? (
           <div style={{
-            textAlign: 'center', padding: '60px 20px', background: '#f8fafc',
-            borderRadius: 12, border: '2px dashed #e2e8f0'
+            textAlign: 'center', padding: '60px 20px', background: 'var(--surface-2)',
+            borderRadius: 12, border: '2px dashed var(--border)'
           }}>
             <p style={{ fontSize: 48, margin: '0 0 16px' }}>🎲</p>
-            <p style={{ color: '#64748b', fontSize: 16 }}>Nenhum sorteio disponível para este evento.</p>
+            <p style={{ color: 'var(--ink-2)', fontSize: 16 }}>Nenhum sorteio disponível para este evento.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {sorteios.map(s => {
-              const st = statusLabel[s.status] ?? { label: s.status, cor: '#64748b' }
+              const st = statusLabel[s.status] ?? { label: s.status, cor: 'var(--ink-2)' }
               const aberto = s.status === 'INSCRICOES_ABERTAS'
               return (
                 <div key={s.id} style={{
-                  border: '1px solid #e2e8f0', borderRadius: 12,
+                  border: '1px solid var(--border)', borderRadius: 12,
                   background: '#fff', overflow: 'hidden',
-                  boxShadow: sorteioSelecionado?.id === s.id ? '0 0 0 2px #1d4ed8' : 'none'
+                  boxShadow: sorteioSelecionado?.id === s.id ? '0 0 0 2px var(--brand-strong)' : 'none'
                 }}>
                   <div
                     onClick={() => carregarInscricoes(s)}
@@ -267,7 +267,7 @@ export default function SorteioPage() {
                     }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                        <span style={{ fontWeight: 700, fontSize: 16, color: '#0f172a' }}>
+                        <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>
                           Sorteio #{s.id}
                         </span>
                         <span style={{
@@ -277,15 +277,15 @@ export default function SorteioPage() {
                           {st.label}
                         </span>
                       </div>
-                      <p style={{ color: '#475569', margin: 0, fontSize: 14 }}>
+                      <p style={{ color: 'var(--ink-2)', margin: 0, fontSize: 14 }}>
                         {s.quantidadeIngressos} ingresso(s) · {s.quantidadeListaEspera} na lista de espera
                       </p>
-                      <p style={{ color: '#94a3b8', margin: '4px 0 0', fontSize: 13 }}>
+                      <p style={{ color: 'var(--ink-muted)', margin: '4px 0 0', fontSize: 13 }}>
                         Inscrições até: {formatData(s.prazoInscricao)}
                       </p>
                     </div>
                     {aberto && (
-                      <span style={{ color: '#1d4ed8', fontWeight: 600, fontSize: 14 }}>
+                      <span style={{ color: 'var(--brand-strong)', fontWeight: 600, fontSize: 14 }}>
                         Clique para se inscrever →
                       </span>
                     )}
@@ -293,7 +293,7 @@ export default function SorteioPage() {
 
                   {/* Painel expandido */}
                   {sorteioSelecionado?.id === s.id && (
-                    <div style={{ borderTop: '1px solid #e2e8f0', padding: 20, background: '#f8fafc' }}>
+                    <div style={{ borderTop: '1px solid var(--border)', padding: 20, background: 'var(--surface-2)' }}>
 
                       {/* Ações do comprador */}
                       {!ehOrganizador && (
@@ -301,12 +301,12 @@ export default function SorteioPage() {
                           {minhaInscricao ? (
                             <div style={{
                               display: 'flex', alignItems: 'center', gap: 12,
-                              background: '#fff', border: '1px solid #e2e8f0',
+                              background: '#fff', border: '1px solid var(--border)',
                               borderRadius: 8, padding: '12px 16px'
                             }}>
                               <span style={{ fontSize: 16 }}>Sua situação:</span>
                               <span style={{
-                                background: inscricaoLabel[minhaInscricao.status]?.cor ?? '#64748b',
+                                background: inscricaoLabel[minhaInscricao.status]?.cor ?? 'var(--ink-2)',
                                 color: '#fff', borderRadius: 20, padding: '4px 14px',
                                 fontWeight: 600, fontSize: 13
                               }}>
@@ -327,14 +327,14 @@ export default function SorteioPage() {
                             <button
                               onClick={() => acao(`/sorteios/${s.id}/inscrever`)}
                               style={{
-                                background: '#1d4ed8', color: '#fff', border: 'none',
+                                background: 'var(--brand-strong)', color: '#fff', border: 'none',
                                 borderRadius: 8, padding: '12px 24px', cursor: 'pointer',
                                 fontWeight: 600, fontSize: 15
                               }}>
                               🎯 Inscrever-se no Sorteio
                             </button>
                           ) : (
-                            <p style={{ color: '#64748b', fontSize: 14 }}>Inscrições não disponíveis no momento.</p>
+                            <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>Inscrições não disponíveis no momento.</p>
                           )}
                         </div>
                       )}
@@ -353,7 +353,7 @@ export default function SorteioPage() {
                             </button>
                           )}
                           {s.status === 'AGUARDANDO_SORTEIO' && (
-                            <button onClick={() => acao(`/sorteios/${s.id}/sortear`)} style={btnStyle('#1d4ed8')}>
+                            <button onClick={() => acao(`/sorteios/${s.id}/sortear`)} style={btnStyle('var(--brand-strong)')}>
                               🎲 Realizar Sorteio
                             </button>
                           )}
@@ -366,25 +366,25 @@ export default function SorteioPage() {
                       )}
 
                       {/* Lista de inscrições */}
-                      <h3 style={{ fontSize: 14, fontWeight: 600, color: '#475569', marginBottom: 12 }}>
+                      <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 12 }}>
                         Inscrições ({inscricoes.length})
                       </h3>
                       {inscricoes.length === 0 ? (
-                        <p style={{ color: '#94a3b8', fontSize: 14 }}>Nenhuma inscrição ainda.</p>
+                        <p style={{ color: 'var(--ink-muted)', fontSize: 14 }}>Nenhuma inscrição ainda.</p>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto' }}>
                           {inscricoes.map(i => {
-                            const il = inscricaoLabel[i.status] ?? { label: i.status, cor: '#64748b' }
+                            const il = inscricaoLabel[i.status] ?? { label: i.status, cor: 'var(--ink-2)' }
                             return (
                               <div key={i.id} style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                 background: '#fff', borderRadius: 6, padding: '8px 14px',
-                                border: '1px solid #e2e8f0', fontSize: 13
+                                border: '1px solid var(--border)', fontSize: 13
                               }}>
-                                <span style={{ color: '#475569' }}>Participante #{i.participanteId}</span>
+                                <span style={{ color: 'var(--ink-2)' }}>Participante #{i.participanteId}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   {i.posicao > 0 && (
-                                    <span style={{ color: '#94a3b8', fontSize: 12 }}>#{i.posicao}</span>
+                                    <span style={{ color: 'var(--ink-muted)', fontSize: 12 }}>#{i.posicao}</span>
                                   )}
                                   <span style={{
                                     background: il.cor, color: '#fff',

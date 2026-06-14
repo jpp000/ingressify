@@ -310,7 +310,7 @@ export default function GerenciarEventos() {
       <Navbar />
       <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
 
-        <aside style={{ width: 220, background: '#fff', borderRight: '1px solid #e2e8f0', padding: '24px 0', flexShrink: 0 }}>
+        <aside style={{ width: 220, background: '#fff', borderRight: '1px solid var(--border)', padding: '24px 0', flexShrink: 0 }}>
           {SIDEBAR.map(item => (
             <button
               key={item.id}
@@ -318,10 +318,10 @@ export default function GerenciarEventos() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 width: '100%', padding: '12px 20px',
-                background: abaAtiva === item.id ? '#eff6ff' : 'transparent',
+                background: abaAtiva === item.id ? 'var(--brand-soft)' : 'transparent',
                 border: 'none',
-                borderLeft: abaAtiva === item.id ? '3px solid #1d4ed8' : '3px solid transparent',
-                color: abaAtiva === item.id ? '#1d4ed8' : '#64748b',
+                borderLeft: abaAtiva === item.id ? '3px solid var(--brand-strong)' : '3px solid transparent',
+                color: abaAtiva === item.id ? 'var(--brand-strong)' : 'var(--ink-2)',
                 fontWeight: abaAtiva === item.id ? 700 : 400,
                 fontSize: 14, cursor: 'pointer', textAlign: 'left',
               }}
@@ -390,7 +390,7 @@ export default function GerenciarEventos() {
           )}
 
           {abaAtiva === 'configuracoes' && (
-            <div style={{ textAlign: 'center', padding: '64px 0', color: '#94a3b8' }}>
+            <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--ink-muted)' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>⚙️</div>
               <p>Configurações em breve.</p>
             </div>
@@ -418,9 +418,9 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
 }) {
   return (
     <>
-      <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1e293b', marginBottom: 24 }}>Meus Eventos</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 24 }}>Meus Eventos</h1>
       {eventos.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px 0', color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--ink-muted)' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
           <p>Você ainda não criou nenhum evento.</p>
         </div>
@@ -430,7 +430,7 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
             <div key={ev.id} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>{ev.nome}</h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>{ev.nome}</h3>
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20,
                     background: ev.status === 'ATIVO' ? '#dcfce7' : ev.status === 'CANCELADO' ? '#fee2e2' : '#fef3c7',
@@ -439,7 +439,7 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
                     {ev.status}
                   </span>
                 </div>
-                <p style={{ fontSize: 13, color: '#64748b' }}>
+                <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
                   🕐 {ev.dataHora ? new Date(ev.dataHora).toLocaleString('pt-BR') : ''} &nbsp;|&nbsp;
                   📍 {ev.local} &nbsp;|&nbsp;
                   👥 Cap: {ev.capacidade}
@@ -447,7 +447,7 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Link to={`/eventos/${ev.id}`}>
-                  <button style={{ background: '#eff6ff', color: '#1d4ed8', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  <button style={{ background: 'var(--brand-soft)', color: 'var(--brand-strong)', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                     Ver Detalhes
                   </button>
                 </Link>
@@ -457,7 +457,7 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
                   </button>
                 </Link>
                 <Link to={`/mapa-assentos?eventoId=${ev.id}`}>
-                  <button style={{ background: '#f5f3ff', color: '#7c3aed', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  <button style={{ background: 'var(--brand-soft)', color: '#7c3aed', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                     Mapa
                   </button>
                 </Link>
@@ -481,7 +481,7 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
                 )}
                 <button
                   onClick={() => onExcluir(ev.id)}
-                  style={{ background: '#1e293b', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                  style={{ background: 'var(--ink)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
                   title="Excluir evento permanentemente"
                 >
                   Excluir
@@ -516,8 +516,8 @@ function CriarEventoForm({
     onFormChange({ ...form, [campo]: e.target.value })
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '12px 14px', border: '1px solid #e2e8f0',
-    borderRadius: 8, fontSize: 14, color: '#1e293b', outline: 'none', background: '#fff',
+    width: '100%', padding: '12px 14px', border: '1px solid var(--border)',
+    borderRadius: 8, fontSize: 14, color: 'var(--ink)', outline: 'none', background: '#fff',
   }
 
   const cardStyle: React.CSSProperties = {
@@ -540,14 +540,14 @@ function CriarEventoForm({
 
   return (
     <>
-      <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1e293b', marginBottom: 28 }}>Criar Evento</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 28 }}>Criar Evento</h1>
       <form onSubmit={onSubmit}>
 
         <div style={cardStyle}>
-          <h2 style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 20 }}>Informações Básicas</h2>
+          <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Informações Básicas</h2>
 
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
               Nome do Evento <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input placeholder="ex: Festival de Música de Verão" value={form.nome} onChange={set('nome')} required style={inputStyle} />
@@ -555,14 +555,14 @@ function CriarEventoForm({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Categoria</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>Categoria</label>
               <select value={form.categoria} onChange={set('categoria')} style={inputStyle}>
                 <option value="">Selecionar Categoria</option>
                 {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
                 Data e Horário <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input type="datetime-local" value={form.dataHora} onChange={set('dataHora')} required style={inputStyle} />
@@ -571,18 +571,18 @@ function CriarEventoForm({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
                 Abertura dos Portões <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input type="datetime-local" value={form.aberturaPortoes} onChange={set('aberturaPortoes')} required style={inputStyle} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
                 Capacidade Total <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input type="number" min="1" value={form.capacidade} onChange={set('capacidade')} required style={inputStyle} />
               {capacidade > 0 && totalAlocado > 0 && (
-                <p style={{ fontSize: 11, color: totalAlocado > capacidade ? '#ef4444' : '#64748b', marginTop: 4 }}>
+                <p style={{ fontSize: 11, color: totalAlocado > capacidade ? '#ef4444' : 'var(--ink-2)', marginTop: 4 }}>
                   {totalAlocado} de {capacidade} ingressos alocados nos tipos
                 </p>
               )}
@@ -590,21 +590,21 @@ function CriarEventoForm({
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
               Endereço do Local <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input placeholder="Comece a digitar o endereço..." value={form.local} onChange={set('local')} required style={inputStyle} />
           </div>
 
-          <div style={{ background: '#e8f4fd', borderRadius: 12, height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #bfdbfe' }}>
-            <div style={{ textAlign: 'center', color: '#64748b' }}>
+          <div style={{ background: '#e8f4fd', borderRadius: 12, height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--brand-soft-2)' }}>
+            <div style={{ textAlign: 'center', color: 'var(--ink-2)' }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>🗺️</div>
               <p style={{ fontSize: 13 }}>Mapa do local aparecerá aqui</p>
             </div>
           </div>
 
           <div style={{ marginTop: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Descrição</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>Descrição</label>
             <textarea
               placeholder="Descreva o evento..."
               value={form.descricao}
@@ -616,11 +616,11 @@ function CriarEventoForm({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Prazo de Reembolso (dias)</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>Prazo de Reembolso (dias)</label>
               <input type="number" min="0" value={form.prazoReembolsoDias} onChange={set('prazoReembolsoDias')} style={inputStyle} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>URL da Imagem de Capa</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>URL da Imagem de Capa</label>
               <input
                 placeholder="https://..."
                 value={form.imagemCapaUrl}
@@ -635,14 +635,14 @@ function CriarEventoForm({
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>Tipos de Ingresso</h2>
-              <p style={{ fontSize: 13, color: '#94a3b8' }}>Configure categorias, benefícios e lotes de venda para cada tipo.</p>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)', marginBottom: 4 }}>Tipos de Ingresso</h2>
+              <p style={{ fontSize: 13, color: 'var(--ink-muted)' }}>Configure categorias, benefícios e lotes de venda para cada tipo.</p>
             </div>
             <button
               type="button"
               onClick={onAbrirModalNovo}
               style={{
-                background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 8,
+                background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 8,
                 padding: '10px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
               }}
@@ -653,8 +653,8 @@ function CriarEventoForm({
 
           {tipos.length === 0 ? (
             <div style={{
-              border: '2px dashed #e2e8f0', borderRadius: 12, padding: '36px 24px',
-              textAlign: 'center', color: '#94a3b8',
+              border: '2px dashed var(--border)', borderRadius: 12, padding: '36px 24px',
+              textAlign: 'center', color: 'var(--ink-muted)',
             }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>🎟️</div>
               <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Nenhum tipo de ingresso criado</p>
@@ -666,23 +666,23 @@ function CriarEventoForm({
                 <div
                   key={i}
                   style={{
-                    border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 20px',
+                    border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px',
                     display: 'flex', alignItems: 'flex-start', gap: 16,
                     background: '#fafbff', cursor: 'pointer',
                     transition: 'border-color 0.15s',
                   }}
                   onClick={() => onAbrirModalEditar(i)}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = '#93c5fd')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = '#e2e8f0')}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                 >
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: '#1e293b' }}>{tipo.nome || '(sem nome)'}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#1d4ed8', background: '#eff6ff', borderRadius: 6, padding: '2px 8px' }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{tipo.nome || '(sem nome)'}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--brand-strong)', background: 'var(--brand-soft)', borderRadius: 6, padding: '2px 8px' }}>
                         {tipo.lotes.length} {tipo.lotes.length === 1 ? 'lote' : 'lotes'}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#64748b' }}>
+                    <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--ink-2)' }}>
                       <span>💰 {precoRangeTipo(tipo)}</span>
                       <span>🎟 {Number(tipo.quantidadeTotal) || 0} ingressos</span>
                       {tipo.beneficios.filter(b => b.trim()).length > 0 && (
@@ -697,7 +697,7 @@ function CriarEventoForm({
                           </span>
                         ))}
                         {tipo.beneficios.filter(b => b.trim()).length > 4 && (
-                          <span style={{ fontSize: 11, color: '#94a3b8' }}>+{tipo.beneficios.filter(b => b.trim()).length - 4} mais</span>
+                          <span style={{ fontSize: 11, color: 'var(--ink-muted)' }}>+{tipo.beneficios.filter(b => b.trim()).length - 4} mais</span>
                         )}
                       </div>
                     )}
@@ -705,7 +705,7 @@ function CriarEventoForm({
                   <button
                     type="button"
                     onClick={e => { e.stopPropagation(); onRemoverTipo(i) }}
-                    style={{ background: 'none', border: 'none', color: '#cbd5e1', fontSize: 18, cursor: 'pointer', padding: 4, flexShrink: 0 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--ink-muted)', fontSize: 18, cursor: 'pointer', padding: 4, flexShrink: 0 }}
                     title="Remover tipo"
                   >
                     🗑️
@@ -718,7 +718,7 @@ function CriarEventoForm({
 
         {/* Imagem de Capa */}
         <div style={cardStyle}>
-          <h2 style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 20 }}>Imagem de Capa</h2>
+          <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Imagem de Capa</h2>
           {imagemPreview ? (
             <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', height: 200 }}>
               <img src={imagemPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -732,9 +732,9 @@ function CriarEventoForm({
             </div>
           ) : (
             <div style={{
-              border: '2px dashed #cbd5e1', borderRadius: 12, height: 160,
+              border: '2px dashed var(--ink-muted)', borderRadius: 12, height: 160,
               display: 'flex', flexDirection: 'column', alignItems: 'center',
-              justifyContent: 'center', color: '#94a3b8', background: '#fafafa',
+              justifyContent: 'center', color: 'var(--ink-muted)', background: '#fafafa',
             }}>
               <span style={{ fontSize: 36, marginBottom: 10 }}>☁️</span>
               <p style={{ fontSize: 14, fontWeight: 600 }}>Clique para fazer upload ou arraste e solte</p>
@@ -748,7 +748,7 @@ function CriarEventoForm({
           type="submit"
           disabled={salvando}
           style={{
-            background: salvando ? '#93c5fd' : '#1d4ed8',
+            background: salvando ? '#93c5fd' : 'var(--brand-strong)',
             color: '#fff', border: 'none', borderRadius: 12,
             padding: '16px 48px', fontSize: 16, fontWeight: 700,
             cursor: salvando ? 'default' : 'pointer', width: '100%',
@@ -778,8 +778,8 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
   const [modalErros, setModalErros] = useState<string[]>([])
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 12px', border: '1px solid #e2e8f0',
-    borderRadius: 8, fontSize: 14, color: '#1e293b', outline: 'none', background: '#fff',
+    width: '100%', padding: '10px 12px', border: '1px solid var(--border)',
+    borderRadius: 8, fontSize: 14, color: 'var(--ink)', outline: 'none', background: '#fff',
     boxSizing: 'border-box',
   }
 
@@ -864,20 +864,20 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
       }}>
         {/* Header */}
         <div style={{
-          padding: '24px 28px 20px', borderBottom: '1px solid #f1f5f9',
+          padding: '24px 28px 20px', borderBottom: '1px solid var(--surface-2)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
         }}>
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1e293b', marginBottom: 2 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', marginBottom: 2 }}>
               {tipoInicial ? 'Editar Tipo de Ingresso' : 'Novo Tipo de Ingresso'}
             </h2>
-            <p style={{ fontSize: 13, color: '#94a3b8' }}>Configure nome, benefícios e lotes de venda.</p>
+            <p style={{ fontSize: 13, color: 'var(--ink-muted)' }}>Configure nome, benefícios e lotes de venda.</p>
           </div>
           <button
             onClick={onFechar}
             style={{
-              background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8,
-              width: 36, height: 36, fontSize: 18, cursor: 'pointer', color: '#64748b',
+              background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 8,
+              width: 36, height: 36, fontSize: 18, cursor: 'pointer', color: 'var(--ink-2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}
           >
@@ -904,11 +904,11 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
 
           {/* Informações básicas */}
           <section style={{ marginBottom: 28 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>
               Informações Básicas
             </h3>
             <div style={{ marginBottom: 14 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
                 Nome do Tipo <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
@@ -920,7 +920,7 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
                 Quantidade Total de Ingressos <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
@@ -933,14 +933,14 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                 style={inputStyle}
               />
               {capacidadeEvento > 0 && (
-                <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+                <p style={{ fontSize: 11, color: 'var(--ink-muted)', marginTop: 4 }}>
                   Disponível no evento: {capacidadeDisponivel} ingressos
                 </p>
               )}
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Descrição</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>Descrição</label>
               <textarea
                 placeholder="Descreva o que está incluso neste tipo..."
                 value={tipo.descricao}
@@ -954,19 +954,19 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
           {/* Benefícios */}
           <section style={{ marginBottom: 28 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Benefícios Inclusos
               </h3>
               <button
                 type="button"
                 onClick={adicionarBeneficio}
-                style={{ background: 'none', border: 'none', color: '#1d4ed8', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--brand-strong)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
               >
                 + Adicionar
               </button>
             </div>
             {tipo.beneficios.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#cbd5e1', fontStyle: 'italic' }}>
+              <p style={{ fontSize: 13, color: 'var(--ink-muted)', fontStyle: 'italic' }}>
                 Nenhum benefício adicionado. Ex: "Open bar", "Área VIP", "Meet &amp; Greet".
               </p>
             ) : (
@@ -983,7 +983,7 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                     <button
                       type="button"
                       onClick={() => removerBeneficio(i)}
-                      style={{ background: 'none', border: 'none', color: '#cbd5e1', fontSize: 18, cursor: 'pointer', padding: 4, flexShrink: 0 }}
+                      style={{ background: 'none', border: 'none', color: 'var(--ink-muted)', fontSize: 18, cursor: 'pointer', padding: 4, flexShrink: 0 }}
                     >
                       ✕
                     </button>
@@ -997,15 +997,15 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
           <section>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
                   Lotes de Venda
                 </h3>
-                <p style={{ fontSize: 12, color: '#94a3b8' }}>Cada lote tem seu próprio preço e período de vendas.</p>
+                <p style={{ fontSize: 12, color: 'var(--ink-muted)' }}>Cada lote tem seu próprio preço e período de vendas.</p>
               </div>
               <button
                 type="button"
                 onClick={adicionarLote}
-                style={{ background: 'none', border: 'none', color: '#1d4ed8', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                style={{ background: 'none', border: 'none', color: 'var(--brand-strong)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
                 + Lote
               </button>
@@ -1014,17 +1014,17 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
             {/* Contador de uso */}
             {qtdTotal > 0 && (
               <div style={{
-                background: somaLotes > qtdTotal ? '#fef2f2' : somaLotes === qtdTotal ? '#f0fdf4' : '#eff6ff',
-                border: `1px solid ${somaLotes > qtdTotal ? '#fecaca' : somaLotes === qtdTotal ? '#bbf7d0' : '#bfdbfe'}`,
+                background: somaLotes > qtdTotal ? '#fef2f2' : somaLotes === qtdTotal ? '#f0fdf4' : 'var(--brand-soft)',
+                border: `1px solid ${somaLotes > qtdTotal ? '#fecaca' : somaLotes === qtdTotal ? '#bbf7d0' : 'var(--brand-soft-2)'}`,
                 borderRadius: 8, padding: '8px 14px', marginBottom: 14,
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: somaLotes > qtdTotal ? '#ef4444' : somaLotes === qtdTotal ? '#16a34a' : '#1d4ed8' }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: somaLotes > qtdTotal ? '#ef4444' : somaLotes === qtdTotal ? '#16a34a' : 'var(--brand-strong)' }}>
                   {somaLotes > qtdTotal
                     ? `Excedido: ${somaLotes} / ${qtdTotal} ingressos nos lotes`
                     : `${somaLotes} / ${qtdTotal} ingressos alocados nos lotes`}
                 </span>
-                <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                <span style={{ fontSize: 11, color: 'var(--ink-muted)' }}>
                   {qtdTotal - somaLotes > 0 ? `${qtdTotal - somaLotes} ainda sem lote` : somaLotes === qtdTotal ? 'Todos alocados' : ''}
                 </span>
               </div>
@@ -1039,14 +1039,14 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                   <div
                     key={i}
                     style={{
-                      border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px',
+                      border: '1px solid var(--border)', borderRadius: 12, padding: '16px',
                       background: '#fafbff', position: 'relative',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                       <span style={{
-                        fontSize: 12, fontWeight: 700, color: '#1d4ed8',
-                        background: '#eff6ff', borderRadius: 6, padding: '3px 10px',
+                        fontSize: 12, fontWeight: 700, color: 'var(--brand-strong)',
+                        background: 'var(--brand-soft)', borderRadius: 6, padding: '3px 10px',
                       }}>
                         Lote {i + 1}
                       </span>
@@ -1054,7 +1054,7 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                         <button
                           type="button"
                           onClick={() => removerLote(i)}
-                          style={{ background: 'none', border: 'none', color: '#cbd5e1', fontSize: 16, cursor: 'pointer', padding: 0 }}
+                          style={{ background: 'none', border: 'none', color: 'var(--ink-muted)', fontSize: 16, cursor: 'pointer', padding: 0 }}
                           title="Remover lote"
                         >
                           🗑️
@@ -1064,7 +1064,7 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
 
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-muted)', marginBottom: 4 }}>
                           Nome do Lote <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <input
@@ -1075,7 +1075,7 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                         />
                       </div>
                       <div>
-                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-muted)', marginBottom: 4 }}>
                           Preço (R$) <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <input
@@ -1086,7 +1086,7 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                         />
                       </div>
                       <div>
-                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-muted)', marginBottom: 4 }}>
                           Quantidade <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <input
@@ -1098,11 +1098,11 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                           onChange={e => atualizarLote(i, 'quantidade', e.target.value)}
                           style={{
                             ...inputStyle,
-                            borderColor: maxLote !== undefined && Number(lote.quantidade) > maxLote ? '#ef4444' : '#e2e8f0',
+                            borderColor: maxLote !== undefined && Number(lote.quantidade) > maxLote ? '#ef4444' : 'var(--border)',
                           }}
                         />
                         {maxLote !== undefined && (
-                          <p style={{ fontSize: 10, color: Number(lote.quantidade) > maxLote ? '#ef4444' : '#94a3b8', marginTop: 2 }}>
+                          <p style={{ fontSize: 10, color: Number(lote.quantidade) > maxLote ? '#ef4444' : 'var(--ink-muted)', marginTop: 2 }}>
                             máx: {maxLote}
                           </p>
                         )}
@@ -1111,8 +1111,8 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>
-                          Início das Vendas <span style={{ fontWeight: 400, color: '#cbd5e1' }}>(opcional)</span>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-muted)', marginBottom: 4 }}>
+                          Início das Vendas <span style={{ fontWeight: 400, color: 'var(--ink-muted)' }}>(opcional)</span>
                         </label>
                         <input
                           type="datetime-local"
@@ -1122,8 +1122,8 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                         />
                       </div>
                       <div>
-                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>
-                          Fim das Vendas <span style={{ fontWeight: 400, color: '#cbd5e1' }}>(opcional)</span>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-muted)', marginBottom: 4 }}>
+                          Fim das Vendas <span style={{ fontWeight: 400, color: 'var(--ink-muted)' }}>(opcional)</span>
                         </label>
                         <input
                           type="datetime-local"
@@ -1142,14 +1142,14 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
 
         {/* Footer */}
         <div style={{
-          padding: '20px 28px', borderTop: '1px solid #f1f5f9',
+          padding: '20px 28px', borderTop: '1px solid var(--surface-2)',
           display: 'flex', gap: 12, justifyContent: 'flex-end', flexShrink: 0,
         }}>
           <button
             type="button"
             onClick={onFechar}
             style={{
-              background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0',
+              background: 'var(--surface-2)', color: 'var(--ink-2)', border: '1px solid var(--border)',
               borderRadius: 10, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}
           >
@@ -1159,7 +1159,7 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
             type="button"
             onClick={handleSalvar}
             style={{
-              background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 10,
+              background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 10,
               padding: '10px 28px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
             }}
           >
@@ -1198,20 +1198,20 @@ function RelatoriosPanel({ eventos, eventoSelecionado, tiposMetrica, analytics, 
 
   return (
     <>
-      <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1e293b', marginBottom: 24 }}>Relatórios e Analytics</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 24 }}>Relatórios e Analytics</h1>
 
       {/* Seletor de evento */}
       <div style={{ background: '#fff', borderRadius: 14, padding: '20px 24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 24 }}>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 10 }}>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>
           Selecionar Evento
         </label>
         {eventos.length === 0 ? (
-          <p style={{ color: '#94a3b8', fontSize: 14 }}>Você não possui eventos criados ainda.</p>
+          <p style={{ color: 'var(--ink-muted)', fontSize: 14 }}>Você não possui eventos criados ainda.</p>
         ) : (
           <select
             value={eventoSelecionado ?? ''}
             onChange={e => onSelecionarEvento(Number(e.target.value))}
-            style={{ width: '100%', padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, color: '#1e293b', outline: 'none' }}
+            style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 14, color: 'var(--ink)', outline: 'none' }}
           >
             <option value="">Escolha um evento para ver as métricas</option>
             {eventos.map(ev => (
@@ -1224,11 +1224,11 @@ function RelatoriosPanel({ eventos, eventoSelecionado, tiposMetrica, analytics, 
       </div>
 
       {carregando && (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>Carregando métricas...</div>
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--ink-muted)' }}>Carregando métricas...</div>
       )}
 
       {!carregando && eventoSelecionado && evento && tiposMetrica.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--ink-muted)' }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>🎟️</div>
           <p>Nenhum tipo de ingresso encontrado para este evento.</p>
         </div>
@@ -1239,51 +1239,51 @@ function RelatoriosPanel({ eventos, eventoSelecionado, tiposMetrica, analytics, 
           {/* Cards de métricas principais */}
           <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
             <div style={cardMetrica}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                 Taxa de Ocupação
               </p>
-              <p style={{ fontSize: 32, fontWeight: 800, color: taxaOcupacao >= 80 ? '#16a34a' : taxaOcupacao >= 50 ? '#f59e0b' : '#1d4ed8' }}>
+              <p style={{ fontSize: 32, fontWeight: 800, color: taxaOcupacao >= 80 ? '#16a34a' : taxaOcupacao >= 50 ? '#f59e0b' : 'var(--brand-strong)' }}>
                 {taxaOcupacao.toFixed(1)}%
               </p>
-              <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+              <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 4 }}>
                 {totalVendidos.toLocaleString('pt-BR')} / {totalCapacidade.toLocaleString('pt-BR')} ingressos
               </p>
-              <div style={{ marginTop: 10, background: '#e2e8f0', borderRadius: 4, height: 6, overflow: 'hidden' }}>
-                <div style={{ background: taxaOcupacao >= 80 ? '#16a34a' : taxaOcupacao >= 50 ? '#f59e0b' : '#1d4ed8', height: '100%', width: `${Math.min(taxaOcupacao, 100)}%`, borderRadius: 4 }} />
+              <div style={{ marginTop: 10, background: 'var(--border)', borderRadius: 4, height: 6, overflow: 'hidden' }}>
+                <div style={{ background: taxaOcupacao >= 80 ? '#16a34a' : taxaOcupacao >= 50 ? '#f59e0b' : 'var(--brand-strong)', height: '100%', width: `${Math.min(taxaOcupacao, 100)}%`, borderRadius: 4 }} />
               </div>
             </div>
 
             <div style={cardMetrica}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                 Receita Realizada
               </p>
               <p style={{ fontSize: 28, fontWeight: 800, color: '#16a34a' }}>{formatMoeda(receitaRealizada)}</p>
-              <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+              <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 4 }}>
                 de {formatMoeda(receitaPotencial)} potencial
               </p>
               {receitaPotencial > 0 && (
-                <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                <p style={{ fontSize: 12, color: 'var(--ink-muted)', marginTop: 2 }}>
                   {((receitaRealizada / receitaPotencial) * 100).toFixed(1)}% da receita potencial
                 </p>
               )}
             </div>
 
             <div style={cardMetrica}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                 Ingressos Disponíveis
               </p>
-              <p style={{ fontSize: 32, fontWeight: 800, color: '#1e293b' }}>
+              <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--ink)' }}>
                 {tiposMetrica.reduce((s, t) => s + t.quantidadeDisponivel, 0).toLocaleString('pt-BR')}
               </p>
-              <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>ingressos ainda à venda</p>
+              <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 4 }}>ingressos ainda à venda</p>
             </div>
 
             <div style={cardMetrica}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                 Tipos de Ingresso
               </p>
-              <p style={{ fontSize: 32, fontWeight: 800, color: '#1d4ed8' }}>{tiposMetrica.length}</p>
-              <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>categorias configuradas</p>
+              <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--brand-strong)' }}>{tiposMetrica.length}</p>
+              <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 4 }}>categorias configuradas</p>
             </div>
           </div>
 
@@ -1291,28 +1291,28 @@ function RelatoriosPanel({ eventos, eventoSelecionado, tiposMetrica, analytics, 
           {analytics && (
             <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
               <div style={cardMetrica}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                   Ingressos Revendidos
                 </p>
                 <p style={{ fontSize: 32, fontWeight: 800, color: '#7c3aed' }}>{analytics.totalRevendidos}</p>
-                <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+                <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 4 }}>
                   {analytics.taxaRevenda.toFixed(1)}% dos vendidos
                 </p>
               </div>
               <div style={cardMetrica}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                   Avaliação Média
                 </p>
                 <p style={{ fontSize: 32, fontWeight: 800, color: '#f59e0b' }}>
                   {analytics.totalAvaliacoes > 0 ? analytics.mediaAvaliacao.toFixed(1) : '—'}
                 </p>
-                <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+                <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 4 }}>
                   {analytics.totalAvaliacoes > 0 ? `${analytics.totalAvaliacoes} avaliações` : 'Sem avaliações ainda'}
                 </p>
                 {analytics.totalAvaliacoes > 0 && (
                   <div style={{ display: 'flex', gap: 2, marginTop: 6 }}>
                     {[1,2,3,4,5].map(i => (
-                      <span key={i} style={{ color: i <= Math.round(analytics.mediaAvaliacao) ? '#f59e0b' : '#e2e8f0', fontSize: 14 }}>★</span>
+                      <span key={i} style={{ color: i <= Math.round(analytics.mediaAvaliacao) ? '#f59e0b' : 'var(--border)', fontSize: 14 }}>★</span>
                     ))}
                   </div>
                 )}
@@ -1322,7 +1322,7 @@ function RelatoriosPanel({ eventos, eventoSelecionado, tiposMetrica, analytics, 
 
           {/* Breakdown por tipo */}
           <div style={{ background: '#fff', borderRadius: 14, padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 20 }}>Ocupação por Tipo de Ingresso</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Ocupação por Tipo de Ingresso</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {tiposMetrica.map(t => {
                 const vendidos = t.quantidadeTotal - t.quantidadeDisponivel
@@ -1332,19 +1332,19 @@ function RelatoriosPanel({ eventos, eventoSelecionado, tiposMetrica, analytics, 
                   <div key={t.id}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 6 }}>
                       <div>
-                        <span style={{ fontWeight: 700, color: '#1e293b', fontSize: 14 }}>{t.nome}</span>
-                        <span style={{ marginLeft: 10, fontSize: 12, color: '#64748b' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: 14 }}>{t.nome}</span>
+                        <span style={{ marginLeft: 10, fontSize: 12, color: 'var(--ink-2)' }}>
                           {vendidos} / {t.quantidadeTotal} vendidos · {formatMoeda(t.preco)} cada
                         </span>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <span style={{ fontWeight: 700, color: '#16a34a', fontSize: 14 }}>{formatMoeda(receita)}</span>
-                        <span style={{ marginLeft: 8, fontSize: 12, color: '#94a3b8' }}>{taxa.toFixed(1)}%</span>
+                        <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--ink-muted)' }}>{taxa.toFixed(1)}%</span>
                       </div>
                     </div>
-                    <div style={{ background: '#e2e8f0', borderRadius: 4, height: 8, overflow: 'hidden' }}>
+                    <div style={{ background: 'var(--border)', borderRadius: 4, height: 8, overflow: 'hidden' }}>
                       <div style={{
-                        background: taxa >= 80 ? '#16a34a' : taxa >= 50 ? '#f59e0b' : '#1d4ed8',
+                        background: taxa >= 80 ? '#16a34a' : taxa >= 50 ? '#f59e0b' : 'var(--brand-strong)',
                         height: '100%', width: `${Math.min(taxa, 100)}%`, borderRadius: 4,
                         transition: 'width 0.4s ease',
                       }} />
@@ -1357,42 +1357,42 @@ function RelatoriosPanel({ eventos, eventoSelecionado, tiposMetrica, analytics, 
 
           {/* Resumo financeiro */}
           <div style={{ background: '#fff', borderRadius: 14, padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 16 }}>Resumo Financeiro</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 16 }}>Resumo Financeiro</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                  <th style={{ textAlign: 'left', padding: '10px 0', fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Tipo</th>
-                  <th style={{ textAlign: 'right', padding: '10px 0', fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Preço</th>
-                  <th style={{ textAlign: 'right', padding: '10px 0', fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Vendidos</th>
-                  <th style={{ textAlign: 'right', padding: '10px 0', fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Receita</th>
-                  <th style={{ textAlign: 'right', padding: '10px 0', fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Potencial</th>
+                <tr style={{ borderBottom: '2px solid var(--surface-2)' }}>
+                  <th style={{ textAlign: 'left', padding: '10px 0', fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase' }}>Tipo</th>
+                  <th style={{ textAlign: 'right', padding: '10px 0', fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase' }}>Preço</th>
+                  <th style={{ textAlign: 'right', padding: '10px 0', fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase' }}>Vendidos</th>
+                  <th style={{ textAlign: 'right', padding: '10px 0', fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase' }}>Receita</th>
+                  <th style={{ textAlign: 'right', padding: '10px 0', fontSize: 12, fontWeight: 600, color: 'var(--ink-muted)', textTransform: 'uppercase' }}>Potencial</th>
                 </tr>
               </thead>
               <tbody>
                 {tiposMetrica.map(t => {
                   const vendidos = t.quantidadeTotal - t.quantidadeDisponivel
                   return (
-                    <tr key={t.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                      <td style={{ padding: '12px 0', fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{t.nome}</td>
-                      <td style={{ padding: '12px 0', fontSize: 14, color: '#64748b', textAlign: 'right' }}>{formatMoeda(t.preco)}</td>
-                      <td style={{ padding: '12px 0', fontSize: 14, color: '#1e293b', textAlign: 'right' }}>{vendidos}</td>
+                    <tr key={t.id} style={{ borderBottom: '1px solid var(--surface-2)' }}>
+                      <td style={{ padding: '12px 0', fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{t.nome}</td>
+                      <td style={{ padding: '12px 0', fontSize: 14, color: 'var(--ink-2)', textAlign: 'right' }}>{formatMoeda(t.preco)}</td>
+                      <td style={{ padding: '12px 0', fontSize: 14, color: 'var(--ink)', textAlign: 'right' }}>{vendidos}</td>
                       <td style={{ padding: '12px 0', fontSize: 14, fontWeight: 700, color: '#16a34a', textAlign: 'right' }}>{formatMoeda(vendidos * t.preco)}</td>
-                      <td style={{ padding: '12px 0', fontSize: 14, color: '#94a3b8', textAlign: 'right' }}>{formatMoeda(t.quantidadeTotal * t.preco)}</td>
+                      <td style={{ padding: '12px 0', fontSize: 14, color: 'var(--ink-muted)', textAlign: 'right' }}>{formatMoeda(t.quantidadeTotal * t.preco)}</td>
                     </tr>
                   )
                 })}
               </tbody>
               <tfoot>
-                <tr style={{ borderTop: '2px solid #e2e8f0' }}>
-                  <td style={{ padding: '14px 0', fontWeight: 800, color: '#1e293b' }}>Total</td>
+                <tr style={{ borderTop: '2px solid var(--border)' }}>
+                  <td style={{ padding: '14px 0', fontWeight: 800, color: 'var(--ink)' }}>Total</td>
                   <td />
-                  <td style={{ padding: '14px 0', fontWeight: 800, color: '#1e293b', textAlign: 'right' }}>{totalVendidos}</td>
+                  <td style={{ padding: '14px 0', fontWeight: 800, color: 'var(--ink)', textAlign: 'right' }}>{totalVendidos}</td>
                   <td style={{ padding: '14px 0', fontWeight: 800, color: '#16a34a', textAlign: 'right' }}>{formatMoeda(receitaRealizada)}</td>
-                  <td style={{ padding: '14px 0', fontWeight: 800, color: '#94a3b8', textAlign: 'right' }}>{formatMoeda(receitaPotencial)}</td>
+                  <td style={{ padding: '14px 0', fontWeight: 800, color: 'var(--ink-muted)', textAlign: 'right' }}>{formatMoeda(receitaPotencial)}</td>
                 </tr>
               </tfoot>
             </table>
-            <p style={{ fontSize: 11, color: '#cbd5e1', marginTop: 12 }}>
+            <p style={{ fontSize: 11, color: 'var(--ink-muted)', marginTop: 12 }}>
               * Velocidade de vendas ao longo do tempo e perfil detalhado de compradores requerem módulo avançado de analytics.
             </p>
           </div>

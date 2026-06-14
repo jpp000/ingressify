@@ -116,7 +116,7 @@ export default function DenunciasPage() {
       <>
         <Navbar />
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px', textAlign: 'center' }}>
-          <p style={{ color: '#64748b' }}>Acesso restrito a administradores.</p>
+          <p style={{ color: 'var(--ink-2)' }}>Acesso restrito a administradores.</p>
         </div>
       </>
     )
@@ -128,10 +128,10 @@ export default function DenunciasPage() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#1e293b', marginBottom: 6 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', marginBottom: 6 }}>
               Denúncias de Revendas
             </h1>
-            <p style={{ color: '#64748b', fontSize: 14 }}>
+            <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>
               {pendentes > 0 ? `${pendentes} denúncia(s) aguardando moderação` : 'Nenhuma denúncia pendente'}
             </p>
           </div>
@@ -141,8 +141,8 @@ export default function DenunciasPage() {
                 key={status}
                 onClick={() => setFiltroStatus(status)}
                 style={{
-                  background: filtroStatus === status ? '#1d4ed8' : '#f1f5f9',
-                  color: filtroStatus === status ? '#fff' : '#475569',
+                  background: filtroStatus === status ? 'var(--brand-strong)' : 'var(--surface-2)',
+                  color: filtroStatus === status ? '#fff' : 'var(--ink-2)',
                   border: 'none',
                   borderRadius: 20,
                   padding: '8px 16px',
@@ -172,9 +172,9 @@ export default function DenunciasPage() {
         )}
 
         {carregando ? (
-          <p style={{ color: '#94a3b8', textAlign: 'center', padding: 40 }}>Carregando...</p>
+          <p style={{ color: 'var(--ink-muted)', textAlign: 'center', padding: 40 }}>Carregando...</p>
         ) : denunciasFiltradas.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>
+          <div style={{ textAlign: 'center', padding: 60, color: 'var(--ink-muted)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
             <p>Nenhuma denúncia encontrada.</p>
           </div>
@@ -190,7 +190,7 @@ export default function DenunciasPage() {
                   key={d.id}
                   style={{
                     background: '#fff',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid var(--border)',
                     borderRadius: 14,
                     padding: '20px 24px',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
@@ -199,7 +199,7 @@ export default function DenunciasPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontWeight: 700, color: '#1e293b', fontSize: 16 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: 16 }}>
                           #{d.id} — {evento?.nome ?? `Anúncio #${d.anuncioId}`}
                         </span>
                         <span style={{
@@ -207,17 +207,17 @@ export default function DenunciasPage() {
                           fontWeight: 700,
                           padding: '2px 8px',
                           borderRadius: 20,
-                          background: resolvida ? '#f1f5f9' : '#fef3c7',
-                          color: resolvida ? '#64748b' : '#92400e',
+                          background: resolvida ? 'var(--surface-2)' : '#fef3c7',
+                          color: resolvida ? 'var(--ink-2)' : '#92400e',
                         }}>
                           {resolvida ? 'Resolvida' : 'Pendente'}
                         </span>
                       </div>
                       {evento && (
-                        <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{evento.local}</p>
+                        <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: 0 }}>{evento.local}</p>
                       )}
                     </div>
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                    <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>
                       {new Date(d.criadaEm).toLocaleString('pt-BR')}
                     </span>
                   </div>
@@ -238,8 +238,8 @@ export default function DenunciasPage() {
                   {d.descricao && (
                     <p style={{
                       fontSize: 14,
-                      color: '#475569',
-                      background: '#f8fafc',
+                      color: 'var(--ink-2)',
+                      background: 'var(--surface-2)',
                       borderRadius: 8,
                       padding: '10px 14px',
                       margin: '0 0 14px',
@@ -258,10 +258,10 @@ export default function DenunciasPage() {
                           onClick={() => decidir(d.id, decisao)}
                           style={{
                             background: decisao === 'VENDEDOR_BLOQUEADO' || decisao === 'ANUNCIO_REMOVIDO'
-                              ? '#fef2f2' : '#f1f5f9',
+                              ? '#fef2f2' : 'var(--surface-2)',
                             color: decisao === 'VENDEDOR_BLOQUEADO' || decisao === 'ANUNCIO_REMOVIDO'
-                              ? '#b91c1c' : '#475569',
-                            border: '1px solid #e2e8f0',
+                              ? '#b91c1c' : 'var(--ink-2)',
+                            border: '1px solid var(--border)',
                             borderRadius: 8,
                             padding: '8px 14px',
                             fontSize: 13,
@@ -288,10 +288,10 @@ export default function DenunciasPage() {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>
+      <div style={{ fontSize: 11, color: 'var(--ink-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>
         {label}
       </div>
-      <div style={{ fontSize: 14, color: '#1e293b', fontWeight: 500 }}>{value}</div>
+      <div style={{ fontSize: 14, color: 'var(--ink)', fontWeight: 500 }}>{value}</div>
     </div>
   )
 }

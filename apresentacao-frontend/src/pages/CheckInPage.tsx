@@ -77,10 +77,10 @@ export default function CheckInPage() {
     <>
       <Navbar />
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#1e293b', marginBottom: 6 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', marginBottom: 6 }}>
           Check-in de Ingressos
         </h1>
-        <p style={{ color: '#64748b', fontSize: 14, marginBottom: 28 }}>
+        <p style={{ color: 'var(--ink-2)', fontSize: 14, marginBottom: 28 }}>
           Escaneie QR codes ou digite o código do ingresso para validar a entrada.
         </p>
 
@@ -104,13 +104,13 @@ export default function CheckInPage() {
           <>
             {evento && (
               <div style={{
-                background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12,
+                background: 'var(--brand-soft)', border: '1px solid var(--brand-soft-2)', borderRadius: 12,
                 padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12,
               }}>
                 <span style={{ fontSize: 24 }}>📅</span>
                 <div>
-                  <p style={{ fontWeight: 700, color: '#1e293b', margin: 0 }}>{evento.nome}</p>
-                  <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0' }}>Evento #{eventoId}</p>
+                  <p style={{ fontWeight: 700, color: 'var(--ink)', margin: 0 }}>{evento.nome}</p>
+                  <p style={{ fontSize: 12, color: 'var(--ink-2)', margin: '2px 0 0' }}>Evento #{eventoId}</p>
                 </div>
               </div>
             )}
@@ -131,7 +131,7 @@ export default function CheckInPage() {
                 background: '#fff', borderRadius: 16, padding: 24,
                 boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 32,
               }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 16 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 16 }}>
                   Validar Ingresso
                 </h2>
                 <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
@@ -143,7 +143,7 @@ export default function CheckInPage() {
                     onKeyDown={e => e.key === 'Enter' && realizarCheckIn('manual')}
                     style={{
                       flex: 1, padding: '12px 16px',
-                      border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, outline: 'none',
+                      border: '1px solid var(--border)', borderRadius: 8, fontSize: 14, outline: 'none',
                     }}
                   />
                 </div>
@@ -152,7 +152,7 @@ export default function CheckInPage() {
                     onClick={() => realizarCheckIn('manual')}
                     disabled={carregando || !codigo.trim()}
                     style={{
-                      background: '#1d4ed8', color: '#fff', border: 'none',
+                      background: 'var(--brand-strong)', color: '#fff', border: 'none',
                       borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600,
                       cursor: carregando ? 'wait' : 'pointer',
                       opacity: !codigo.trim() ? 0.5 : 1,
@@ -177,13 +177,13 @@ export default function CheckInPage() {
             )}
 
             <section>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 12 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 12 }}>
                 Relatório de Check-ins ({relatorio.length})
               </h2>
               {relatorio.length === 0 ? (
                 <div style={{
                   textAlign: 'center', padding: '40px 24px',
-                  background: '#f8fafc', borderRadius: 12, color: '#94a3b8',
+                  background: 'var(--surface-2)', borderRadius: 12, color: 'var(--ink-muted)',
                 }}>
                   Nenhum check-in registrado ainda.
                 </div>
@@ -193,15 +193,15 @@ export default function CheckInPage() {
                     <div
                       key={r.registroId}
                       style={{
-                        background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
+                        background: '#fff', border: '1px solid var(--border)', borderRadius: 10,
                         padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       }}
                     >
                       <div>
-                        <p style={{ fontWeight: 600, color: '#1e293b', fontSize: 14, margin: 0 }}>
+                        <p style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 14, margin: 0 }}>
                           Ingresso {r.ingressoId.slice(0, 8)}...
                         </p>
-                        <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0' }}>
+                        <p style={{ fontSize: 12, color: 'var(--ink-2)', margin: '2px 0 0' }}>
                           Operador #{r.operadorId}
                         </p>
                       </div>

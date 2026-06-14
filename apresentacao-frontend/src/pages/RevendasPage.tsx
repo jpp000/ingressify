@@ -165,10 +165,10 @@ export default function RevendasPage() {
       <Navbar />
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
 
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#1e293b', marginBottom: 6 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', marginBottom: 6 }}>
           Marketplace de Revendas
         </h1>
-        <p style={{ color: '#64748b', fontSize: 14, marginBottom: 28 }}>
+        <p style={{ color: 'var(--ink-2)', fontSize: 14, marginBottom: 28 }}>
           Ingressos de compradores que não podem mais ir — transferência segura e garantida.
         </p>
 
@@ -186,7 +186,7 @@ export default function RevendasPage() {
             onChange={e => setFiltroNome(e.target.value)}
             style={{
               flex: 1, padding: '10px 14px',
-              border: '1px solid #e2e8f0', borderRadius: 8,
+              border: '1px solid var(--border)', borderRadius: 8,
               fontSize: 14, outline: 'none',
             }}
           />
@@ -194,8 +194,8 @@ export default function RevendasPage() {
             <button
               onClick={() => setFiltroNome('')}
               style={{
-                background: '#f1f5f9', border: 'none', borderRadius: 8,
-                padding: '10px 16px', fontSize: 13, color: '#64748b',
+                background: 'var(--surface-2)', border: 'none', borderRadius: 8,
+                padding: '10px 16px', fontSize: 13, color: 'var(--ink-2)',
                 cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
               }}
             >
@@ -211,7 +211,7 @@ export default function RevendasPage() {
         )}
 
         {carregando ? (
-          <div style={{ textAlign: 'center', padding: '64px 0', color: '#94a3b8' }}>Carregando anúncios...</div>
+          <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--ink-muted)' }}>Carregando anúncios...</div>
         ) : (
           <>
             {/* Minha reserva pendente */}
@@ -226,7 +226,7 @@ export default function RevendasPage() {
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>
                     Você tem uma reserva pendente
                   </p>
-                  <p style={{ fontSize: 15, fontWeight: 800, color: '#1e293b' }}>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)' }}>
                     {eventosMap.get(minhaReserva.eventoId)?.nome ?? `Evento #${minhaReserva.eventoId}`}
                     {' · '}{minhaReserva.quantidade} ingresso(s) · {formatMoeda(minhaReserva.preco)}
                   </p>
@@ -264,14 +264,14 @@ export default function RevendasPage() {
 
             {/* Disponíveis */}
             <section style={{ marginBottom: 32 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 12 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 12 }}>
                 Disponíveis ({disponiveis.length})
               </h2>
               {disponiveis.length === 0 ? (
                 <div style={{
                   textAlign: 'center', padding: '48px 24px',
-                  background: '#f8fafc', borderRadius: 16,
-                  color: '#94a3b8', border: '1px dashed #e2e8f0',
+                  background: 'var(--surface-2)', borderRadius: 16,
+                  color: 'var(--ink-muted)', border: '1px dashed var(--border)',
                 }}>
                   <div style={{ fontSize: 40, marginBottom: 12 }}>🎟️</div>
                   <p style={{ fontWeight: 600, marginBottom: 4 }}>
@@ -308,23 +308,23 @@ export default function RevendasPage() {
                   width: '100%', maxWidth: 440, margin: 16,
                   boxShadow: '0 16px 48px rgba(0,0,0,0.2)',
                 }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px' }}>
                     🚨 Denunciar Anúncio
                   </h3>
-                  <label style={{ display: 'block', fontSize: 13, color: '#64748b', marginBottom: 6 }}>Motivo</label>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--ink-2)', marginBottom: 6 }}>Motivo</label>
                   <select
                     value={denunciaForm.motivo}
                     onChange={e => setDenunciaForm(f => ({ ...f, motivo: e.target.value }))}
                     style={{
                       width: '100%', padding: '10px 14px', marginBottom: 14,
-                      border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14,
+                      border: '1px solid var(--border)', borderRadius: 8, fontSize: 14,
                     }}
                   >
                     {MOTIVOS_DENUNCIA.map(m => (
                       <option key={m.value} value={m.value}>{m.label}</option>
                     ))}
                   </select>
-                  <label style={{ display: 'block', fontSize: 13, color: '#64748b', marginBottom: 6 }}>Descrição (opcional)</label>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--ink-2)', marginBottom: 6 }}>Descrição (opcional)</label>
                   <textarea
                     value={denunciaForm.descricao}
                     onChange={e => setDenunciaForm(f => ({ ...f, descricao: e.target.value }))}
@@ -332,7 +332,7 @@ export default function RevendasPage() {
                     rows={3}
                     style={{
                       width: '100%', padding: '10px 14px', marginBottom: 20,
-                      border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14,
+                      border: '1px solid var(--border)', borderRadius: 8, fontSize: 14,
                       resize: 'vertical', fontFamily: 'inherit', outline: 'none',
                     }}
                   />
@@ -340,7 +340,7 @@ export default function RevendasPage() {
                     <button
                       onClick={() => { setDenunciaAberta(null); setDenunciaForm({ motivo: 'PRECO_ABUSIVO', descricao: '' }) }}
                       style={{
-                        background: '#f1f5f9', color: '#64748b', border: 'none',
+                        background: 'var(--surface-2)', color: 'var(--ink-2)', border: 'none',
                         borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
                       }}
                     >
@@ -365,7 +365,7 @@ export default function RevendasPage() {
             {/* Reservados */}
             {reservados.length > 0 && (
               <section>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: '#94a3b8', marginBottom: 12 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-muted)', marginBottom: 12 }}>
                   Reservados ({reservados.length})
                 </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -411,7 +411,7 @@ function AnuncioCard({
 
   return (
     <div style={{
-      background: '#fff', border: `1px solid ${reservado ? '#fde68a' : '#e2e8f0'}`,
+      background: '#fff', border: `1px solid ${reservado ? '#fde68a' : 'var(--border)'}`,
       borderRadius: 12, padding: '16px 20px',
       display: 'flex', alignItems: 'center', gap: 16,
       opacity: reservado && !isMeu ? 0.7 : 1,
@@ -425,7 +425,7 @@ function AnuncioCard({
       ) : (
         <div style={{
           width: 52, height: 52, borderRadius: 8,
-          background: isMeu ? '#eff6ff' : '#f0fdf4',
+          background: isMeu ? 'var(--brand-soft)' : '#f0fdf4',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 22, flexShrink: 0,
         }}>
@@ -435,7 +435,7 @@ function AnuncioCard({
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
-          <span style={{ fontWeight: 700, color: '#1e293b', fontSize: 15 }}>{nomeEvento}</span>
+          <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: 15 }}>{nomeEvento}</span>
           <span style={{
             fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
             background: reservado ? '#fef3c7' : '#dcfce7',
@@ -445,10 +445,10 @@ function AnuncioCard({
             {reservado ? 'Reservado' : 'Disponível'}
           </span>
           {isMeu && (
-            <span style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>Seu anúncio</span>
+            <span style={{ fontSize: 11, color: 'var(--ink-muted)', fontStyle: 'italic' }}>Seu anúncio</span>
           )}
         </div>
-        <p style={{ fontSize: 12, color: '#64748b' }}>
+        <p style={{ fontSize: 12, color: 'var(--ink-2)' }}>
           {dataEvento && `📅 ${dataEvento} · `}
           {evento?.local && `📍 ${evento.local} · `}
           🎟️ {anuncio.quantidade} ingresso(s)
@@ -456,7 +456,7 @@ function AnuncioCard({
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-        <span style={{ fontSize: 20, fontWeight: 800, color: '#1d4ed8' }}>
+        <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand-strong)' }}>
           {formatMoeda(anuncio.preco)}
         </span>
         {!reservado && !isMeu && onReservar && currentUserId && (

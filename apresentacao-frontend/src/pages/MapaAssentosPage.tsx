@@ -27,15 +27,15 @@ interface MapaAssentos {
 const corStatus: Record<string, string> = {
   DISPONIVEL: '#22c55e',
   RESERVADO: '#f59e0b',
-  VENDIDO: '#64748b',
-  BLOQUEADO: '#1e293b',
+  VENDIDO: 'var(--ink-2)',
+  BLOQUEADO: 'var(--ink)',
 }
 
 const corTipo: Record<string, string> = {
-  NORMAL: '#3b82f6',
+  NORMAL: 'var(--brand)',
   VIP: '#a855f7',
   ACESSIBILIDADE: '#06b6d4',
-  BLOQUEADO: '#1e293b',
+  BLOQUEADO: 'var(--ink)',
 }
 
 const formatMoeda = (v: number) =>
@@ -147,16 +147,16 @@ export default function MapaAssentosPage() {
         {/* Cabeçalho */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>
               🗺️ Mapa de Assentos
             </h1>
-            <p style={{ color: '#64748b', marginTop: 4 }}>
+            <p style={{ color: 'var(--ink-2)', marginTop: 4 }}>
               Selecione seu(s) assento(s) e garanta sua posição
             </p>
           </div>
           {ehOrganizador && eventoId && !mapa && !criando && (
             <button onClick={() => setCriando(true)} style={{
-              background: '#1d4ed8', color: '#fff', border: 'none',
+              background: 'var(--brand-strong)', color: '#fff', border: 'none',
               borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 600
             }}>
               + Criar Mapa
@@ -178,7 +178,7 @@ export default function MapaAssentosPage() {
         {/* Form criar mapa */}
         {criando && (
           <form onSubmit={criarMapa} style={{
-            background: '#f8fafc', border: '1px solid #e2e8f0',
+            background: 'var(--surface-2)', border: '1px solid var(--border)',
             borderRadius: 12, padding: 24, marginBottom: 32
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Configurar Mapa de Assentos</h2>
@@ -190,24 +190,24 @@ export default function MapaAssentosPage() {
                 { label: 'Preço VIP (R$)', field: 'precoVip' },
               ].map(({ label, field }) => (
                 <label key={field} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 13, color: '#475569', fontWeight: 500 }}>{label}</span>
+                  <span style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 500 }}>{label}</span>
                   <input
                     type="number"
                     value={(form as any)[field]}
                     onChange={e => setForm(prev => ({ ...prev, [field]: e.target.value }))}
                     min="1" step="0.01" required
-                    style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14 }}
+                    style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--ink-muted)', fontSize: 14 }}
                   />
                 </label>
               ))}
             </div>
-            <p style={{ color: '#64748b', fontSize: 13, marginTop: 12 }}>
+            <p style={{ color: 'var(--ink-2)', fontSize: 13, marginTop: 12 }}>
               💡 Assentos VIP são gerados na 1ª fileira (centro) com +50% no preço.
               Assentos de Acessibilidade ficam na última fileira com 50% de desconto.
             </p>
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
               <button type="submit" style={btnStyle('#16a34a')}>Criar Mapa</button>
-              <button type="button" onClick={() => setCriando(false)} style={btnStyle('#64748b')}>Cancelar</button>
+              <button type="button" onClick={() => setCriando(false)} style={btnStyle('var(--ink-2)')}>Cancelar</button>
             </div>
           </form>
         )}
@@ -225,7 +225,7 @@ export default function MapaAssentosPage() {
             ].map(({ label, cor }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                 <span style={{ width: 16, height: 16, borderRadius: 4, background: cor, display: 'inline-block' }} />
-                <span style={{ color: '#475569' }}>{label}</span>
+                <span style={{ color: 'var(--ink-2)' }}>{label}</span>
               </div>
             ))}
           </div>
@@ -239,16 +239,16 @@ export default function MapaAssentosPage() {
             icone="💺"
           />
         ) : carregando ? (
-          <p style={{ color: '#64748b', textAlign: 'center', padding: 40 }}>Carregando mapa...</p>
+          <p style={{ color: 'var(--ink-2)', textAlign: 'center', padding: 40 }}>Carregando mapa...</p>
         ) : !mapa ? (
           <div style={{
-            textAlign: 'center', padding: '60px 20px', background: '#f8fafc',
-            borderRadius: 12, border: '2px dashed #e2e8f0'
+            textAlign: 'center', padding: '60px 20px', background: 'var(--surface-2)',
+            borderRadius: 12, border: '2px dashed var(--border)'
           }}>
             <p style={{ fontSize: 48, margin: '0 0 16px' }}>💺</p>
-            <p style={{ color: '#64748b', fontSize: 16 }}>Nenhum mapa de assentos configurado para este evento.</p>
+            <p style={{ color: 'var(--ink-2)', fontSize: 16 }}>Nenhum mapa de assentos configurado para este evento.</p>
             {ehOrganizador && (
-              <button onClick={() => setCriando(true)} style={{ ...btnStyle('#1d4ed8'), marginTop: 16 }}>
+              <button onClick={() => setCriando(true)} style={{ ...btnStyle('var(--brand-strong)'), marginTop: 16 }}>
                 Criar Mapa de Assentos
               </button>
             )}
@@ -257,7 +257,7 @@ export default function MapaAssentosPage() {
           <>
             {/* Palco */}
             <div style={{
-              background: '#0f172a', color: '#94a3b8', borderRadius: 8,
+              background: 'var(--ink)', color: 'var(--ink-muted)', borderRadius: 8,
               padding: '10px 0', textAlign: 'center', fontWeight: 600,
               fontSize: 14, letterSpacing: 4, marginBottom: 24
             }}>
@@ -268,7 +268,7 @@ export default function MapaAssentosPage() {
             <div style={{ overflowX: 'auto' }}>
               {[...agruparPorFileira(mapa.assentos).entries()].map(([fileira, assentos]) => (
                 <div key={fileira} style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
-                  <span style={{ width: 20, color: '#94a3b8', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
+                  <span style={{ width: 20, color: 'var(--ink-muted)', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
                     {fileira}
                   </span>
                   {assentos
@@ -311,22 +311,22 @@ export default function MapaAssentosPage() {
             {selecionados.length > 0 && (
               <div style={{
                 position: 'sticky', bottom: 20, marginTop: 32,
-                background: '#0f172a', borderRadius: 12, padding: '16px 24px',
+                background: 'var(--ink)', borderRadius: 12, padding: '16px 24px',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
               }}>
                 <div>
-                  <p style={{ color: '#94a3b8', margin: 0, fontSize: 13 }}>
+                  <p style={{ color: 'var(--ink-muted)', margin: 0, fontSize: 13 }}>
                     {selecionados.length} assento(s) selecionado(s)
                   </p>
-                  <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 20, margin: '4px 0 0' }}>
+                  <p style={{ color: 'var(--surface-2)', fontWeight: 700, fontSize: 20, margin: '4px 0 0' }}>
                     {formatMoeda(totalSelecionado)}
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <button
                     onClick={() => setSelecionados([])}
-                    style={{ background: '#334155', color: '#cbd5e1', border: 'none', borderRadius: 8, padding: '10px 16px', cursor: 'pointer' }}>
+                    style={{ background: 'var(--ink-2)', color: 'var(--ink-muted)', border: 'none', borderRadius: 8, padding: '10px 16px', cursor: 'pointer' }}>
                     Limpar
                   </button>
                   <button
