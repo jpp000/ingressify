@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { eventoService, tipoIngressoService, analyticsService } from '../services/api'
+import { eventoService, tipoIngressoService, analyticsService, cupomService } from '../services/api'
 import Navbar from '../components/Navbar'
 import { CATEGORIAS, formatMoeda } from '../constants'
 import { useAuth } from '../context/AuthContext'
@@ -425,6 +425,12 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
   onCancelar: (id: number) => void
   onExcluir: (id: number) => void
 }) {
+  const { usuario } = useAuth()
+  const [eventoComCupons, setEventoComCupons] = useState<number | null>(null)
+
+  const toggleCupons = (eventoId: number) =>
+    setEventoComCupons(prev => prev === eventoId ? null : eventoId)
+
   return (
     <>
       <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 24 }}>Meus Eventos</h1>
@@ -436,66 +442,77 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {eventos.map(ev => (
-            <div key={ev.id} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>{ev.nome}</h3>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20,
-                    background: ev.status === 'ATIVO' ? '#dcfce7' : ev.status === 'CANCELADO' ? '#fee2e2' : '#fef3c7',
-                    color: ev.status === 'ATIVO' ? '#16a34a' : ev.status === 'CANCELADO' ? '#ef4444' : '#b45309',
-                  }}>
-                    {ev.status}
-                  </span>
+            <div key={ev.id}>
+              <div style={{ background: '#fff', borderRadius: eventoComCupons === ev.id ? '12px 12px 0 0' : 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>{ev.nome}</h3>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20,
+                      background: ev.status === 'ATIVO' ? '#dcfce7' : ev.status === 'CANCELADO' ? '#fee2e2' : '#fef3c7',
+                      color: ev.status === 'ATIVO' ? '#16a34a' : ev.status === 'CANCELADO' ? '#ef4444' : '#b45309',
+                    }}>
+                      {ev.status}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
+                    🕐 {ev.dataHora ? new Date(ev.dataHora).toLocaleString('pt-BR') : ''} &nbsp;|&nbsp;
+                    📍 {ev.local} &nbsp;|&nbsp;
+                    👥 Cap: {ev.capacidade}
+                  </p>
                 </div>
-                <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
-                  🕐 {ev.dataHora ? new Date(ev.dataHora).toLocaleString('pt-BR') : ''} &nbsp;|&nbsp;
-                  📍 {ev.local} &nbsp;|&nbsp;
-                  👥 Cap: {ev.capacidade}
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <Link to={`/eventos/${ev.id}`}>
-                  <button style={{ background: 'var(--brand-soft)', color: 'var(--brand-strong)', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    Ver Detalhes
-                  </button>
-                </Link>
-                <Link to={`/sorteios?eventoId=${ev.id}`}>
-                  <button style={{ background: '#f0fdf4', color: '#16a34a', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    Sorteios
-                  </button>
-                </Link>
-                <Link to={`/mapa-assentos?eventoId=${ev.id}`}>
-                  <button style={{ background: 'var(--brand-soft)', color: '#7c3aed', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    Mapa
-                  </button>
-                </Link>
-                <Link to={`/check-in?eventoId=${ev.id}`}>
-                  <button style={{ background: '#f0f9ff', color: '#0284c7', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    Check-in
-                  </button>
-                </Link>
-                <Link to={`/eventos/${ev.id}`}>
-                  <button style={{ background: '#fffbeb', color: '#b45309', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    Revendas
-                  </button>
-                </Link>
-                {ev.status === 'ATIVO' && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <Link to={`/eventos/${ev.id}`}>
+                    <button style={{ background: 'var(--brand-soft)', color: 'var(--brand-strong)', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      Ver Detalhes
+                    </button>
+                  </Link>
+                  <Link to={`/sorteios?eventoId=${ev.id}`}>
+                    <button style={{ background: '#f0fdf4', color: '#16a34a', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      Sorteios
+                    </button>
+                  </Link>
+                  <Link to={`/mapa-assentos?eventoId=${ev.id}`}>
+                    <button style={{ background: 'var(--brand-soft)', color: '#7c3aed', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      Mapa
+                    </button>
+                  </Link>
+                  <Link to={`/check-in?eventoId=${ev.id}`}>
+                    <button style={{ background: '#f0f9ff', color: '#0284c7', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      Check-in
+                    </button>
+                  </Link>
+                  <Link to={`/eventos/${ev.id}`}>
+                    <button style={{ background: '#fffbeb', color: '#b45309', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      Revendas
+                    </button>
+                  </Link>
                   <button
-                    onClick={() => onCancelar(ev.id)}
-                    style={{ background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                    onClick={() => toggleCupons(ev.id)}
+                    style={{ background: eventoComCupons === ev.id ? 'var(--brand-strong)' : 'var(--brand-soft)', color: eventoComCupons === ev.id ? '#fff' : 'var(--brand-strong)', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
                   >
-                    Cancelar
+                    Cupons
                   </button>
-                )}
-                <button
-                  onClick={() => onExcluir(ev.id)}
-                  style={{ background: 'var(--ink)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-                  title="Excluir evento permanentemente"
-                >
-                  Excluir
-                </button>
+                  {ev.status === 'ATIVO' && (
+                    <button
+                      onClick={() => onCancelar(ev.id)}
+                      style={{ background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onExcluir(ev.id)}
+                    style={{ background: 'var(--ink)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                    title="Excluir evento permanentemente"
+                  >
+                    Excluir
+                  </button>
+                </div>
               </div>
+              {eventoComCupons === ev.id && usuario && (
+                <PainelCupons eventoId={ev.id} usuarioId={usuario.id} />
+              )}
             </div>
           ))}
         </div>
@@ -1460,5 +1477,161 @@ function RelatoriosPanel({ eventos, eventoSelecionado, tiposMetrica, analytics, 
         </>
       )}
     </>
+  )
+}
+
+interface CupomItem {
+  id: number; codigo: string; tipo: string; valor: number
+  valorMinimo: number; limiteUsos: number; usos: number
+  validoDe: string; validoAte: string; ativo: boolean
+}
+
+const CUPOM_FORM_INICIAL = {
+  codigo: '', tipo: 'PERCENTUAL', valor: '', valorMinimo: '',
+  limiteUsos: '0', validoDe: '', validoAte: '',
+}
+
+function PainelCupons({ eventoId, usuarioId }: { eventoId: number; usuarioId: number }) {
+  const [cupons, setCupons] = useState<CupomItem[]>([])
+  const [carregando, setCarregando] = useState(true)
+  const [form, setForm] = useState(CUPOM_FORM_INICIAL)
+  const [salvando, setSalvando] = useState(false)
+  const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null)
+
+  const carregar = () => {
+    setCarregando(true)
+    cupomService.listar(eventoId)
+      .then(r => setCupons(r.data))
+      .catch(() => {})
+      .finally(() => setCarregando(false))
+  }
+
+  useEffect(() => { carregar() }, [eventoId])
+
+  const set = (campo: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm(prev => ({ ...prev, [campo]: e.target.value }))
+
+  const criar = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setMsg(null)
+    if (!form.codigo.trim()) { setMsg({ ok: false, texto: 'Informe o código do cupom.' }); return }
+    if (!form.valor) { setMsg({ ok: false, texto: 'Informe o valor do desconto.' }); return }
+    if (!form.validoDe || !form.validoAte) { setMsg({ ok: false, texto: 'Informe o período de validade.' }); return }
+    setSalvando(true)
+    try {
+      await cupomService.criar(eventoId, usuarioId, {
+        codigo: form.codigo.trim().toUpperCase(),
+        tipo: form.tipo,
+        valor: parseFloat(form.valor.replace(',', '.')),
+        valorMinimo: form.valorMinimo ? parseFloat(form.valorMinimo.replace(',', '.')) : 0,
+        limiteUsos: Number(form.limiteUsos) || 0,
+        validoDe: form.validoDe,
+        validoAte: form.validoAte,
+      })
+      setMsg({ ok: true, texto: 'Cupom criado com sucesso!' })
+      setForm(CUPOM_FORM_INICIAL)
+      carregar()
+    } catch (err: unknown) {
+      const ex = err as { response?: { data?: { message?: string } } }
+      setMsg({ ok: false, texto: ex.response?.data?.message ?? 'Erro ao criar cupom.' })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '9px 12px', border: '1px solid var(--border)',
+    borderRadius: 8, fontSize: 13, color: 'var(--ink)', background: '#fff', outline: 'none',
+  }
+
+  return (
+    <div style={{ background: 'var(--brand-soft)', border: '1px solid var(--brand-soft-2)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '20px 24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+
+        {/* Lista de cupons existentes */}
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand-strong)', marginBottom: 12 }}>
+            Cupons criados ({cupons.length})
+          </h4>
+          {carregando ? (
+            <p style={{ fontSize: 13, color: 'var(--ink-muted)' }}>Carregando...</p>
+          ) : cupons.length === 0 ? (
+            <p style={{ fontSize: 13, color: 'var(--ink-muted)' }}>Nenhum cupom criado para este evento.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {cupons.map(c => (
+                <div key={c.id} style={{ background: '#fff', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, fontFamily: 'monospace', color: 'var(--brand-strong)', background: 'var(--brand-soft)', padding: '3px 10px', borderRadius: 6, letterSpacing: 1 }}>
+                    {c.codigo}
+                  </div>
+                  <div style={{ flex: 1, fontSize: 12, color: 'var(--ink-2)' }}>
+                    {c.tipo === 'PERCENTUAL' ? `${c.valor}% off` : `R$ ${Number(c.valor).toFixed(2)} off`}
+                    {c.valorMinimo > 0 && ` · mín R$ ${Number(c.valorMinimo).toFixed(2)}`}
+                    {' · '}{c.usos}/{c.limiteUsos === 0 ? '∞' : c.limiteUsos} usos
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12, background: c.ativo ? '#dcfce7' : '#f3f4f6', color: c.ativo ? '#16a34a' : 'var(--ink-muted)' }}>
+                    {c.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Formulário de criação */}
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand-strong)', marginBottom: 12 }}>
+            Novo cupom
+          </h4>
+          <form onSubmit={criar} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)', display: 'block', marginBottom: 4 }}>Código *</label>
+                <input style={{ ...inp, textTransform: 'uppercase', fontFamily: 'monospace', letterSpacing: 1 }} placeholder="EX: PROMO10" value={form.codigo} onChange={set('codigo')} maxLength={20} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)', display: 'block', marginBottom: 4 }}>Tipo *</label>
+                <select style={inp} value={form.tipo} onChange={set('tipo')}>
+                  <option value="PERCENTUAL">Percentual (%)</option>
+                  <option value="VALOR_FIXO">Valor fixo (R$)</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)', display: 'block', marginBottom: 4 }}>
+                  {form.tipo === 'PERCENTUAL' ? 'Desconto (%) *' : 'Desconto (R$) *'}
+                </label>
+                <input style={inp} placeholder={form.tipo === 'PERCENTUAL' ? '10' : '25,00'} value={form.valor} onChange={set('valor')} inputMode="decimal" />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)', display: 'block', marginBottom: 4 }}>Valor mínimo (R$)</label>
+                <input style={inp} placeholder="0,00 (sem mínimo)" value={form.valorMinimo} onChange={set('valorMinimo')} inputMode="decimal" />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)', display: 'block', marginBottom: 4 }}>Limite de usos</label>
+                <input style={inp} type="number" min="0" placeholder="0 = ilimitado" value={form.limiteUsos} onChange={set('limiteUsos')} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)', display: 'block', marginBottom: 4 }}>Válido de *</label>
+                <input style={inp} type="datetime-local" value={form.validoDe} onChange={set('validoDe')} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)', display: 'block', marginBottom: 4 }}>Válido até *</label>
+                <input style={inp} type="datetime-local" value={form.validoAte} onChange={set('validoAte')} />
+              </div>
+            </div>
+            {msg && (
+              <p style={{ fontSize: 12, color: msg.ok ? '#16a34a' : '#ef4444', fontWeight: 600, margin: 0 }}>{msg.texto}</p>
+            )}
+            <button type="submit" disabled={salvando} style={{ alignSelf: 'flex-start', background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              {salvando ? 'Criando…' : 'Criar Cupom'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   )
 }
