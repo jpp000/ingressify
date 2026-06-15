@@ -272,7 +272,7 @@ hr { height: 1px; background: var(--border); border: 0; }
 .brand b { color: var(--brand-strong); font-weight: 700; }
 .brand__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 3px; align-self: center; }
 
-.nav-primary { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.nav-primary { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .nav-more { position: relative; flex-shrink: 0; }
 .nav-link {
   display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;

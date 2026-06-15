@@ -103,27 +103,28 @@ export default function Navbar() {
                 <Icon size={18} /><span className="nav-link__t">{label}</span>
               </Link>
             ))}
-            {temMais && (
-              <div className="nav-more">
-                <button
-                  className={`nav-link${algumExtraAtivo || aberto === 'mais' ? ' nav-link--active' : ''}`}
-                  onClick={() => setAberto(a => a === 'mais' ? null : 'mais')}
-                  aria-haspopup="menu" aria-expanded={aberto === 'mais'}
-                >
-                  <MoreHorizontal size={18} /><span className="nav-link__t">Mais</span>
-                </button>
-                {aberto === 'mais' && (
-                  <div className="menu menu--left" role="menu">
-                    {extras.map(({ to, label, Icon, match, state }) => (
-                      <Link key={to} to={to} state={state} className={`menu__item${match(pathname) ? ' menu__item--active' : ''}`} role="menuitem">
-                        <Icon size={18} />{label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </nav>
+
+          {temMais && (
+            <div className="nav-more">
+              <button
+                className={`nav-link${algumExtraAtivo || aberto === 'mais' ? ' nav-link--active' : ''}`}
+                onClick={() => setAberto(a => a === 'mais' ? null : 'mais')}
+                aria-haspopup="menu" aria-expanded={aberto === 'mais'}
+              >
+                <MoreHorizontal size={18} /><span className="nav-link__t">Mais</span>
+              </button>
+              {aberto === 'mais' && (
+                <div className="menu menu--left" role="menu">
+                  {extras.map(({ to, label, Icon, match, state }) => (
+                    <Link key={to} to={to} state={state} className={`menu__item${match(pathname) ? ' menu__item--active' : ''}`} role="menuitem">
+                      <Icon size={18} />{label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {mostrarBusca && (
             <form className="topbar__search" onSubmit={submitBusca} role="search">
