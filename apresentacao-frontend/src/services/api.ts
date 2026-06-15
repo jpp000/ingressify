@@ -62,6 +62,8 @@ export const ingressoService = {
   detalhe: (id: string) => api.get(`/ingressos/${id}`),
   comprar: (usuarioId: number, dados: object) =>
     api.post('/ingressos/comprar', dados, { headers: { 'X-Usuario-Id': usuarioId } }),
+  comprarPedido: (usuarioId: number, dados: object) =>
+    api.post('/pedidos', dados, { headers: { 'X-Usuario-Id': usuarioId } }),
   transferir: (id: string, usuarioId: number, dados: object) =>
     api.post(`/ingressos/${id}/transferir`, dados, { headers: { 'X-Usuario-Id': usuarioId } }),
   reembolsar: (id: string, usuarioId: number) =>
@@ -77,6 +79,25 @@ export const saldoService = {
     api.post('/saldo/adicionar', { valor }, { headers: { 'X-Usuario-Id': usuarioId } }),
   transacoes: (usuarioId: number, page = 1, limit = 10) =>
     api.get(`/transacoes?page=${page}&limit=${limit}`, { headers: { 'X-Usuario-Id': usuarioId } })
+}
+
+// Carteira (recarga / saque)
+export const carteiraService = {
+  obter: (usuarioId: number) =>
+    api.get('/carteira', { headers: { 'X-Usuario-Id': usuarioId } }),
+  recarregar: (usuarioId: number, valor: number) =>
+    api.post('/carteira/recarregar', { valor }, { headers: { 'X-Usuario-Id': usuarioId } }),
+  sacar: (usuarioId: number, valor: number) =>
+    api.post('/carteira/sacar', { valor }, { headers: { 'X-Usuario-Id': usuarioId } }),
+}
+
+// Cupons & Promoções
+export const cupomService = {
+  validar: (codigo: string, eventoId: number, valor: number) =>
+    api.post('/cupons/validar', { codigo, eventoId, valor }),
+  listar: (eventoId: number) => api.get(`/eventos/${eventoId}/cupons`),
+  criar: (eventoId: number, usuarioId: number, dados: object) =>
+    api.post(`/eventos/${eventoId}/cupons`, dados, { headers: { 'X-Usuario-Id': usuarioId } }),
 }
 
 // Revendas

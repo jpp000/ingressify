@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import {
   Calendar, Clock, MapPin, Star, Dices, Repeat, Armchair, Megaphone, Ticket,
-  Minus, Plus, Lock, Pin, ArrowRight, Music2, Drama, Trophy, Mic, Disc3, UtensilsCrossed, type LucideIcon,
+  Minus, Plus, Lock, Pin, ArrowRight, Percent, Music2, Drama, Trophy, Mic, Disc3, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react'
 import { eventoService, tipoIngressoService, avaliacaoService, revendaService, feedService } from '../services/api'
 import Navbar from '../components/Navbar'
@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 
 interface Evento { id: number; nome: string; dataHora: string; local: string; descricao?: string; imagemCapaUrl?: string; status: string; aberturaPortoes?: string; categoria?: string }
 interface Lote { id: number; nome: string; preco: number; quantidadeDisponivel: number; ativo: boolean }
-interface TipoIngresso { id: number; nome: string; preco: number; quantidadeDisponivel: number; descricao?: string; lotes?: Lote[] }
+interface TipoIngresso { id: number; nome: string; preco: number; quantidadeDisponivel: number; descricao?: string; lotes?: Lote[]; precoMeia?: number | null; meiaEntradaHabilitada?: boolean; cotaMeiaDisponivel?: number }
 interface Avaliacao { id: number; nota: number; comentario?: string; respostaOrganizador?: string }
 interface AnuncioRevenda { id: number; preco: number; status: string; quantidade: number; vendedorId: number; compradorId: number | null }
 interface Postagem { id: number; titulo: string; conteudo: string; fixada: boolean; criadaEm: string }
@@ -32,6 +32,7 @@ export default function EventoDetalhe() {
   const [revendas, setRevendas] = useState<AnuncioRevenda[]>([])
   const [postagens, setPostagens] = useState<Postagem[]>([])
   const [selecoes, setSelecoes] = useState<Record<number, number>>({})
+  const [selecoesMeia, setSelecoesMeia] = useState<Record<number, number>>({})
   const [carregando, setCarregando] = useState(true)
   const [reservando, setReservando] = useState<number | null>(null)
   const [msgRevenda, setMsgRevenda] = useState('')
@@ -76,18 +77,32 @@ export default function EventoDetalhe() {
 
   const loteAtivo = (t: TipoIngresso) => t.lotes?.find(l => l.ativo) ?? null
   const maxParaTipo = (t: TipoIngresso) => { const l = loteAtivo(t); return l ? l.quantidadeDisponivel : t.quantidadeDisponivel }
+  const maxInteira = (t: TipoIngresso) => Math.max(0, maxParaTipo(t) - (selecoesMeia[t.id] ?? 0))
+  const maxMeia = (t: TipoIngresso) => Math.max(0, Math.min(t.cotaMeiaDisponivel ?? 0, maxParaTipo(t) - (selecoes[t.id] ?? 0)))
   const alterarQtd = (tipoId: number, delta: number) => setSelecoes(prev => {
-    const tipo = tipos.find(t => t.id === tipoId); const max = tipo ? maxParaTipo(tipo) : 0
+    const tipo = tipos.find(t => t.id === tipoId); const max = tipo ? maxInteira(tipo) : 0
+    return { ...prev, [tipoId]: Math.max(0, Math.min(max, (prev[tipoId] ?? 0) + delta)) }
+  })
+  const alterarQtdMeia = (tipoId: number, delta: number) => setSelecoesMeia(prev => {
+    const tipo = tipos.find(t => t.id === tipoId); const max = tipo ? maxMeia(tipo) : 0
     return { ...prev, [tipoId]: Math.max(0, Math.min(max, (prev[tipoId] ?? 0) + delta)) }
   })
 
-  const total = tipos.reduce((acc, t) => acc + (selecoes[t.id] ?? 0) * Number(t.preco), 0)
-  const temSelecionado = Object.values(selecoes).some(q => q > 0)
+  const total = tipos.reduce((acc, t) => acc
+    + (selecoes[t.id] ?? 0) * Number(t.preco)
+    + (selecoesMeia[t.id] ?? 0) * Number(t.precoMeia ?? t.preco), 0)
+  const temSelecionado = Object.values(selecoes).some(q => q > 0) || Object.values(selecoesMeia).some(q => q > 0)
   const mediaAval = avaliacoes.length ? avaliacoes.reduce((s, a) => s + a.nota, 0) / avaliacoes.length : 0
 
   const irParaRevisao = () => {
     if (!temSelecionado || !evento) return
-    const itens = Object.entries(selecoes).filter(([, q]) => q > 0).map(([tipoId, quantidade]) => ({ tipoId: Number(tipoId), quantidade }))
+    const itens: { tipoId: number; quantidade: number; meia: boolean }[] = []
+    tipos.forEach(t => {
+      const qi = selecoes[t.id] ?? 0
+      if (qi > 0) itens.push({ tipoId: t.id, quantidade: qi, meia: false })
+      const qm = selecoesMeia[t.id] ?? 0
+      if (qm > 0) itens.push({ tipoId: t.id, quantidade: qm, meia: true })
+    })
     navigate('/revisao', { state: { evento, tipos, itens } })
   }
 
@@ -232,11 +247,15 @@ export default function EventoDetalhe() {
               <p className="muted" style={{ textAlign: 'center', padding: 'var(--sp-4) 0' }}>Nenhum tipo disponível.</p>
             ) : tipos.map(t => {
               const qtd = selecoes[t.id] ?? 0
-              const max = maxParaTipo(t)
-              const esgotado = max === 0
+              const qtdMeia = selecoesMeia[t.id] ?? 0
+              const maxI = maxInteira(t)
+              const maxM = maxMeia(t)
+              const esgotado = maxParaTipo(t) === 0
               const lote = loteAtivo(t)
+              const temMeia = t.meiaEntradaHabilitada && t.precoMeia != null
               return (
-                <div key={t.id} className="ticket-row between" style={{ alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
+                <div key={t.id} className="ticket-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 'var(--sp-2)' }}>
+                  <div className="between" style={{ alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 600 }}>{t.nome}</div>
                     <div className="money" style={{ color: 'var(--brand-strong)' }}>{formatMoeda(t.preco)}</div>
@@ -249,7 +268,24 @@ export default function EventoDetalhe() {
                     <div className="stepper">
                       <button className="qty-btn" onClick={() => alterarQtd(t.id, -1)} disabled={qtd === 0} aria-label="Remover"><Minus size={16} /></button>
                       <span className="qty-val">{qtd}</span>
-                      <button className="qty-btn qty-btn--add" onClick={() => alterarQtd(t.id, 1)} disabled={qtd >= max} aria-label="Adicionar"><Plus size={16} /></button>
+                      <button className="qty-btn qty-btn--add" onClick={() => alterarQtd(t.id, 1)} disabled={qtd >= maxI} aria-label="Adicionar"><Plus size={16} /></button>
+                    </div>
+                  )}
+                  </div>
+                  {!esgotado && temMeia && (
+                    <div className="between" style={{ alignItems: 'center', gap: 'var(--sp-3)', paddingLeft: 'var(--sp-3)', borderLeft: '2px solid var(--brand-soft-2)' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="row" style={{ gap: 6, fontWeight: 600, fontSize: '0.9rem' }}><Percent size={13} /> Meia-entrada</div>
+                        <div className="money" style={{ color: 'var(--brand-strong)', fontSize: '0.95rem' }}>
+                          {formatMoeda(Number(t.precoMeia))}
+                          <span className="muted" style={{ fontSize: '0.75rem', fontWeight: 400 }}> · restam {t.cotaMeiaDisponivel ?? 0}</span>
+                        </div>
+                      </div>
+                      <div className="stepper">
+                        <button className="qty-btn" onClick={() => alterarQtdMeia(t.id, -1)} disabled={qtdMeia === 0} aria-label="Remover meia"><Minus size={16} /></button>
+                        <span className="qty-val">{qtdMeia}</span>
+                        <button className="qty-btn qty-btn--add" onClick={() => alterarQtdMeia(t.id, 1)} disabled={qtdMeia >= maxM} aria-label="Adicionar meia"><Plus size={16} /></button>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -9,5 +9,8 @@ public record CriarTipoIngressoRequest(
 		int quantidade,
 		String descricao,
 		List<String> beneficios,
-		List<CriarLoteRequest> lotes) {
+		List<CriarLoteRequest> lotes,
+		boolean meiaEntradaHabilitada,
+		int percentualMeia,
+		int cotaMeia) {
 }

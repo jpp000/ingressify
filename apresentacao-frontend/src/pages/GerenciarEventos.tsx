@@ -50,6 +50,9 @@ interface TipoForm {
   quantidadeTotal: string
   beneficios: string[]
   lotes: LoteForm[]
+  meiaEntradaHabilitada: boolean
+  percentualMeia: string
+  cotaMeia: string
 }
 
 interface EventoForm {
@@ -82,6 +85,9 @@ const TIPO_INICIAL: TipoForm = {
   quantidadeTotal: '100',
   beneficios: [],
   lotes: [{ nome: 'Lote 1', preco: '50,00', quantidade: '100', dataInicio: '', dataFim: '' }],
+  meiaEntradaHabilitada: false,
+  percentualMeia: '50',
+  cotaMeia: '',
 }
 
 export default function GerenciarEventos() {
@@ -234,6 +240,9 @@ export default function GerenciarEventos() {
             dataInicio: l.dataInicio || null,
             dataFim: l.dataFim || null,
           })),
+          meiaEntradaHabilitada: tipo.meiaEntradaHabilitada ?? false,
+          percentualMeia: Number(tipo.percentualMeia) || 50,
+          cotaMeia: Number(tipo.cotaMeia) || 0,
         })
       }
 
@@ -839,6 +848,14 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
     if (qtd && somaLotes > qtd)
       erros.push(`Soma das quantidades dos lotes (${somaLotes}) excede a quantidade total (${qtd}).`)
 
+    if (tipo.meiaEntradaHabilitada) {
+      const pm = Number(tipo.percentualMeia)
+      if (!pm || pm < 1 || pm > 99) erros.push('Percentual de meia-entrada deve estar entre 1 e 99.')
+      const cm = Number(tipo.cotaMeia)
+      if (!Number.isFinite(cm) || cm < 0) erros.push('Cota de meia-entrada inválida.')
+      else if (qtd && cm > qtd) erros.push(`Cota de meia-entrada (${cm}) não pode exceder a quantidade total (${qtd}).`)
+    }
+
     if (erros.length > 0) {
       setModalErros(erros)
       return
@@ -989,6 +1006,50 @@ function ModalTipoIngresso({ tipoInicial, capacidadeEvento, quantidadeJaAlocada,
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+          </section>
+
+          {/* Meia-entrada */}
+          <section style={{ marginBottom: 28 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Meia-entrada
+              </h3>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: 'var(--ink-2)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={tipo.meiaEntradaHabilitada ?? false}
+                  onChange={e => setTipoField('meiaEntradaHabilitada', e.target.checked)}
+                />
+                Habilitar
+              </label>
+            </div>
+            {(tipo.meiaEntradaHabilitada ?? false) && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
+                    Desconto (%)
+                  </label>
+                  <input
+                    type="number" min="1" max="99"
+                    value={tipo.percentualMeia ?? '50'}
+                    onChange={e => setTipoField('percentualMeia', e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>
+                    Cota de meias
+                  </label>
+                  <input
+                    type="number" min="0" max={qtdTotal || undefined}
+                    placeholder={`máx ${qtdTotal || 0}`}
+                    value={tipo.cotaMeia ?? ''}
+                    onChange={e => setTipoField('cotaMeia', e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
               </div>
             )}
           </section>

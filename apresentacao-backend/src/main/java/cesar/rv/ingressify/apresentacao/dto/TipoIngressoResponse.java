@@ -13,13 +13,20 @@ public record TipoIngressoResponse(
 		int quantidadeTotal,
 		String descricao,
 		List<String> beneficios,
-		List<LoteResponse> lotes) {
+		List<LoteResponse> lotes,
+		boolean meiaEntradaHabilitada,
+		int percentualMeia,
+		int cotaMeia,
+		int cotaMeiaDisponivel,
+		BigDecimal precoMeia) {
 
 	public static TipoIngressoResponse fromDomain(TipoIngresso t) {
 		return new TipoIngressoResponse(
 				t.getId().getId(), t.getNome(), t.getPreco().getValor(),
 				t.getQuantidadeDisponivel(), t.getQuantidadeTotal(), t.getDescricao(),
 				t.getBeneficios(),
-				t.getLotes().stream().map(LoteResponse::fromDomain).toList());
+				t.getLotes().stream().map(LoteResponse::fromDomain).toList(),
+				t.isMeiaEntradaHabilitada(), t.getPercentualMeia(), t.getCotaMeia(), t.getCotaMeiaDisponivel(),
+				t.isMeiaEntradaHabilitada() ? t.precoMeia().getValor() : null);
 	}
 }

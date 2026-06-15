@@ -3,6 +3,7 @@ package cesar.rv.ingressify.infraestrutura;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import cesar.rv.ingressify.aplicacao.financeiro.carteira.CarteiraServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.financeiro.extrato.ExtratoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.identidade.usuario.UsuarioServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.analytics.AnalyticsServicoAplicacao;
@@ -11,6 +12,7 @@ import cesar.rv.ingressify.aplicacao.marketplace.avaliacao.AvaliacaoServicoAplic
 import cesar.rv.ingressify.aplicacao.marketplace.catalogo.CatalogoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.checkin.CheckinServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.compra.CompraServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.cupom.CupomServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.denuncia.DenunciaServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.evento.EventoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.feed.FeedServicoAplicacao;
@@ -44,6 +46,8 @@ import cesar.rv.ingressify.dominio.marketplace.avaliacao.AvaliacaoServico;
 import cesar.rv.ingressify.dominio.marketplace.checkin.CheckinServico;
 import cesar.rv.ingressify.dominio.marketplace.checkin.RegistroCheckinRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.compra.PedidoRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.cupom.CupomRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.cupom.CupomServico;
 import cesar.rv.ingressify.dominio.marketplace.denuncia.DenunciaRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.denuncia.DenunciaServico;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoRepositorio;
@@ -278,6 +282,23 @@ public class IngressifyConfiguration {
 	}
 
 	@Bean
+	public CupomServico cupomServico(CupomRepositorio cupomRepositorio) {
+		return new CupomServico(cupomRepositorio);
+	}
+
+	@Bean
+	public CupomServicoAplicacao cupomServicoAplicacao(CupomServico cupomServico,
+			EventoRepositorio eventoRepositorio) {
+		return new CupomServicoAplicacao(cupomServico, eventoRepositorio);
+	}
+
+	@Bean
+	public CarteiraServicoAplicacao carteiraServicoAplicacao(SaldoServico saldoServico,
+			TransacaoServico transacaoServico) {
+		return new CarteiraServicoAplicacao(saldoServico, transacaoServico);
+	}
+
+	@Bean
 	public CompraServicoAplicacao compraServicoAplicacao(
 			TipoIngressoServico tipoIngressoServico,
 			TipoIngressoRepositorio tipoIngressoRepositorio,
@@ -285,9 +306,10 @@ public class IngressifyConfiguration {
 			PagamentoServico pagamentoServico,
 			SaldoServico saldoServico,
 			TransacaoServico transacaoServico,
-			PedidoRepositorio pedidoRepositorio) {
+			PedidoRepositorio pedidoRepositorio,
+			CupomServico cupomServico) {
 		return new CompraServicoAplicacao(tipoIngressoServico, tipoIngressoRepositorio, ingressoServico,
-				pagamentoServico, saldoServico, transacaoServico, pedidoRepositorio);
+				pagamentoServico, saldoServico, transacaoServico, pedidoRepositorio, cupomServico);
 	}
 
 	@Bean

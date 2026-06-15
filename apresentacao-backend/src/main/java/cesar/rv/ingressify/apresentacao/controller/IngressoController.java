@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import cesar.rv.ingressify.aplicacao.marketplace.compra.CompraServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.compra.ItemPedidoCompra;
 import cesar.rv.ingressify.aplicacao.marketplace.ingresso.IngressoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.reembolso.ReembolsoServicoAplicacao;
 import cesar.rv.ingressify.apresentacao.dto.CompraIngressoRequest;
+import cesar.rv.ingressify.apresentacao.dto.CriarPedidoRequest;
 import cesar.rv.ingressify.apresentacao.dto.IngressoResponse;
 import cesar.rv.ingressify.apresentacao.dto.SolicitarReembolsoRequest;
 import cesar.rv.ingressify.apresentacao.dto.TransferirIngressoRequest;
@@ -50,7 +52,8 @@ public class IngressoController {
 		}
 		try {
 			List<IngressoId> ids = compraServico.comprar(
-					new UsuarioId(usuarioId), new TipoIngressoId(req.tipoIngressoId()), req.quantidade());
+					new UsuarioId(usuarioId), new TipoIngressoId(req.tipoIngressoId()), req.quantidade(),
+					req.meiaEntrada(), req.documento(), req.codigoCupom());
 			List<IngressoResponse> resp = ids.stream()
 					.map(id -> IngressoResponse.fromDomain(ingressoServico.obter(id)))
 					.toList();
@@ -60,6 +63,31 @@ public class IngressoController {
 					.body(java.util.Map.of("motivo", e.getMessage()));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
+		}
+	}
+
+	@PostMapping("/pedidos")
+	public ResponseEntity<?> comprarPedido(
+			@RequestHeader("X-Usuario-Id") int usuarioId,
+			@RequestBody CriarPedidoRequest req) {
+		if (req.itens() == null || req.itens().isEmpty()) {
+			return ResponseEntity.badRequest().build();
+		}
+		try {
+			List<ItemPedidoCompra> itens = req.itens().stream()
+					.map(i -> new ItemPedidoCompra(i.tipoIngressoId(), i.quantidade(), i.meiaEntrada(), i.documento()))
+					.toList();
+			List<IngressoId> ids = compraServico.comprarPedido(new UsuarioId(usuarioId), itens, req.codigoCupom());
+			List<IngressoResponse> resp = ids.stream()
+					.map(id -> IngressoResponse.fromDomain(ingressoServico.obter(id)))
+					.toList();
+			return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body(java.util.Map.of("motivo", e.getMessage()));
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest()
+					.body(java.util.Map.of("motivo", e.getMessage()));
 		}
 	}
 

@@ -1,5 +1,6 @@
 package cesar.rv.ingressify.dominio.marketplace.tipoIngresso;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +24,10 @@ public class TipoIngresso {
 	private String descricao;
 	private List<String> beneficios = new ArrayList<>();
 	private List<Lote> lotes = new ArrayList<>();
+	private boolean meiaEntradaHabilitada = false;
+	private int percentualMeia = 50;
+	private int cotaMeia = 0;
+	private int cotaMeiaDisponivel = 0;
 
 	public TipoIngresso(EventoId eventoId, String nome, Dinheiro preco, int quantidadeDisponivel, int quantidadeTotal,
 			String descricao) {
@@ -117,6 +122,71 @@ public class TipoIngresso {
 					.min(Comparator.comparingInt(Lote::getNumero))
 					.ifPresent(l -> l.devolver(qtd));
 		}
+	}
+
+	/** Habilita ou desabilita a meia-entrada, definindo o percentual de desconto e a cota disponível. */
+	public void configurarMeiaEntrada(boolean habilitada, int percentual, int cota) {
+		if (habilitada) {
+			Validate.isTrue(percentual >= 1 && percentual <= 99, "percentualMeia deve estar entre 1 e 99");
+			Validate.isTrue(cota >= 0 && cota <= quantidadeTotal, "cotaMeia não pode exceder a quantidade total");
+		}
+		this.meiaEntradaHabilitada = habilitada;
+		this.percentualMeia = habilitada ? percentual : 50;
+		this.cotaMeia = habilitada ? cota : 0;
+		this.cotaMeiaDisponivel = habilitada ? cota : 0;
+	}
+
+	/** Restaura a configuração de meia-entrada na reconstituição a partir da persistência. */
+	public void reconstituirMeiaEntrada(boolean habilitada, int percentual, int cota, int cotaDisponivel) {
+		this.meiaEntradaHabilitada = habilitada;
+		this.percentualMeia = percentual;
+		this.cotaMeia = cota;
+		this.cotaMeiaDisponivel = cotaDisponivel;
+	}
+
+	/** Preço da meia-entrada (preço cheio com o percentual de desconto aplicado). */
+	public Dinheiro precoMeia() {
+		if (!meiaEntradaHabilitada) {
+			throw new IllegalStateException("meia-entrada não habilitada para este tipo de ingresso");
+		}
+		BigDecimal fator = BigDecimal.valueOf(100L - percentualMeia).divide(BigDecimal.valueOf(100));
+		return new Dinheiro(preco.getValor().multiply(fator));
+	}
+
+	/** Reserva ingressos de meia-entrada, consumindo o estoque geral e a cota de meia. */
+	public void reservarMeia(int qtd) {
+		Validate.isTrue(qtd > 0, "qtd deve ser > 0");
+		if (!meiaEntradaHabilitada) {
+			throw new IllegalStateException("meia-entrada não habilitada para este tipo de ingresso");
+		}
+		if (cotaMeiaDisponivel < qtd) {
+			throw new IllegalStateException("cota de meia-entrada esgotada");
+		}
+		reservar(qtd);
+		this.cotaMeiaDisponivel -= qtd;
+	}
+
+	/** Devolve ingressos de meia-entrada ao estoque geral e à cota de meia. */
+	public void devolverMeia(int qtd) {
+		Validate.isTrue(qtd > 0, "qtd deve ser > 0");
+		devolver(qtd);
+		this.cotaMeiaDisponivel = Math.min(cotaMeiaDisponivel + qtd, cotaMeia);
+	}
+
+	public boolean isMeiaEntradaHabilitada() {
+		return meiaEntradaHabilitada;
+	}
+
+	public int getPercentualMeia() {
+		return percentualMeia;
+	}
+
+	public int getCotaMeia() {
+		return cotaMeia;
+	}
+
+	public int getCotaMeiaDisponivel() {
+		return cotaMeiaDisponivel;
 	}
 
 	public TipoIngressoId getId() {

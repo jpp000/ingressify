@@ -306,7 +306,7 @@ public class DatabaseSeeder implements ApplicationRunner {
 	private TipoIngressoId criarTipo(EventoId eventoId, UsuarioId organizador, String nome, BigDecimal preco,
 			int quantidade, String descricao, List<String> beneficios, List<CriarLoteDto> lotes) {
 		return tipoIngressoServicoAplicacao.criarTipoIngresso(eventoId, organizador, nome, preco, quantidade,
-				descricao, beneficios, lotes);
+				descricao, beneficios, lotes, false, 50, 0);
 	}
 
 	private TipoIngressoId criarTipoDireto(EventoId eventoId, String nome, BigDecimal preco,
