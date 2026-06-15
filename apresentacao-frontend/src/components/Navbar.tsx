@@ -20,16 +20,17 @@ interface Destino {
   state?: object
 }
 
+/* Ordem = prioridade inline. Cada papel vê só o que faz sentido para ele. */
 const DESTINOS: Destino[] = [
-  { to: '/', label: 'Explorar', Icon: Compass, match: p => p === '/', visivel: () => true },
+  { to: '/denuncias', label: 'Moderação', Icon: ShieldAlert, match: p => p.startsWith('/denuncias'), visivel: r => r.admin },
   { to: '/gerenciar', label: 'Meus eventos', Icon: CalendarDays, match: p => p.startsWith('/gerenciar'), visivel: r => r.organizador },
+  { to: '/check-in', label: 'Check-in', Icon: ScanLine, match: p => p.startsWith('/check-in'), visivel: r => r.operador || r.organizador },
+  { to: '/', label: 'Explorar', Icon: Compass, match: p => p === '/', visivel: r => r.comprador },
   { to: '/meus-ingressos', label: 'Carteira', Icon: Ticket, match: p => p.startsWith('/meus-ingressos') || p.startsWith('/revender') || p.startsWith('/revisao'), visivel: r => r.comprador },
   { to: '/revendas', label: 'Revendas', Icon: Repeat, match: p => p.startsWith('/revendas'), visivel: r => r.comprador },
   { to: '/sorteios', label: 'Sorteios', Icon: Dices, match: p => p.startsWith('/sorteios'), visivel: r => r.comprador || r.organizador },
-  { to: '/check-in', label: 'Check-in', Icon: ScanLine, match: p => p.startsWith('/check-in'), visivel: r => r.operador || r.organizador || r.admin },
-  { to: '/mapa-assentos', label: 'Mapa de assentos', Icon: Armchair, match: p => p.startsWith('/mapa-assentos'), visivel: r => r.organizador || r.comprador },
+  { to: '/mapa-assentos', label: 'Mapa de assentos', Icon: Armchair, match: p => p.startsWith('/mapa-assentos'), visivel: r => r.organizador },
   { to: '/saldo', label: 'Saldo', Icon: Wallet, match: p => p === '/saldo', visivel: r => r.comprador },
-  { to: '/denuncias', label: 'Denúncias', Icon: ShieldAlert, match: p => p.startsWith('/denuncias'), visivel: r => r.admin },
 ]
 
 const MAX_INLINE = 4
@@ -49,19 +50,31 @@ export default function Navbar() {
   const navRef = useRef<HTMLElement>(null)
 
   const papeis: Papeis = { comprador: isComprador(), organizador: isOrganizador(), operador: isOperadorPorta(), admin: isAdmin() }
-  const destinos = useMemo(() => DESTINOS.filter(d => d.visivel(papeis)),
-    [papeis.comprador, papeis.organizador, papeis.operador, papeis.admin])
 
-  // se houver overflow, o último slot inline vira o botão "Mais"
+  /* Papéis de staff entram em modo focado: o COMPRADOR implícito (todo usuário tem)
+     não deve poluir a experiência do admin/operador com catálogo, carteira e busca. */
+  const modoAdmin = papeis.admin
+  const modoOperador = papeis.operador && !papeis.organizador && !papeis.admin
+  const modoConsumidor = !modoAdmin && !modoOperador
+
+  const destinos = useMemo(() => {
+    if (modoAdmin) return DESTINOS.filter(d => d.to === '/denuncias')
+    if (modoOperador) return DESTINOS.filter(d => d.to === '/check-in')
+    return DESTINOS.filter(d => d.to !== '/denuncias' && d.visivel(papeis))
+  }, [modoAdmin, modoOperador, papeis.comprador, papeis.organizador, papeis.operador, papeis.admin])
+
   const temMais = destinos.length > MAX_INLINE
   const inline = temMais ? destinos.slice(0, MAX_INLINE - 1) : destinos.slice(0, MAX_INLINE)
   const extras = temMais ? destinos.slice(MAX_INLINE - 1) : []
-  const primariosMobile = destinos.slice(0, 4)
+  const mobile = destinos.slice(0, 5)
   const homeLink = destinos[0]?.to ?? '/'
+  const mostrarBusca = modoConsumidor && papeis.comprador
+  const mostrarSaldo = modoConsumidor && papeis.comprador
+  const mostrarCriarEvento = modoConsumidor && papeis.organizador
 
   useEffect(() => {
-    if (papeis.comprador && usuario) saldoService.obter(usuario.id).then(r => setSaldo(r.data.valor)).catch(() => {})
-  }, [papeis.comprador, usuario])
+    if (mostrarSaldo && usuario) saldoService.obter(usuario.id).then(r => setSaldo(r.data.valor)).catch(() => {})
+  }, [mostrarSaldo, usuario])
 
   useEffect(() => {
     const fechar = (e: MouseEvent) => { if (navRef.current && !navRef.current.contains(e.target as Node)) setAberto(null) }
@@ -91,7 +104,7 @@ export default function Navbar() {
               </Link>
             ))}
             {temMais && (
-              <div style={{ position: 'relative' }}>
+              <div className="nav-more">
                 <button
                   className={`nav-link${algumExtraAtivo || aberto === 'mais' ? ' nav-link--active' : ''}`}
                   onClick={() => setAberto(a => a === 'mais' ? null : 'mais')}
@@ -100,7 +113,7 @@ export default function Navbar() {
                   <MoreHorizontal size={18} /><span className="nav-link__t">Mais</span>
                 </button>
                 {aberto === 'mais' && (
-                  <div className="menu" style={{ left: 0, right: 'auto', minWidth: 220 }} role="menu">
+                  <div className="menu menu--left" role="menu">
                     {extras.map(({ to, label, Icon, match, state }) => (
                       <Link key={to} to={to} state={state} className={`menu__item${match(pathname) ? ' menu__item--active' : ''}`} role="menuitem">
                         <Icon size={18} />{label}
@@ -112,24 +125,26 @@ export default function Navbar() {
             )}
           </nav>
 
-          <form className="topbar__search" onSubmit={submitBusca} role="search">
-            <Search size={17} />
-            <input placeholder="Buscar eventos…" value={busca} onChange={e => setBusca(e.target.value)} aria-label="Buscar eventos" />
-          </form>
+          {mostrarBusca && (
+            <form className="topbar__search" onSubmit={submitBusca} role="search">
+              <Search size={17} />
+              <input placeholder="Buscar eventos…" value={busca} onChange={e => setBusca(e.target.value)} aria-label="Buscar eventos" />
+            </form>
+          )}
 
-          {papeis.comprador && saldo !== null && (
+          {mostrarSaldo && saldo !== null && (
             <Link to="/saldo" className="saldo-pill" title="Seu saldo">
               <Wallet size={17} /><span className="money">{formatMoeda(saldo)}</span>
             </Link>
           )}
 
-          {papeis.organizador && (
+          {mostrarCriarEvento && (
             <Link to="/gerenciar" state={{ aba: 'criar-evento' }} className="topbar__cta">
               <button className="btn btn--sm" type="button"><Plus size={17} /><span className="nav-link__t">Criar evento</span></button>
             </Link>
           )}
 
-          <div style={{ position: 'relative', flexShrink: 0 }}>
+          <div className="nav-more">
             <button className="avatar-btn" onClick={() => setAberto(a => a === 'perfil' ? null : 'perfil')} aria-haspopup="menu" aria-expanded={aberto === 'perfil'}>
               <span className="avatar" aria-hidden>{iniciais(usuario.nome)}</span>
               <span className="avatar-btn__name truncate">{usuario.nome.split(' ')[0]}</span>
@@ -153,7 +168,7 @@ export default function Navbar() {
       </header>
 
       <nav className="bottomnav" aria-label="Navegação">
-        {primariosMobile.map(({ to, label, Icon, match, state }) => (
+        {mobile.map(({ to, label, Icon, match, state }) => (
           <Link key={to} to={to} state={state} className={`bottomnav__item${match(pathname) ? ' bottomnav__item--active' : ''}`}>
             <Icon size={22} /><span>{label}</span>
           </Link>

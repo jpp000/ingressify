@@ -1,276 +1,139 @@
 import { useEffect, useMemo, useState } from 'react'
+import {
+  ShieldAlert, Archive, Trash2, AlertTriangle, Ban, CheckCircle2, MapPin, Tag, User, Store, Clock, Inbox,
+} from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { denunciaService, eventoService, revendaService } from '../services/api'
 import { formatMoeda } from '../constants'
 import { useAuth } from '../context/AuthContext'
 
-interface Denuncia {
-  id: number
-  anuncioId: number
-  denuncianteId: number
-  motivo: string
-  descricao: string
-  status: string
-  decisao: string | null
-  criadaEm: string
-  decididaEm: string | null
-}
-
-interface Anuncio {
-  id: number
-  preco: number
-  status: string
-  vendedorId: number
-  eventoId: number
-}
-
-interface Evento {
-  id: number
-  nome: string
-  local: string
-}
+interface Denuncia { id: number; anuncioId: number; denuncianteId: number; motivo: string; descricao: string; status: string; decisao: string | null; criadaEm: string; decididaEm: string | null }
+interface Anuncio { id: number; preco: number; status: string; vendedorId: number; eventoId: number }
+interface Evento { id: number; nome: string; local: string }
 
 const MOTIVO_LABELS: Record<string, string> = {
-  PRECO_ABUSIVO: 'Preço abusivo',
-  INGRESSO_SUSPEITO: 'Ingresso suspeito',
-  COMPORTAMENTO_INADEQUADO: 'Comportamento inadequado',
-  OUTRO: 'Outro',
+  PRECO_ABUSIVO: 'Preço abusivo', INGRESSO_SUSPEITO: 'Ingresso suspeito',
+  COMPORTAMENTO_INADEQUADO: 'Comportamento inadequado', OUTRO: 'Outro',
 }
-
-const DECISAO_LABELS: Record<string, string> = {
-  ARQUIVADA: 'Arquivar',
-  ANUNCIO_REMOVIDO: 'Remover anúncio',
-  VENDEDOR_AVISADO: 'Avisar vendedor',
-  VENDEDOR_BLOQUEADO: 'Bloquear vendedor',
-}
-
-const DECISOES = Object.keys(DECISAO_LABELS)
+const DECISOES = [
+  { id: 'ARQUIVADA', label: 'Arquivar', Icon: Archive, danger: false },
+  { id: 'VENDEDOR_AVISADO', label: 'Avisar vendedor', Icon: AlertTriangle, danger: false },
+  { id: 'ANUNCIO_REMOVIDO', label: 'Remover anúncio', Icon: Trash2, danger: true },
+  { id: 'VENDEDOR_BLOQUEADO', label: 'Bloquear vendedor', Icon: Ban, danger: true },
+]
+const DECISAO_LABEL: Record<string, string> = Object.fromEntries(DECISOES.map(d => [d.id, d.label]))
 
 export default function DenunciasPage() {
   const { usuario, isAdmin } = useAuth()
   const [denuncias, setDenuncias] = useState<Denuncia[]>([])
   const [anunciosMap, setAnunciosMap] = useState<Map<number, Anuncio>>(new Map())
   const [eventosMap, setEventosMap] = useState<Map<number, Evento>>(new Map())
-  const [filtroStatus, setFiltroStatus] = useState<'TODAS' | 'PENDENTE' | 'RESOLVIDA'>('TODAS')
+  const [filtro, setFiltro] = useState<'TODAS' | 'PENDENTE' | 'RESOLVIDA'>('PENDENTE')
   const [carregando, setCarregando] = useState(true)
-  const [msg, setMsg] = useState('')
+  const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null)
   const [decidindoId, setDecidindoId] = useState<number | null>(null)
 
   const carregar = async () => {
     if (!usuario) return
-    setCarregando(true)
-    setMsg('')
+    setCarregando(true); setMsg(null)
     try {
       const res = await denunciaService.listar(usuario.id)
       const lista: Denuncia[] = res.data
       const anuncioIds = [...new Set(lista.map(d => d.anuncioId))]
-
-      const anuncios = await Promise.all(
-        anuncioIds.map(id => revendaService.detalhe(id).then(r => r.data as Anuncio).catch(() => null))
-      )
-      const mapaAnuncios = new Map<number, Anuncio>()
-      anuncios.forEach(a => { if (a) mapaAnuncios.set(a.id, a) })
-
+      const anuncios = await Promise.all(anuncioIds.map(id => revendaService.detalhe(id).then(r => r.data as Anuncio).catch(() => null)))
+      const mapaA = new Map<number, Anuncio>()
+      anuncios.forEach(a => { if (a) mapaA.set(a.id, a) })
       const eventoIds = [...new Set(anuncios.filter(Boolean).map(a => (a as Anuncio).eventoId))]
-      const eventos = await Promise.all(
-        eventoIds.map(id => eventoService.detalhe(id).then(r => [id, r.data] as [number, Evento]))
-      )
-
-      setDenuncias(lista)
-      setAnunciosMap(mapaAnuncios)
-      setEventosMap(new Map(eventos))
-    } catch {
-      setMsg('Erro ao carregar denúncias.')
-    } finally {
-      setCarregando(false)
-    }
+      const eventos = await Promise.all(eventoIds.map(id => eventoService.detalhe(id).then(r => [id, r.data] as [number, Evento])))
+      setDenuncias(lista); setAnunciosMap(mapaA); setEventosMap(new Map(eventos))
+    } catch { setMsg({ ok: false, texto: 'Erro ao carregar denúncias.' }) }
+    finally { setCarregando(false) }
   }
-
   useEffect(() => { carregar() }, [usuario])
 
-  const denunciasFiltradas = useMemo(() => {
-    if (filtroStatus === 'TODAS') return denuncias
-    return denuncias.filter(d => d.status === filtroStatus)
-  }, [denuncias, filtroStatus])
-
   const pendentes = denuncias.filter(d => d.status === 'PENDENTE').length
+  const resolvidas = denuncias.length - pendentes
+  const filtradas = useMemo(() => filtro === 'TODAS' ? denuncias : denuncias.filter(d => d.status === filtro), [denuncias, filtro])
 
-  const decidir = async (denunciaId: number, decisao: string) => {
+  const decidir = async (id: number, decisao: string) => {
     if (!usuario) return
-    setDecidindoId(denunciaId)
-    setMsg('')
+    setDecidindoId(id); setMsg(null)
     try {
-      await denunciaService.decidir(denunciaId, usuario.id, decisao)
-      setMsg('Denúncia resolvida com sucesso.')
+      await denunciaService.decidir(id, usuario.id, decisao)
+      setMsg({ ok: true, texto: `Decisão aplicada: ${DECISAO_LABEL[decisao]}.` })
       await carregar()
     } catch (e: unknown) {
       const err = e as { response?: { data?: { motivo?: string } } }
-      setMsg(err.response?.data?.motivo ?? 'Erro ao decidir denúncia.')
-    } finally {
-      setDecidindoId(null)
-    }
+      setMsg({ ok: false, texto: err.response?.data?.motivo ?? 'Erro ao decidir denúncia.' })
+    } finally { setDecidindoId(null) }
   }
 
   if (!isAdmin()) {
-    return (
-      <>
-        <Navbar />
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px', textAlign: 'center' }}>
-          <p style={{ color: 'var(--ink-2)' }}>Acesso restrito a administradores.</p>
-        </div>
-      </>
-    )
+    return (<><Navbar /><div className="app-container page"><div className="empty"><Ban size={40} /><h3>Acesso restrito</h3><p className="muted">Esta área é exclusiva de administradores.</p></div></div></>)
   }
 
   return (
     <>
       <Navbar />
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', marginBottom: 6 }}>
-              Denúncias de Revendas
-            </h1>
-            <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>
-              {pendentes > 0 ? `${pendentes} denúncia(s) aguardando moderação` : 'Nenhuma denúncia pendente'}
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {(['TODAS', 'PENDENTE', 'RESOLVIDA'] as const).map(status => (
-              <button
-                key={status}
-                onClick={() => setFiltroStatus(status)}
-                style={{
-                  background: filtroStatus === status ? 'var(--brand-strong)' : 'var(--surface-2)',
-                  color: filtroStatus === status ? '#fff' : 'var(--ink-2)',
-                  border: 'none',
-                  borderRadius: 20,
-                  padding: '8px 16px',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {status === 'TODAS' ? 'Todas' : status === 'PENDENTE' ? 'Pendentes' : 'Resolvidas'}
-              </button>
+      <div className="app-container page page--mid">
+        <div className="page-head row" style={{ gap: 'var(--sp-3)' }}>
+          <span className="list-ico list-ico--out" style={{ width: 48, height: 48 }}><ShieldAlert size={24} /></span>
+          <div><h1>Moderação de revendas</h1><p className="secondary">Avalie denúncias e aplique decisões sobre os anúncios.</p></div>
+        </div>
+
+        <div className="row wrap" style={{ gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
+          <div className="stat"><span className="stat__n" style={{ color: 'var(--warn)' }}>{pendentes}</span><span className="stat__l">Pendentes</span></div>
+          <div className="stat"><span className="stat__n" style={{ color: 'oklch(0.45 0.12 150)' }}>{resolvidas}</span><span className="stat__l">Resolvidas</span></div>
+          <div className="stat"><span className="stat__n">{denuncias.length}</span><span className="stat__l">Total</span></div>
+        </div>
+
+        <div className="between wrap" style={{ gap: 'var(--sp-3)', marginBottom: 'var(--sp-4)' }}>
+          <div className="segmented">
+            {([['PENDENTE', 'Pendentes'], ['RESOLVIDA', 'Resolvidas'], ['TODAS', 'Todas']] as const).map(([v, t]) => (
+              <button key={v} className={`segmented__opt${filtro === v ? ' segmented__opt--active' : ''}`} onClick={() => setFiltro(v)}>{t}</button>
             ))}
           </div>
         </div>
 
-        {msg && (
-          <div style={{
-            background: msg.includes('sucesso') ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${msg.includes('sucesso') ? '#bbf7d0' : '#fecaca'}`,
-            borderRadius: 10,
-            padding: '12px 16px',
-            marginBottom: 20,
-            fontSize: 14,
-            color: msg.includes('sucesso') ? '#166534' : '#b91c1c',
-          }}>
-            {msg}
-          </div>
-        )}
+        {msg && <div className={`auth-alert ${msg.ok ? 'auth-alert--ok' : 'auth-alert--err'}`}>{msg.ok ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}{msg.texto}</div>}
 
         {carregando ? (
-          <p style={{ color: 'var(--ink-muted)', textAlign: 'center', padding: 40 }}>Carregando...</p>
-        ) : denunciasFiltradas.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, color: 'var(--ink-muted)' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-            <p>Nenhuma denúncia encontrada.</p>
-          </div>
+          <div className="stack" style={{ gap: 'var(--sp-3)' }}>{Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 160 }} />)}</div>
+        ) : filtradas.length === 0 ? (
+          <div className="empty"><Inbox size={40} /><h3>Tudo em ordem</h3><p className="muted">Nenhuma denúncia {filtro === 'PENDENTE' ? 'pendente' : filtro === 'RESOLVIDA' ? 'resolvida' : ''} no momento.</p></div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {denunciasFiltradas.map(d => {
+          <div className="stack" style={{ gap: 'var(--sp-4)' }}>
+            {filtradas.map(d => {
               const anuncio = anunciosMap.get(d.anuncioId)
               const evento = anuncio ? eventosMap.get(anuncio.eventoId) : undefined
               const resolvida = d.status === 'RESOLVIDA'
-
               return (
-                <div
-                  key={d.id}
-                  style={{
-                    background: '#fff',
-                    border: '1px solid var(--border)',
-                    borderRadius: 14,
-                    padding: '20px 24px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: 16 }}>
-                          #{d.id} — {evento?.nome ?? `Anúncio #${d.anuncioId}`}
-                        </span>
-                        <span style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          padding: '2px 8px',
-                          borderRadius: 20,
-                          background: resolvida ? 'var(--surface-2)' : '#fef3c7',
-                          color: resolvida ? 'var(--ink-2)' : '#92400e',
-                        }}>
-                          {resolvida ? 'Resolvida' : 'Pendente'}
-                        </span>
-                      </div>
-                      {evento && (
-                        <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: 0 }}>{evento.local}</p>
-                      )}
+                <div key={d.id} className="surface surface--pad">
+                  <div className="between wrap" style={{ gap: 'var(--sp-2)', marginBottom: 'var(--sp-3)' }}>
+                    <div className="row" style={{ gap: 'var(--sp-2)' }}>
+                      <span className="muted" style={{ fontWeight: 600 }}>#{d.id}</span>
+                      <h3 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-sans)', letterSpacing: 0 }}>{evento?.nome ?? `Anúncio #${d.anuncioId}`}</h3>
+                      <span className={`badge ${resolvida ? 'badge--success' : 'badge--warn'}`}>{resolvida ? 'Resolvida' : 'Pendente'}</span>
                     </div>
-                    <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>
-                      {new Date(d.criadaEm).toLocaleString('pt-BR')}
-                    </span>
+                    <span className="muted row" style={{ gap: 6, fontSize: '0.8125rem' }}><Clock size={14} /> {new Date(d.criadaEm).toLocaleDateString('pt-BR')}</span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 14 }}>
-                    <Info label="Motivo" value={MOTIVO_LABELS[d.motivo] ?? d.motivo} />
-                    <Info label="Denunciante" value={`Usuário #${d.denuncianteId}`} />
-                    {anuncio && (
-                      <>
-                        <Info label="Vendedor" value={`Usuário #${anuncio.vendedorId}`} />
-                        <Info label="Preço anunciado" value={formatMoeda(anuncio.preco)} />
-                        <Info label="Status do anúncio" value={anuncio.status} />
-                      </>
-                    )}
-                    {d.decisao && <Info label="Decisão" value={DECISAO_LABELS[d.decisao] ?? d.decisao} />}
+                  <div className="den-grid">
+                    <Info Icon={Tag} label="Motivo" value={MOTIVO_LABELS[d.motivo] ?? d.motivo} />
+                    <Info Icon={MapPin} label="Local" value={evento?.local ?? '—'} />
+                    <Info Icon={User} label="Denunciante" value={`Usuário #${d.denuncianteId}`} />
+                    {anuncio && <Info Icon={Store} label="Vendedor" value={`Usuário #${anuncio.vendedorId}`} />}
+                    {anuncio && <Info Icon={Tag} label="Preço anunciado" value={formatMoeda(anuncio.preco)} />}
+                    {d.decisao && <Info Icon={CheckCircle2} label="Decisão" value={DECISAO_LABEL[d.decisao] ?? d.decisao} />}
                   </div>
 
-                  {d.descricao && (
-                    <p style={{
-                      fontSize: 14,
-                      color: 'var(--ink-2)',
-                      background: 'var(--surface-2)',
-                      borderRadius: 8,
-                      padding: '10px 14px',
-                      margin: '0 0 14px',
-                      lineHeight: 1.5,
-                    }}>
-                      {d.descricao}
-                    </p>
-                  )}
+                  {d.descricao && <p className="org-reply" style={{ marginTop: 'var(--sp-3)' }}>{d.descricao}</p>}
 
                   {!resolvida && (
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {DECISOES.map(decisao => (
-                        <button
-                          key={decisao}
-                          disabled={decidindoId === d.id}
-                          onClick={() => decidir(d.id, decisao)}
-                          style={{
-                            background: decisao === 'VENDEDOR_BLOQUEADO' || decisao === 'ANUNCIO_REMOVIDO'
-                              ? '#fef2f2' : 'var(--surface-2)',
-                            color: decisao === 'VENDEDOR_BLOQUEADO' || decisao === 'ANUNCIO_REMOVIDO'
-                              ? '#b91c1c' : 'var(--ink-2)',
-                            border: '1px solid var(--border)',
-                            borderRadius: 8,
-                            padding: '8px 14px',
-                            fontSize: 13,
-                            fontWeight: 600,
-                            cursor: decidindoId === d.id ? 'wait' : 'pointer',
-                            opacity: decidindoId === d.id ? 0.6 : 1,
-                          }}
-                        >
-                          {DECISAO_LABELS[decisao]}
+                    <div className="row wrap" style={{ gap: 'var(--sp-2)', marginTop: 'var(--sp-4)' }}>
+                      {DECISOES.map(({ id, label, Icon, danger }) => (
+                        <button key={id} className={`btn btn--sm ${danger ? 'btn--danger' : 'btn--ghost'}`} disabled={decidindoId === d.id} onClick={() => decidir(d.id, id)}>
+                          <Icon size={16} /> {label}
                         </button>
                       ))}
                     </div>
@@ -285,13 +148,11 @@ export default function DenunciasPage() {
   )
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ Icon, label, value }: { Icon: typeof Tag; label: string; value: string }) {
   return (
-    <div>
-      <div style={{ fontSize: 11, color: 'var(--ink-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 14, color: 'var(--ink)', fontWeight: 500 }}>{value}</div>
+    <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
+      <Icon size={16} style={{ color: 'var(--ink-muted)', marginTop: 2, flexShrink: 0 }} />
+      <div><div className="muted" style={{ fontSize: '0.75rem' }}>{label}</div><div style={{ fontWeight: 500 }}>{value}</div></div>
     </div>
   )
 }
