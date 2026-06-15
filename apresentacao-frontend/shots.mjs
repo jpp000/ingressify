@@ -14,7 +14,7 @@ const browser = await chromium.launch()
 
 const VPS = JSON.parse(process.env.VPS || '[{"w":1280,"h":900,"tag":"desktop"},{"w":390,"h":844,"tag":"mobile"}]')
 for (const vp of VPS) {
-  const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 2 })
+  const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: Number(process.env.DSF || 2) })
   const page = await ctx.newPage()
   if (!process.env.NOLOGIN) {
     // login na MESMA aba (sessionStorage é por-aba)
@@ -31,7 +31,7 @@ for (const vp of VPS) {
     try {
       await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle', timeout: 15000 })
       await page.waitForTimeout(900)
-      await page.screenshot({ path: `${OUT}/${nome}-${vp.tag}.png`, fullPage: true })
+      await page.screenshot({ path: `${OUT}/${nome}-${vp.tag}.png`, fullPage: process.env.FULL !== '0' })
       console.log(`ok ${nome}-${vp.tag}`)
     } catch (e) {
       console.log(`ERRO ${nome}-${vp.tag}: ${e.message}`)

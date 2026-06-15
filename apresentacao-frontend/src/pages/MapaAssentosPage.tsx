@@ -148,7 +148,7 @@ export default function MapaAssentosPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>
-              🗺️ Mapa de Assentos
+              Mapa de Assentos
             </h1>
             <p style={{ color: 'var(--ink-2)', marginTop: 4 }}>
               Selecione seu(s) assento(s) e garanta sua posição

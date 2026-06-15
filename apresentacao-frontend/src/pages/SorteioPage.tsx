@@ -142,7 +142,7 @@ export default function SorteioPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>
-              🎟️ Sorteio de Ingressos
+              Sorteio de Ingressos
             </h1>
             <p style={{ color: 'var(--ink-2)', marginTop: 4 }}>
               Inscreva-se para concorrer a ingressos por sorteio justo
