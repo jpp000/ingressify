@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { MapPin, Tag, Lock, Wallet, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react'
-import { ingressoService, saldoService } from '../services/api'
+import { MapPin, Tag, Lock, Wallet, CheckCircle2, AlertCircle, ShieldCheck, IdCard } from 'lucide-react'
+import { ingressoService, saldoService, cupomService } from '../services/api'
 import Navbar from '../components/Navbar'
 import { formatMoeda, formatDataBadge, corCategoria } from '../constants'
 import { useAuth } from '../context/AuthContext'
 
 interface Evento { id: number; nome: string; dataHora: string; local: string; imagemCapaUrl?: string; categoria?: string }
-interface TipoIngresso { id: number; nome: string; preco: number }
-interface ItemPedido { tipoId: number; quantidade: number }
+interface TipoIngresso { id: number; nome: string; preco: number; precoMeia?: number | null; meiaEntradaHabilitada?: boolean }
+interface ItemPedido { tipoId: number; quantidade: number; meia?: boolean }
 interface LocationState { evento: Evento; tipos: TipoIngresso[]; itens: ItemPedido[] }
 
 export default function RevisaoPedido() {
@@ -19,31 +19,47 @@ export default function RevisaoPedido() {
 
   const [cupom, setCupom] = useState('')
   const [desconto, setDesconto] = useState(0)
+  const [cupomAplicado, setCupomAplicado] = useState<string | null>(null)
+  const [validandoCupom, setValidandoCupom] = useState(false)
   const [mensagemCupom, setMensagemCupom] = useState<{ ok: boolean; texto: string } | null>(null)
+  const [documento, setDocumento] = useState('')
   const [confirmando, setConfirmando] = useState(false)
   const [erro, setErro] = useState('')
 
   if (!state) { navigate('/'); return null }
   const { evento, tipos, itens } = state
 
-  const subtotal = itens.reduce((acc, item) => {
+  const precoItem = (item: ItemPedido) => {
     const tipo = tipos.find(t => t.id === item.tipoId)
-    return acc + (tipo ? Number(tipo.preco) * item.quantidade : 0)
-  }, 0)
-  const total = subtotal - desconto
+    if (!tipo) return 0
+    return item.meia && tipo.precoMeia != null ? Number(tipo.precoMeia) : Number(tipo.preco)
+  }
+  const subtotal = itens.reduce((acc, item) => acc + precoItem(item) * item.quantidade, 0)
+  const total = Math.max(0, subtotal - desconto)
+  const temMeia = itens.some(i => i.meia)
 
-  const aplicarCupom = () => {
-    if (cupom.toUpperCase() === 'BEMVINDO10') {
-      setDesconto(subtotal * 0.10)
-      setMensagemCupom({ ok: true, texto: 'Cupom aplicado: 10% de desconto.' })
-    } else {
-      setDesconto(0)
-      setMensagemCupom({ ok: false, texto: 'Cupom inválido.' })
-    }
+  const aplicarCupom = async () => {
+    if (!cupom.trim()) return
+    setValidandoCupom(true); setMensagemCupom(null)
+    try {
+      const res = await cupomService.validar(cupom.trim(), evento.id, subtotal)
+      setDesconto(Number(res.data.desconto))
+      setCupomAplicado(res.data.codigo)
+      setMensagemCupom({ ok: true, texto: `Cupom aplicado: ${formatMoeda(Number(res.data.desconto))} de desconto.` })
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } }
+      setDesconto(0); setCupomAplicado(null)
+      setMensagemCupom({ ok: false, texto: err.response?.data?.message ?? 'Cupom inválido para este pedido.' })
+    } finally { setValidandoCupom(false) }
   }
 
   const confirmarCompra = async () => {
-    setConfirmando(true); setErro('')
+    setErro('')
+    if (temMeia && !documento.trim()) {
+      setErro('Informe o documento para validar a meia-entrada.')
+      return
+    }
+    setConfirmando(true)
     try {
       const saldoRes = await saldoService.obter(usuario!.id)
       const saldoAtual = Number(saldoRes.data.valor)
@@ -51,9 +67,15 @@ export default function RevisaoPedido() {
         setErro(`Saldo insuficiente. Seu saldo é ${formatMoeda(saldoAtual)} e o total é ${formatMoeda(total)}.`)
         setConfirmando(false); return
       }
-      for (const item of itens) {
-        await ingressoService.comprar(usuario!.id, { tipoIngressoId: item.tipoId, quantidade: item.quantidade })
-      }
+      await ingressoService.comprarPedido(usuario!.id, {
+        itens: itens.map(item => ({
+          tipoIngressoId: item.tipoId,
+          quantidade: item.quantidade,
+          meiaEntrada: !!item.meia,
+          documento: item.meia ? documento.trim() : null,
+        })),
+        codigoCupom: cupomAplicado,
+      })
       navigate('/meus-ingressos', { state: { sucesso: true } })
     } catch (e: unknown) {
       const err = e as { response?: { data?: { motivo?: string; message?: string } } }
@@ -91,13 +113,17 @@ export default function RevisaoPedido() {
             <div className="surface surface--pad">
               <h3 style={{ marginBottom: 'var(--sp-4)' }}>Resumo do pedido</h3>
               <div className="stack" style={{ gap: 'var(--sp-3)' }}>
-                {itens.map(item => {
+                {itens.map((item, idx) => {
                   const tipo = tipos.find(t => t.id === item.tipoId)
                   if (!tipo) return null
                   return (
-                    <div key={item.tipoId} className="sum-row">
-                      <span><strong style={{ fontWeight: 600 }}>{tipo.nome}</strong> <span className="muted">× {item.quantidade}</span></span>
-                      <span className="money">{formatMoeda(Number(tipo.preco) * item.quantidade)}</span>
+                    <div key={idx} className="sum-row">
+                      <span>
+                        <strong style={{ fontWeight: 600 }}>{tipo.nome}</strong>
+                        {item.meia && <span className="badge badge--brand" style={{ marginLeft: 6 }}>Meia</span>}
+                        {' '}<span className="muted">× {item.quantidade}</span>
+                      </span>
+                      <span className="money">{formatMoeda(precoItem(item) * item.quantidade)}</span>
                     </div>
                   )
                 })}
@@ -108,13 +134,25 @@ export default function RevisaoPedido() {
                 )}
               </div>
 
+              {temMeia && (
+                <div className="field" style={{ marginTop: 'var(--sp-5)' }}>
+                  <span className="label">Documento (meia-entrada)</span>
+                  <div className="input-group"><IdCard size={18} />
+                    <input className="input" placeholder="RG ou carteira de estudante" value={documento} onChange={e => setDocumento(e.target.value)} />
+                  </div>
+                  <span className="field-hint">Obrigatório — será conferido na entrada do evento.</span>
+                </div>
+              )}
+
               <div className="field" style={{ marginTop: 'var(--sp-5)' }}>
                 <span className="label">Cupom de desconto</span>
                 <div className="row" style={{ gap: 'var(--sp-2)' }}>
                   <div className="input-group grow"><Tag size={18} />
-                    <input className="input" placeholder="Ex.: BEMVINDO10" value={cupom} onChange={e => setCupom(e.target.value)} />
+                    <input className="input" placeholder="Digite o código" value={cupom} onChange={e => setCupom(e.target.value)} />
                   </div>
-                  <button className="btn btn--soft" onClick={aplicarCupom}>Aplicar</button>
+                  <button className="btn btn--soft" onClick={aplicarCupom} disabled={validandoCupom || !cupom.trim()}>
+                    {validandoCupom ? 'Validando…' : 'Aplicar'}
+                  </button>
                 </div>
                 {mensagemCupom && <span className={mensagemCupom.ok ? 'field-hint' : 'field-error'} style={mensagemCupom.ok ? { color: 'oklch(0.45 0.13 150)' } : undefined}>{mensagemCupom.texto}</span>}
               </div>

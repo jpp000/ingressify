@@ -9,7 +9,9 @@ public record IngressoResponse(
 		int eventoId,
 		int proprietarioId,
 		StatusIngresso status,
-		boolean bloqueadoPorReembolso) {
+		boolean bloqueadoPorReembolso,
+		boolean meiaEntrada,
+		String documento) {
 
 	public static IngressoResponse fromDomain(Ingresso i) {
 		return new IngressoResponse(
@@ -18,6 +20,8 @@ public record IngressoResponse(
 				i.getEventoId().getId(),
 				i.getProprietario().getId(),
 				i.getStatus(),
-				i.isBloqueadoPorReembolso());
+				i.isBloqueadoPorReembolso(),
+				i.isMeiaEntrada(),
+				i.getDocumento());
 	}
 }

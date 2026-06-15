@@ -49,7 +49,11 @@ public class CompraDirectaProcessamento extends ProcessamentoPagamentoTemplate {
 			throw new IllegalStateException("quantidade indisponível: apenas "
 					+ tipo.getQuantidadeDisponivel() + " disponíveis");
 		}
-		tipo.reservar(ctx.getQuantidade());
+		if (ctx.isMeiaEntrada()) {
+			tipo.reservarMeia(ctx.getQuantidade());
+		} else {
+			tipo.reservar(ctx.getQuantidade());
+		}
 		tipoIngressoServico.salvar(tipo);
 	}
 
@@ -63,7 +67,11 @@ public class CompraDirectaProcessamento extends ProcessamentoPagamentoTemplate {
 			saldoServico.debitar(ctx.getCompradorId(), ctx.getValorTotal());
 		} catch (RuntimeException e) {
 			TipoIngresso tipo = tipoIngressoRepositorio.obter(ctx.getTipoIngressoId());
-			tipo.devolver(ctx.getQuantidade());
+			if (ctx.isMeiaEntrada()) {
+				tipo.devolverMeia(ctx.getQuantidade());
+			} else {
+				tipo.devolver(ctx.getQuantidade());
+			}
 			tipoIngressoServico.salvar(tipo);
 			pagamentoServico.rejeitar(pagamento.getId());
 			throw e;
@@ -80,6 +88,9 @@ public class CompraDirectaProcessamento extends ProcessamentoPagamentoTemplate {
 		TipoIngresso tipo = tipoIngressoRepositorio.obter(ctx.getTipoIngressoId());
 		for (int n = 0; n < ctx.getQuantidade(); n++) {
 			Ingresso ingresso = new Ingresso(ctx.getTipoIngressoId(), tipo.getEventoId(), ctx.getCompradorId());
+			if (ctx.isMeiaEntrada()) {
+				ingresso.definirMeiaEntrada(ctx.getDocumento());
+			}
 			ingressoServico.salvar(ingresso);
 			ctx.adicionarIngresso(ingresso.getId());
 		}

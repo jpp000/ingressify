@@ -38,7 +38,8 @@ public class TipoIngressoServicoAplicacao {
 	}
 
 	public TipoIngressoId criarTipoIngresso(EventoId eventoId, UsuarioId organizadorId, String nome, BigDecimal preco,
-			int quantidade, String descricao, List<String> beneficios, List<CriarLoteDto> lotesDto) {
+			int quantidade, String descricao, List<String> beneficios, List<CriarLoteDto> lotesDto,
+			boolean meiaEntradaHabilitada, int percentualMeia, int cotaMeia) {
 		Evento evento = eventoRepositorio.obter(eventoId);
 		if (!evento.getOrganizadorId().equals(organizadorId)) {
 			throw new IllegalStateException("evento não pertence ao organizador");
@@ -76,6 +77,10 @@ public class TipoIngressoServicoAplicacao {
 				tipo.adicionarLote(new Lote(i + 1, l.nome(), new Dinheiro(l.preco()),
 						l.quantidade(), l.dataInicio(), l.dataFim()));
 			}
+		}
+
+		if (meiaEntradaHabilitada) {
+			tipo.configurarMeiaEntrada(true, percentualMeia, cotaMeia);
 		}
 
 		tipoIngressoServico.salvar(tipo);

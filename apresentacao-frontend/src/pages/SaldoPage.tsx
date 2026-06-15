@@ -1,48 +1,66 @@
 import { useEffect, useState } from 'react'
-import { Plus, RotateCcw, Ticket, ArrowDownLeft, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Plus, Minus, RotateCcw, Ticket, ArrowDownLeft, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { saldoService } from '../services/api'
+import { saldoService, carteiraService } from '../services/api'
 import { formatMoeda } from '../constants'
 import { useAuth } from '../context/AuthContext'
 
 interface Transacao { id: number; tipo: string; valor: number; data: string }
 
-const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO'])
+const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO', 'RECARGA'])
 const RAPIDOS = [50, 100, 200]
 
 const LABEL: Record<string, string> = {
-  DEPOSITO: 'Recarga de saldo', COMPRA: 'Compra de ingresso', VENDA: 'Venda (revenda)',
-  REEMBOLSO: 'Reembolso', TRANSFERENCIA: 'Transferência', AJUSTE_SALDO: 'Ajuste de saldo',
+  DEPOSITO: 'Recarga de saldo', RECARGA: 'Recarga de saldo', SAQUE: 'Saque',
+  COMPRA: 'Compra de ingresso', VENDA: 'Venda (revenda)', REEMBOLSO: 'Reembolso',
+  TRANSFERENCIA: 'Transferência', AJUSTE_SALDO: 'Ajuste de saldo',
 }
 
 export default function SaldoPage() {
   const { usuario } = useAuth()
   const [saldo, setSaldo] = useState<number | null>(null)
   const [transacoes, setTransacoes] = useState<Transacao[]>([])
-  const [deposito, setDeposito] = useState('')
+  const [valor, setValor] = useState('')
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null)
-  const [salvando, setSalvando] = useState(false)
+  const [acao, setAcao] = useState<'recarregar' | 'sacar' | null>(null)
 
   const carregar = () => {
     if (!usuario) return
-    saldoService.obter(usuario.id).then(r => setSaldo(r.data.valor))
+    carteiraService.obter(usuario.id).then(r => setSaldo(r.data.valor))
     saldoService.transacoes(usuario.id).then(r => setTransacoes(r.data))
   }
   useEffect(() => { carregar() }, [])
 
-  const adicionar = async () => {
-    const valor = parseFloat(deposito.replace(',', '.'))
-    if (!valor || valor <= 0) { setMsg({ ok: false, texto: 'Informe um valor positivo' }); return }
-    setSalvando(true)
+  const parseValor = () => parseFloat(valor.replace(',', '.'))
+
+  const recarregar = async () => {
+    const v = parseValor()
+    if (!v || v <= 0) { setMsg({ ok: false, texto: 'Informe um valor positivo' }); return }
+    setAcao('recarregar')
     try {
-      await saldoService.adicionar(usuario!.id, valor)
-      setMsg({ ok: true, texto: `${formatMoeda(valor)} adicionados à sua carteira` })
-      setDeposito('')
-      carregar()
+      await carteiraService.recarregar(usuario!.id, v)
+      setMsg({ ok: true, texto: `${formatMoeda(v)} adicionados à sua carteira` })
+      setValor(''); carregar()
     } catch {
-      setMsg({ ok: false, texto: 'Erro ao adicionar saldo' })
-    } finally { setSalvando(false) }
+      setMsg({ ok: false, texto: 'Erro ao recarregar saldo' })
+    } finally { setAcao(null) }
   }
+
+  const sacar = async () => {
+    const v = parseValor()
+    if (!v || v <= 0) { setMsg({ ok: false, texto: 'Informe um valor positivo' }); return }
+    setAcao('sacar')
+    try {
+      await carteiraService.sacar(usuario!.id, v)
+      setMsg({ ok: true, texto: `${formatMoeda(v)} sacados da sua carteira` })
+      setValor(''); carregar()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { motivo?: string } } }
+      setMsg({ ok: false, texto: err.response?.data?.motivo ?? 'Erro ao sacar' })
+    } finally { setAcao(null) }
+  }
+
+  const ocupado = acao !== null
 
   return (
     <>
@@ -50,7 +68,7 @@ export default function SaldoPage() {
       <div className="app-container page page--narrow">
         <div className="page-head">
           <h1>Minha carteira</h1>
-          <p className="secondary">Adicione saldo e acompanhe suas movimentações.</p>
+          <p className="secondary">Recarregue, saque e acompanhe suas movimentações.</p>
         </div>
 
         <div className="wallet" style={{ marginBottom: 'var(--sp-5)' }}>
@@ -59,19 +77,22 @@ export default function SaldoPage() {
         </div>
 
         <div className="surface surface--pad" style={{ marginBottom: 'var(--sp-5)' }}>
-          <h2 style={{ fontSize: '1.15rem', marginBottom: 'var(--sp-4)' }}>Adicionar saldo</h2>
+          <h2 style={{ fontSize: '1.15rem', marginBottom: 'var(--sp-4)' }}>Movimentar carteira</h2>
           <div className="row wrap" style={{ gap: 'var(--sp-2)', marginBottom: 'var(--sp-3)' }}>
             {RAPIDOS.map(v => (
-              <button key={v} className="chip" onClick={() => setDeposito(String(v))}>+ {formatMoeda(v)}</button>
+              <button key={v} className="chip" onClick={() => setValor(String(v))}>{formatMoeda(v)}</button>
             ))}
           </div>
+          <div className="input-group grow" style={{ marginBottom: 'var(--sp-3)' }}>
+            <span style={{ position: 'absolute', left: 14, color: 'var(--ink-muted)', fontWeight: 600 }}>R$</span>
+            <input className="input" style={{ paddingLeft: 42, fontWeight: 600 }} inputMode="decimal" placeholder="0,00" value={valor} onChange={e => setValor(e.target.value)} />
+          </div>
           <div className="row" style={{ gap: 'var(--sp-3)' }}>
-            <div className="input-group grow">
-              <span style={{ position: 'absolute', left: 14, color: 'var(--ink-muted)', fontWeight: 600 }}>R$</span>
-              <input className="input" style={{ paddingLeft: 42, fontWeight: 600 }} inputMode="decimal" placeholder="0,00" value={deposito} onChange={e => setDeposito(e.target.value)} />
-            </div>
-            <button className="btn" onClick={adicionar} disabled={salvando}>
-              <Plus size={18} />{salvando ? 'Depositando…' : 'Depositar'}
+            <button className="btn grow" onClick={recarregar} disabled={ocupado}>
+              <Plus size={18} />{acao === 'recarregar' ? 'Recarregando…' : 'Recarregar'}
+            </button>
+            <button className="btn btn--soft grow" onClick={sacar} disabled={ocupado}>
+              <Minus size={18} />{acao === 'sacar' ? 'Sacando…' : 'Sacar'}
             </button>
           </div>
           {msg && (
@@ -89,7 +110,7 @@ export default function SaldoPage() {
             <div className="empty"><Ticket size={36} /><p className="muted">Nenhuma movimentação ainda.</p></div>
           ) : transacoes.map(t => {
             const positivo = TIPO_POSITIVO.has(t.tipo)
-            const Ico = t.tipo === 'DEPOSITO' ? ArrowDownLeft : t.tipo === 'REEMBOLSO' ? RotateCcw : positivo ? ArrowDownLeft : ArrowUpRight
+            const Ico = t.tipo === 'REEMBOLSO' ? RotateCcw : positivo ? ArrowDownLeft : ArrowUpRight
             return (
               <div key={t.id} className="list-row">
                 <div className={`list-ico ${positivo ? 'list-ico--in' : 'list-ico--out'}`}><Ico size={20} /></div>

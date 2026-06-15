@@ -14,6 +14,8 @@ public class Ingresso {
 	private UsuarioId proprietario;
 	private StatusIngresso status;
 	private boolean bloqueadoPorReembolso;
+	private boolean meiaEntrada;
+	private String documento;
 
 	public Ingresso(TipoIngressoId tipoIngressoId, EventoId eventoId, UsuarioId proprietario) {
 		Validate.notNull(tipoIngressoId, "tipoIngressoId");
@@ -43,6 +45,19 @@ public class Ingresso {
 	public void atribuirId(IngressoId novoId) {
 		Validate.notNull(novoId, "novoId");
 		this.id = novoId;
+	}
+
+	/** Marca o ingresso como meia-entrada, exigindo o documento comprobatório. */
+	public void definirMeiaEntrada(String documento) {
+		Validate.notBlank(documento, "documento");
+		this.meiaEntrada = true;
+		this.documento = documento;
+	}
+
+	/** Restaura os dados de meia-entrada na reconstituição a partir da persistência. */
+	public void reconstituirMeiaEntrada(boolean meiaEntrada, String documento) {
+		this.meiaEntrada = meiaEntrada;
+		this.documento = documento;
 	}
 
 	public void transferir(UsuarioId novoDono) {
@@ -133,5 +148,13 @@ public class Ingresso {
 
 	public boolean isBloqueadoPorReembolso() {
 		return bloqueadoPorReembolso;
+	}
+
+	public boolean isMeiaEntrada() {
+		return meiaEntrada;
+	}
+
+	public String getDocumento() {
+		return documento;
 	}
 }

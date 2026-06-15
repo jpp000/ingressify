@@ -17,17 +17,26 @@ public class ContextoProcessamento {
 	private final int quantidade;
 	private final Dinheiro valorTotal;
 	private final UUID correlacao;
+	private final boolean meiaEntrada;
+	private final String documento;
 
 	private Pagamento pagamento;
 	private final List<IngressoId> ingressosCriados = new ArrayList<>();
 
 	public ContextoProcessamento(UsuarioId compradorId, TipoIngressoId tipoIngressoId,
 			int quantidade, Dinheiro valorTotal, UUID correlacao) {
+		this(compradorId, tipoIngressoId, quantidade, valorTotal, correlacao, false, null);
+	}
+
+	public ContextoProcessamento(UsuarioId compradorId, TipoIngressoId tipoIngressoId,
+			int quantidade, Dinheiro valorTotal, UUID correlacao, boolean meiaEntrada, String documento) {
 		this.compradorId = compradorId;
 		this.tipoIngressoId = tipoIngressoId;
 		this.quantidade = quantidade;
 		this.valorTotal = valorTotal;
 		this.correlacao = correlacao;
+		this.meiaEntrada = meiaEntrada;
+		this.documento = documento;
 	}
 
 	public UsuarioId getCompradorId() { return compradorId; }
@@ -35,6 +44,8 @@ public class ContextoProcessamento {
 	public int getQuantidade() { return quantidade; }
 	public Dinheiro getValorTotal() { return valorTotal; }
 	public UUID getCorrelacao() { return correlacao; }
+	public boolean isMeiaEntrada() { return meiaEntrada; }
+	public String getDocumento() { return documento; }
 
 	public Pagamento getPagamento() { return pagamento; }
 	public void setPagamento(Pagamento pagamento) { this.pagamento = pagamento; }

@@ -60,7 +60,8 @@ public class TipoIngressoController {
 			TipoIngressoId id = tipoIngressoServico.criarTipoIngresso(
 					new EventoId(eventoId), new UsuarioId(usuarioId),
 					req.nome(), req.preco(), req.quantidade(), req.descricao(),
-					req.beneficios(), lotesDto);
+					req.beneficios(), lotesDto,
+						req.meiaEntradaHabilitada(), req.percentualMeia(), req.cotaMeia());
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(TipoIngressoResponse.fromDomain(tipoIngressoServico.obter(id)));
 		} catch (IllegalStateException e) {

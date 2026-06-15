@@ -60,6 +60,18 @@ public class TipoIngressoJpa {
 	@OrderBy("numero ASC")
 	private List<LoteJpa> lotes = new ArrayList<>();
 
+	@Column(name = "meia_entrada_habilitada", nullable = false)
+	private boolean meiaEntradaHabilitada;
+
+	@Column(name = "percentual_meia", nullable = false)
+	private int percentualMeia;
+
+	@Column(name = "cota_meia", nullable = false)
+	private int cotaMeia;
+
+	@Column(name = "cota_meia_disponivel", nullable = false)
+	private int cotaMeiaDisponivel;
+
 	protected TipoIngressoJpa() {}
 
 	public static TipoIngressoJpa fromDomain(TipoIngresso t) {
@@ -73,6 +85,10 @@ public class TipoIngressoJpa {
 		jpa.descricao = t.getDescricao();
 		jpa.beneficios = new ArrayList<>(t.getBeneficios());
 		jpa.lotes = t.getLotes().stream().map(LoteJpa::fromDomain).collect(Collectors.toList());
+		jpa.meiaEntradaHabilitada = t.isMeiaEntradaHabilitada();
+		jpa.percentualMeia = t.getPercentualMeia();
+		jpa.cotaMeia = t.getCotaMeia();
+		jpa.cotaMeiaDisponivel = t.getCotaMeiaDisponivel();
 		return jpa;
 	}
 
@@ -84,6 +100,7 @@ public class TipoIngressoJpa {
 		for (LoteJpa l : lotes) {
 			t.adicionarLote(l.toDomain());
 		}
+		t.reconstituirMeiaEntrada(meiaEntradaHabilitada, percentualMeia, cotaMeia, cotaMeiaDisponivel);
 		return t;
 	}
 
