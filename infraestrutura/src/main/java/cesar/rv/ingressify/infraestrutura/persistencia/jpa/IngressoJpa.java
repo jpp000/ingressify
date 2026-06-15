@@ -42,7 +42,7 @@ public class IngressoJpa {
 	@Column(name = "bloqueado_por_reembolso", nullable = false)
 	private boolean bloqueadoPorReembolso;
 
-	@Column(name = "meia_entrada", nullable = false)
+	@Column(name = "meia_entrada", nullable = false, columnDefinition = "boolean default false")
 	private boolean meiaEntrada;
 
 	@Column(name = "documento")

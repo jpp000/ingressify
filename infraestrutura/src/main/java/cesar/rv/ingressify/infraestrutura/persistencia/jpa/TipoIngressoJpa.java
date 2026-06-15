@@ -60,16 +60,16 @@ public class TipoIngressoJpa {
 	@OrderBy("numero ASC")
 	private List<LoteJpa> lotes = new ArrayList<>();
 
-	@Column(name = "meia_entrada_habilitada", nullable = false)
+	@Column(name = "meia_entrada_habilitada", nullable = false, columnDefinition = "boolean default false")
 	private boolean meiaEntradaHabilitada;
 
-	@Column(name = "percentual_meia", nullable = false)
+	@Column(name = "percentual_meia", nullable = false, columnDefinition = "integer default 0")
 	private int percentualMeia;
 
-	@Column(name = "cota_meia", nullable = false)
+	@Column(name = "cota_meia", nullable = false, columnDefinition = "integer default 0")
 	private int cotaMeia;
 
-	@Column(name = "cota_meia_disponivel", nullable = false)
+	@Column(name = "cota_meia_disponivel", nullable = false, columnDefinition = "integer default 0")
 	private int cotaMeiaDisponivel;
 
 	protected TipoIngressoJpa() {}
