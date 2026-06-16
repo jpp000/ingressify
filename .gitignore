@@ -19,7 +19,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnp
 .pnp.js
-.claude
+
 
 # ── Variáveis de ambiente / segredos ─────────────────────────────────────────
 .env
@@ -48,6 +48,7 @@ bin/
 
 # Cursor
 .cursor/
+.claude/
 
 # ── Sistema operacional ───────────────────────────────────────────────────────
 .DS_Store

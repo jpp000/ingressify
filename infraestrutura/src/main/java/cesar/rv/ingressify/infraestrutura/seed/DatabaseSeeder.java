@@ -144,9 +144,9 @@ public class DatabaseSeeder implements ApplicationRunner {
 		TipoIngressoId camarote = criarTipo(festival, maria, "Camarote VIP", new BigDecimal("350.00"), 150,
 				"Open bar e vista privilegiada", List.of("Open bar", "Lounge exclusivo"), null);
 
-		EventoId standup = criarEvento(joao, "Stand-up Comedy Night",
+		EventoId standup = eventoServicoAplicacao.criarEvento(joao, "Stand-up Comedy Night",
 				agora.plusDays(25), "Teatro Guararapes", "Noite de risadas com os melhores comediantes.",
-				300, "Teatro e Artes", agora.plusDays(25).minusHours(2));
+				300, 200, null, 7, agora.plusDays(25).minusHours(2), "Teatro e Artes");
 		TipoIngressoId inteira = criarTipo(standup, joao, "Inteira", new BigDecimal("60.00"), 200,
 				"Ingresso inteiro", null, null);
 		TipoIngressoId meia = criarTipo(standup, joao, "Meia-entrada", new BigDecimal("30.00"), 100,
@@ -326,7 +326,7 @@ public class DatabaseSeeder implements ApplicationRunner {
 	private EventoId criarEvento(UsuarioId organizador, String nome, LocalDateTime dataHora, String local,
 			String descricao, int capacidade, String categoria, LocalDateTime aberturaPortoes) {
 		return eventoServicoAplicacao.criarEvento(organizador, nome, dataHora, local, descricao, capacidade,
-				null, 7, aberturaPortoes, categoria);
+				0, null, 7, aberturaPortoes, categoria);
 	}
 
 	private EventoId criarEventoPassado(UsuarioId organizador, String nome, LocalDateTime dataHora, String local,
