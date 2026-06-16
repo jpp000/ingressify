@@ -61,6 +61,7 @@ interface EventoForm {
   local: string
   descricao: string
   capacidade: string
+  capacidadeNumerada: string
   prazoReembolsoDias: string
   aberturaPortoes: string
   imagemCapaUrl: string
@@ -73,6 +74,7 @@ const FORM_INICIAL: EventoForm = {
   local: '',
   descricao: '',
   capacidade: '500',
+  capacidadeNumerada: '0',
   prazoReembolsoDias: '7',
   aberturaPortoes: '',
   imagemCapaUrl: '',
@@ -154,6 +156,9 @@ export default function GerenciarEventos() {
     if (!form.local.trim()) msgs.push('Endereço do local é obrigatório.')
     const cap = Number(form.capacidade)
     if (!cap || cap < 1) msgs.push('Capacidade total deve ser pelo menos 1.')
+    const capNum = Number(form.capacidadeNumerada) || 0
+    if (capNum < 0) msgs.push('Capacidade numerada não pode ser negativa.')
+    else if (cap && capNum > cap) msgs.push(`Assentos numerados (${capNum}) não pode exceder a capacidade total (${cap}).`)
 
     if (tipos.length === 0) {
       msgs.push('Adicione pelo menos um tipo de ingresso.')
@@ -213,6 +218,7 @@ export default function GerenciarEventos() {
         local: form.local,
         descricao: form.descricao || null,
         capacidade: Number(form.capacidade),
+        capacidadeNumerada: Number(form.capacidadeNumerada) || 0,
         imagemCapaUrl: form.imagemCapaUrl || null,
         prazoReembolsoDias: Number(form.prazoReembolsoDias),
         aberturaPortoes: form.aberturaPortoes || null,
@@ -612,6 +618,34 @@ function CriarEventoForm({
                   {totalAlocado} de {capacidade} ingressos alocados nos tipos
                 </p>
               )}
+            </div>
+          </div>
+
+          <div style={{ background: '#f8f0ff', border: '1px solid #e9d5ff', borderRadius: 12, padding: 18, marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 4 }}>
+                  Assentos Numerados (opcional)
+                </label>
+                <p style={{ fontSize: 12, color: 'var(--ink-2)', marginBottom: 8 }}>
+                  Defina quantos lugares terão mapa de assentos para seleção. O restante será por ordem de chegada.
+                </p>
+                <input
+                  type="number"
+                  min="0"
+                  max={capacidade || undefined}
+                  placeholder="0 = todo evento é por ordem de chegada"
+                  value={form.capacidadeNumerada}
+                  onChange={set('capacidadeNumerada')}
+                  style={{ ...inputStyle, borderColor: '#e9d5ff' }}
+                />
+                {Number(form.capacidadeNumerada) > 0 && capacidade > 0 && (
+                  <p style={{ fontSize: 11, color: '#7c3aed', marginTop: 4 }}>
+                    {Number(form.capacidadeNumerada)} assentos numerados + {capacidade - Number(form.capacidadeNumerada)} por ordem de chegada
+                  </p>
+                )}
+              </div>
+              <span style={{ fontSize: 32 }}>💺</span>
             </div>
           </div>
 

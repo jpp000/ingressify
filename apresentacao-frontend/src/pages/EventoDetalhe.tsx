@@ -9,7 +9,7 @@ import Navbar from '../components/Navbar'
 import { formatMoeda, corCategoria } from '../constants'
 import { useAuth } from '../context/AuthContext'
 
-interface Evento { id: number; nome: string; dataHora: string; local: string; descricao?: string; imagemCapaUrl?: string; status: string; aberturaPortoes?: string; categoria?: string }
+interface Evento { id: number; nome: string; dataHora: string; local: string; descricao?: string; imagemCapaUrl?: string; status: string; aberturaPortoes?: string; categoria?: string; temAssentosNumerados?: boolean }
 interface Lote { id: number; nome: string; preco: number; quantidadeDisponivel: number; ativo: boolean }
 interface TipoIngresso { id: number; nome: string; preco: number; quantidadeDisponivel: number; descricao?: string; lotes?: Lote[]; precoMeia?: number | null; meiaEntradaHabilitada?: boolean; cotaMeiaDisponivel?: number }
 interface Avaliacao { id: number; nota: number; comentario?: string; respostaOrganizador?: string }
@@ -145,7 +145,9 @@ export default function EventoDetalhe() {
           <div className="ctx-links">
             <Link to={`/sorteios?eventoId=${eventoId}`} className="chip"><Dices size={15} /> Sorteios</Link>
             <Link to={`/revendas?eventoId=${eventoId}`} className="chip"><Repeat size={15} /> Revendas</Link>
-            <Link to={`/mapa-assentos?eventoId=${eventoId}`} className="chip"><Armchair size={15} /> Mapa de assentos</Link>
+            {evento.temAssentosNumerados && (
+              <Link to={`/mapa-assentos?eventoId=${eventoId}`} className="chip"><Armchair size={15} /> Escolher assento</Link>
+            )}
           </div>
 
           {evento.descricao && (

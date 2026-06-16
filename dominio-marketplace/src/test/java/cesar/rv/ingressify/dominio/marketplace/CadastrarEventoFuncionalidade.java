@@ -85,7 +85,7 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
 	public void atualizarNomeEvento() {
 		LocalDateTime dh = LocalDateTime.now().plusDays(10);
 		eventoServico.atualizar(eventoId, "Show de Rock - Edição Especial", dh, "Arena",
-				"Edição com convidados especiais e abertura antecipada.", 1500, null, 7, MarketplaceTestData.aberturaPara(dh), null);
+				"Edição com convidados especiais e abertura antecipada.", 1500, 0, null, 7, MarketplaceTestData.aberturaPara(dh), null);
 	}
 
 	@Then("o nome do evento é atualizado")
@@ -107,7 +107,7 @@ public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
 		try {
 			LocalDateTime dh = LocalDateTime.now().plusDays(1);
 			eventoServico.atualizar(eventoId, "Novo Nome", dh, "Novo Local", "Nova descrição após a mudança de data.", 300,
-					null, 7, MarketplaceTestData.aberturaPara(dh), null);
+					0, null, 7, MarketplaceTestData.aberturaPara(dh), null);
 		} catch (Exception e) {
 			excecao = e;
 		}

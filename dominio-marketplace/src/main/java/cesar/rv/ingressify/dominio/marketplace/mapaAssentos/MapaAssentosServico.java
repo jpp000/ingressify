@@ -123,4 +123,8 @@ public class MapaAssentosServico {
     public List<Assento> listarAssentos(MapaAssentosId mapaId) {
         return repositorio.listarAssentosPorMapa(mapaId);
     }
+
+    public Assento obterAssento(AssentoId assentoId) {
+        return repositorio.obterAssento(assentoId);
+    }
 }

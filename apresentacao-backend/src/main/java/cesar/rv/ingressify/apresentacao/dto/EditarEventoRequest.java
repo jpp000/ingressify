@@ -8,6 +8,7 @@ public record EditarEventoRequest(
 		String local,
 		String descricao,
 		int capacidade,
+		int capacidadeNumerada,
 		String imagemCapaUrl,
 		int prazoReembolsoDias,
 		LocalDateTime aberturaPortoes,

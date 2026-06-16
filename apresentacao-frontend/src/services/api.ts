@@ -202,6 +202,9 @@ export const mapaAssentosService = {
   confirmar: (mapaId: number, usuarioId: number, assentoIds: number[]) =>
     api.post(`/mapas-assentos/${mapaId}/confirmar`, { assentoIds },
       { headers: { 'X-Usuario-Id': usuarioId } }),
+  comprar: (mapaId: number, usuarioId: number, assentoIds: number[]) =>
+    api.post(`/mapas-assentos/${mapaId}/comprar`, { assentoIds },
+      { headers: { 'X-Usuario-Id': usuarioId } }),
   liberarExpirados: (mapaId: number) =>
     api.post(`/mapas-assentos/${mapaId}/liberar-expirados`),
 }

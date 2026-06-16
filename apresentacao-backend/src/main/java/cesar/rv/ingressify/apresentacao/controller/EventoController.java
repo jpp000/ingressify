@@ -60,7 +60,7 @@ public class EventoController {
 			LocalDateTime aberturaPortoes = req.aberturaPortoes() != null ? req.aberturaPortoes() : req.dataHora();
 			EventoId id = eventoServico.criarEvento(
 					new UsuarioId(usuarioId), req.nome(), req.dataHora(), req.local(),
-					req.descricao(), req.capacidade(), req.imagemCapaUrl(),
+					req.descricao(), req.capacidade(), req.capacidadeNumerada(), req.imagemCapaUrl(),
 					req.prazoReembolsoDias(), aberturaPortoes, req.categoria());
 			return ResponseEntity.status(HttpStatus.CREATED)
 					.body(EventoResponse.fromDomain(eventoServico.obter(id)));
@@ -124,8 +124,8 @@ public class EventoController {
 			LocalDateTime aberturaPortoesEd = req.aberturaPortoes() != null ? req.aberturaPortoes() : req.dataHora();
 			eventoServico.editarEvento(
 					new EventoId(id), new UsuarioId(usuarioId), req.nome(), req.dataHora(),
-					req.local(), req.descricao(), req.capacidade(), req.imagemCapaUrl(),
-					req.prazoReembolsoDias(), aberturaPortoesEd, req.categoria());
+					req.local(), req.descricao(), req.capacidade(), req.capacidadeNumerada(),
+					req.imagemCapaUrl(), req.prazoReembolsoDias(), aberturaPortoesEd, req.categoria());
 			return ResponseEntity.ok(EventoResponse.fromDomain(eventoServico.obter(new EventoId(id))));
 		} catch (IllegalStateException e) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();

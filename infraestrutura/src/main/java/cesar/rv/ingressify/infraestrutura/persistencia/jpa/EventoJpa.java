@@ -46,6 +46,9 @@ public class EventoJpa {
 	@Column(nullable = false)
 	private int capacidade;
 
+	@Column(name = "capacidade_numerada", nullable = false)
+	private int capacidadeNumerada;
+
 	@Column(name = "imagem_capa_url", columnDefinition = "TEXT")
 	private String imagemCapaUrl;
 
@@ -70,6 +73,7 @@ public class EventoJpa {
 		jpa.descricao = e.getDescricao();
 		jpa.status = e.getStatus();
 		jpa.capacidade = e.getCapacidade();
+		jpa.capacidadeNumerada = e.getCapacidadeNumerada();
 		jpa.imagemCapaUrl = e.getImagemCapaUrl();
 		jpa.prazoReembolsoDias = e.getPrazoReembolsoDias();
 		jpa.aberturaPortoes = e.getAberturaPortoes();
@@ -80,7 +84,7 @@ public class EventoJpa {
 	public Evento toDomain() {
 		return new Evento(
 				new EventoId(id), new UsuarioId(organizadorId), nome, dataHora,
-				local, descricao, status, capacidade, imagemCapaUrl,
+				local, descricao, status, capacidade, capacidadeNumerada, imagemCapaUrl,
 				prazoReembolsoDias, aberturaPortoes, categoria);
 	}
 

@@ -14,11 +14,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.CompraAssentoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.MapaAssentosServicoAplicacao;
 import cesar.rv.ingressify.apresentacao.dto.AssentoResponse;
+import cesar.rv.ingressify.apresentacao.dto.CompraAssentoResponse;
+import cesar.rv.ingressify.apresentacao.dto.ComprarAssentosRequest;
 import cesar.rv.ingressify.apresentacao.dto.CriarMapaAssentosRequest;
 import cesar.rv.ingressify.apresentacao.dto.MapaAssentosResponse;
 import cesar.rv.ingressify.apresentacao.dto.ReservarAssentosRequest;
+import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.Assento;
@@ -31,9 +35,12 @@ import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentosId;
 public class MapaAssentosController {
 
     private final MapaAssentosServicoAplicacao mapaServico;
+    private final CompraAssentoServicoAplicacao compraServico;
 
-    public MapaAssentosController(MapaAssentosServicoAplicacao mapaServico) {
+    public MapaAssentosController(MapaAssentosServicoAplicacao mapaServico,
+            CompraAssentoServicoAplicacao compraServico) {
         this.mapaServico = mapaServico;
+        this.compraServico = compraServico;
     }
 
     @PostMapping
@@ -101,6 +108,26 @@ public class MapaAssentosController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("motivo", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{id}/comprar")
+    public ResponseEntity<?> comprar(
+            @PathVariable int id,
+            @RequestHeader("X-Usuario-Id") int usuarioId,
+            @RequestBody ComprarAssentosRequest req) {
+        if (req.assentoIds() == null || req.assentoIds().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("motivo", "assentoIds obrigatório"));
+        }
+        try {
+            List<AssentoId> ids = req.assentoIds().stream().map(AssentoId::new).toList();
+            Dinheiro total = compraServico.comprar(ids, new UsuarioId(usuarioId));
+            return ResponseEntity.ok(new CompraAssentoResponse(total.getValor(),
+                    "Compra realizada com sucesso!"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("motivo", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("motivo", e.getMessage()));
         }
     }
 

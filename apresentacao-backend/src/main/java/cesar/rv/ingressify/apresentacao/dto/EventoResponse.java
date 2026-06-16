@@ -13,6 +13,9 @@ public record EventoResponse(
 		String descricao,
 		StatusEvento status,
 		int capacidade,
+		int capacidadeNumerada,
+		int capacidadeOrdemChegada,
+		boolean temAssentosNumerados,
 		String imagemCapaUrl,
 		int prazoReembolsoDias,
 		LocalDateTime aberturaPortoes,
@@ -22,6 +25,7 @@ public record EventoResponse(
 		return new EventoResponse(
 				e.getId().getId(), e.getNome(), e.getDataHora(), e.getLocal(),
 				e.getDescricao(), e.getStatus(), e.getCapacidade(),
+				e.getCapacidadeNumerada(), e.getCapacidadeOrdemChegada(), e.temAssentosNumerados(),
 				e.getImagemCapaUrl(), e.getPrazoReembolsoDias(), e.getAberturaPortoes(),
 				e.getCategoria());
 	}

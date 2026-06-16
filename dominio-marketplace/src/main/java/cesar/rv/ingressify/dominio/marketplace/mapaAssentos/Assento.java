@@ -89,6 +89,10 @@ public class Assento {
         if (status != StatusAssento.RESERVADO) {
             throw new IllegalStateException("assento deve estar reservado para confirmar venda");
         }
+        if (reservaExpirada()) {
+            throw new IllegalStateException(
+                    "reserva do assento " + codigo + " expirou — realize nova reserva");
+        }
         this.status = StatusAssento.VENDIDO;
         this.reservadoAte = null;
     }

@@ -6,7 +6,9 @@ import java.util.List;
 import org.apache.commons.lang3.Validate;
 
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
+import cesar.rv.ingressify.dominio.marketplace.evento.Evento;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
+import cesar.rv.ingressify.dominio.marketplace.evento.EventoServico;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.Assento;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.AssentoId;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentos;
@@ -16,14 +18,33 @@ import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentosServico;
 public class MapaAssentosServicoAplicacao {
 
     private final MapaAssentosServico mapaServico;
+    private final EventoServico eventoServico;
 
-    public MapaAssentosServicoAplicacao(MapaAssentosServico mapaServico) {
+    public MapaAssentosServicoAplicacao(MapaAssentosServico mapaServico, EventoServico eventoServico) {
         Validate.notNull(mapaServico, "mapaServico");
+        Validate.notNull(eventoServico, "eventoServico");
         this.mapaServico = mapaServico;
+        this.eventoServico = eventoServico;
     }
 
     public MapaAssentosId criarMapa(EventoId eventoId, int linhas, int colunas,
             BigDecimal precoNormal, BigDecimal precoVip, UsuarioId organizadorId) {
+        Evento evento = eventoServico.obter(eventoId);
+
+        if (!evento.getOrganizadorId().equals(organizadorId)) {
+            throw new IllegalStateException("somente o organizador pode criar mapa de assentos");
+        }
+        if (!evento.temAssentosNumerados()) {
+            throw new IllegalStateException(
+                    "evento não possui capacidade numerada — configure assentos numerados ao criar o evento");
+        }
+        int totalAssentos = linhas * colunas;
+        if (totalAssentos > evento.getCapacidadeNumerada()) {
+            throw new IllegalStateException(
+                    "mapa de " + totalAssentos + " assentos excede a capacidade numerada do evento ("
+                    + evento.getCapacidadeNumerada() + ")");
+        }
+
         MapaAssentos mapa = mapaServico.criarMapa(eventoId, linhas, colunas, precoNormal, precoVip);
         return mapa.getId();
     }

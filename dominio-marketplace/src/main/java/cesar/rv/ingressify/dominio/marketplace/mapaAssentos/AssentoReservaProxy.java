@@ -15,6 +15,7 @@ import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 public class AssentoReservaProxy {
 
     private static final int MINUTOS_RESERVA = 5;
+    private static final int MAX_ASSENTOS_POR_USUARIO = 6;
 
     private final MapaAssentosRepositorio repositorio;
 
@@ -39,16 +40,34 @@ public class AssentoReservaProxy {
             }
         }
 
-        // Pré-condição 2: anti-ilha — garante que nenhum assento disponível ficará
-        // isolado (ambos os vizinhos ocupados/reservados) após esta seleção
         List<Assento> todosDoEvento = repositorio.listarAssentosPorEvento(
                 assentos.get(0).getEventoId());
+
+        // Pré-condição 2: limite de assentos por usuário por evento
+        verificarLimiteUsuario(assentos, todosDoEvento, usuarioId);
+
+        // Pré-condição 3: anti-ilha — garante que nenhum assento disponível ficará
+        // isolado (ambos os vizinhos ocupados/reservados) após esta seleção
         verificarAntiIlha(assentos, todosDoEvento);
 
         // Delega ao domínio real
         for (Assento a : assentos) {
             a.reservar(usuarioId, MINUTOS_RESERVA);
             repositorio.salvarAssento(a);
+        }
+    }
+
+    private void verificarLimiteUsuario(List<Assento> selecionados, List<Assento> todosDoEvento,
+            UsuarioId usuarioId) {
+        long jaAtivos = todosDoEvento.stream()
+                .filter(a -> usuarioId.equals(a.getReservadoPor()))
+                .filter(a -> a.getStatus() == StatusAssento.VENDIDO
+                        || (a.getStatus() == StatusAssento.RESERVADO && !a.reservaExpirada()))
+                .count();
+        if (jaAtivos + selecionados.size() > MAX_ASSENTOS_POR_USUARIO) {
+            throw new IllegalStateException(
+                    "limite de " + MAX_ASSENTOS_POR_USUARIO + " assentos por usuário por evento excedido"
+                    + " (você já tem " + jaAtivos + ")");
         }
     }
 

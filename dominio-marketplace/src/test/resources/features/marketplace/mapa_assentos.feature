@@ -44,3 +44,23 @@ Feature: Mapa de Assentos
     Given um evento com mapa de assentos já configurado
     When o organizador tenta criar um segundo mapa para o mesmo evento
     Then a criação é rejeitada por duplicidade
+
+  Scenario: Limite de 6 assentos por usuário por evento é aplicado
+    Given um mapa com 2 fileiras e 6 assentos por fileira com 5 assentos já comprados pelo comprador
+    When o comprador tenta reservar 2 assentos adicionais
+    Then a reserva é rejeitada por limite de assentos por usuário
+
+  Scenario: Confirmação de venda é rejeitada se reserva expirou
+    Given um mapa com um assento com reserva expirada pertencente ao comprador
+    When o comprador tenta confirmar a venda do assento expirado
+    Then a confirmação é rejeitada por reserva expirada
+
+  Scenario: Evento sem capacidade numerada rejeita criação de mapa via serviço de aplicação
+    Given um evento sem capacidade numerada configurada
+    When o organizador tenta criar um mapa de assentos para este evento
+    Then a criação do mapa é rejeitada por falta de capacidade numerada
+
+  Scenario: Mapa maior que a capacidade numerada do evento é rejeitado
+    Given um evento com capacidade total 100 e capacidade numerada 20
+    When o organizador tenta criar um mapa com 5 fileiras e 5 assentos por fileira
+    Then a criação do mapa é rejeitada por exceder capacidade numerada
