@@ -19,6 +19,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnp
 .pnp.js
+.claude
 
 # ── Variáveis de ambiente / segredos ─────────────────────────────────────────
 .env
