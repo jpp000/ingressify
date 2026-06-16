@@ -28,7 +28,7 @@ export default function LoginPage() {
       const usuario = { ...raw, papeis }
       login(usuario)
       setUsuarioId(usuario.id)
-      if (papeis.includes('ADMIN')) navigate('/denuncias')
+      if (papeis.includes('ADMIN')) navigate('/admin')
       else if (papeis.includes('ORGANIZADOR')) navigate('/gerenciar')
       else if (papeis.includes('OPERADOR_PORTA')) navigate('/check-in')
       else navigate('/')

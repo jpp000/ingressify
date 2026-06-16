@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Compass, Dices, Repeat, Ticket, Wallet, CalendarDays,
   ScanLine, Armchair, ShieldAlert, Search, Plus, LogOut, ChevronDown, MoreHorizontal,
+  LayoutDashboard, Store,
   type LucideIcon,
 } from 'lucide-react'
 import { saldoService } from '../services/api'
@@ -22,7 +23,9 @@ interface Destino {
 
 /* Ordem = prioridade inline. Cada papel vê só o que faz sentido para ele. */
 const DESTINOS: Destino[] = [
+  { to: '/admin', label: 'Visão geral', Icon: LayoutDashboard, match: p => p === '/admin', visivel: r => r.admin },
   { to: '/denuncias', label: 'Moderação', Icon: ShieldAlert, match: p => p.startsWith('/denuncias'), visivel: r => r.admin },
+  { to: '/admin/marketplace', label: 'Marketplace', Icon: Store, match: p => p.startsWith('/admin/marketplace'), visivel: r => r.admin },
   { to: '/gerenciar', label: 'Meus eventos', Icon: CalendarDays, match: p => p.startsWith('/gerenciar'), visivel: r => r.organizador },
   { to: '/check-in', label: 'Check-in', Icon: ScanLine, match: p => p.startsWith('/check-in'), visivel: r => r.operador || r.organizador },
   { to: '/', label: 'Explorar', Icon: Compass, match: p => p === '/', visivel: r => r.comprador },
@@ -58,9 +61,9 @@ export default function Navbar() {
   const modoConsumidor = !modoAdmin && !modoOperador
 
   const destinos = useMemo(() => {
-    if (modoAdmin) return DESTINOS.filter(d => d.to === '/denuncias')
+    if (modoAdmin) return DESTINOS.filter(d => d.to === '/admin' || d.to === '/denuncias' || d.to.startsWith('/admin/'))
     if (modoOperador) return DESTINOS.filter(d => d.to === '/check-in')
-    return DESTINOS.filter(d => d.to !== '/denuncias' && d.visivel(papeis))
+    return DESTINOS.filter(d => d.to !== '/denuncias' && !d.to.startsWith('/admin') && d.visivel(papeis))
   }, [modoAdmin, modoOperador, papeis.comprador, papeis.organizador, papeis.operador, papeis.admin])
 
   const temMais = destinos.length > MAX_INLINE
@@ -96,6 +99,10 @@ export default function Navbar() {
           <Link to={homeLink} className="brand" aria-label="Ingressify — início">
             Ingress<b>ify</b><span className="brand__dot" aria-hidden />
           </Link>
+
+          {!modoConsumidor && (
+            <span className="mode-chip">{modoAdmin ? 'Administração' : 'Operação'}</span>
+          )}
 
           <nav className="nav-primary" aria-label="Navegação principal">
             {inline.map(({ to, label, Icon, match, state }) => (

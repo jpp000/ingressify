@@ -272,6 +272,14 @@ hr { height: 1px; background: var(--border); border: 0; }
 .brand b { color: var(--brand-strong); font-weight: 700; }
 .brand__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 3px; align-self: center; }
 
+.mode-chip {
+  flex-shrink: 0; padding: 4px 11px; border-radius: var(--r-pill);
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.01em;
+  background: var(--brand-soft); color: var(--brand-strong);
+  border: 1px solid transparent;
+}
+@media (max-width: 560px) { .mode-chip { display: none; } }
+
 .nav-primary { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .nav-more { position: relative; flex-shrink: 0; }
 .nav-link {
@@ -366,6 +374,8 @@ hr { height: 1px; background: var(--border); border: 0; }
 
 .list-row { display: flex; align-items: center; gap: 14px; padding: 14px var(--sp-5); }
 .list-row + .list-row { border-top: 1px solid var(--border); }
+.mod-row { transition: background var(--dur-1) var(--ease); }
+.mod-row:hover { background: var(--surface-2); }
 .list-ico { width: 42px; height: 42px; border-radius: var(--r-md); display: grid; place-items: center; flex-shrink: 0; }
 .list-ico--in { background: var(--success-soft); color: oklch(0.45 0.12 150); }
 .list-ico--out { background: var(--brand-soft); color: var(--brand-strong); }

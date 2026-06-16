@@ -15,6 +15,8 @@ import SorteioPage from './pages/SorteioPage'
 import MapaAssentosPage from './pages/MapaAssentosPage'
 import CheckInPage from './pages/CheckInPage'
 import DenunciasPage from './pages/DenunciasPage'
+import AdminVisaoGeral from './pages/AdminVisaoGeral'
+import AdminMarketplace from './pages/AdminMarketplace'
 
 export default function App() {
   return (
@@ -55,6 +57,12 @@ export default function App() {
         } />
         <Route path="/check-in" element={
           <RotaProtegida><CheckInPage /></RotaProtegida>
+        } />
+        <Route path="/admin" element={
+          <RotaProtegida papelRequerido="ADMIN"><AdminVisaoGeral /></RotaProtegida>
+        } />
+        <Route path="/admin/marketplace" element={
+          <RotaProtegida papelRequerido="ADMIN"><AdminMarketplace /></RotaProtegida>
         } />
         <Route path="/denuncias" element={
           <RotaProtegida papelRequerido="ADMIN"><DenunciasPage /></RotaProtegida>
