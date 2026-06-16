@@ -16,6 +16,7 @@ import cesar.rv.ingressify.aplicacao.marketplace.cupom.CupomServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.denuncia.DenunciaServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.evento.EventoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.feed.FeedServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.grupoCompra.GrupoCompraServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.ingresso.IngressoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.CompraAssentoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.FilaEsperaServicoAplicacao;
@@ -58,6 +59,9 @@ import cesar.rv.ingressify.dominio.marketplace.evento.EventoServico;
 import cesar.rv.ingressify.dominio.marketplace.feed.ComentarioRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.feed.FeedServico;
 import cesar.rv.ingressify.dominio.marketplace.feed.PostagemRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.grupoCompra.GrupoCompraRepositorio;
+import cesar.rv.ingressify.dominio.marketplace.grupoCompra.GrupoCompraServico;
+import cesar.rv.ingressify.dominio.marketplace.grupoCompra.ParticipanteGrupoRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoServico;
 import cesar.rv.ingressify.dominio.marketplace.reembolso.SolicitacaoReembolsoRepositorio;
@@ -399,5 +403,24 @@ public class IngressifyConfiguration {
 			FilaEsperaRepositorio filaEsperaRepositorio,
 			MapaAssentosServico mapaAssentosServico) {
 		return new FilaEsperaServicoAplicacao(filaEsperaRepositorio, mapaAssentosServico);
+	}
+
+	// ── Compra em Grupo ──────────────────────────────────────────────────────
+
+	@Bean
+	public GrupoCompraServico grupoCompraServico(GrupoCompraRepositorio grupoCompraRepositorio,
+			ParticipanteGrupoRepositorio participanteGrupoRepositorio, TipoIngressoServico tipoIngressoServico,
+			EventoRepositorio eventoRepositorio) {
+		return new GrupoCompraServico(grupoCompraRepositorio, participanteGrupoRepositorio, tipoIngressoServico,
+				eventoRepositorio);
+	}
+
+	@Bean
+	public GrupoCompraServicoAplicacao grupoCompraServicoAplicacao(GrupoCompraServico grupoCompraServico,
+			GrupoCompraRepositorio grupoCompraRepositorio, ParticipanteGrupoRepositorio participanteGrupoRepositorio,
+			IngressoServico ingressoServico, PagamentoServico pagamentoServico, SaldoServico saldoServico,
+			TransacaoServico transacaoServico) {
+		return new GrupoCompraServicoAplicacao(grupoCompraServico, grupoCompraRepositorio,
+				participanteGrupoRepositorio, ingressoServico, pagamentoServico, saldoServico, transacaoServico);
 	}
 }

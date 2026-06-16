@@ -227,3 +227,21 @@ export const filaEsperaService = {
     api.get(`/mapas-assentos/${mapaId}/fila/posicao`,
       { headers: { 'X-Usuario-Id': usuarioId } }),
 }
+
+// Compra em Grupo
+export const grupoCompraService = {
+  listarPorEvento: (eventoId: number) =>
+    api.get('/grupos-compra', { params: { eventoId } }),
+  meus: (usuarioId: number) =>
+    api.get('/grupos-compra/meus', { headers: { 'X-Usuario-Id': usuarioId } }),
+  obter: (id: number) =>
+    api.get(`/grupos-compra/${id}`),
+  participantes: (id: number) =>
+    api.get(`/grupos-compra/${id}/participantes`),
+  criar: (usuarioId: number, dados: object) =>
+    api.post('/grupos-compra', dados, { headers: { 'X-Usuario-Id': usuarioId } }),
+  pagar: (id: number, usuarioId: number) =>
+    api.post(`/grupos-compra/${id}/pagar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  cancelar: (id: number, usuarioId: number) =>
+    api.post(`/grupos-compra/${id}/cancelar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+}

@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Compass, Dices, Repeat, Ticket, Wallet, CalendarDays,
   ScanLine, Armchair, ShieldAlert, Search, Plus, LogOut, ChevronDown, MoreHorizontal,
-  LayoutDashboard, Store,
+  LayoutDashboard, Store, Users,
   type LucideIcon,
 } from 'lucide-react'
 import { saldoService } from '../services/api'
@@ -32,6 +32,7 @@ const DESTINOS: Destino[] = [
   { to: '/meus-ingressos', label: 'Carteira', Icon: Ticket, match: p => p.startsWith('/meus-ingressos') || p.startsWith('/revender') || p.startsWith('/revisao'), visivel: r => r.comprador },
   { to: '/revendas', label: 'Revendas', Icon: Repeat, match: p => p.startsWith('/revendas'), visivel: r => r.comprador },
   { to: '/sorteios', label: 'Sorteios', Icon: Dices, match: p => p.startsWith('/sorteios'), visivel: r => r.comprador || r.organizador },
+  { to: '/grupos-compra', label: 'Compra em grupo', Icon: Users, match: p => p.startsWith('/grupos-compra'), visivel: r => r.comprador },
   { to: '/mapa-assentos', label: 'Mapa de assentos', Icon: Armchair, match: p => p.startsWith('/mapa-assentos'), visivel: r => r.organizador },
   { to: '/saldo', label: 'Saldo', Icon: Wallet, match: p => p === '/saldo', visivel: r => r.comprador },
 ]

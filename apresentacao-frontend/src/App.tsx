@@ -12,6 +12,7 @@ import RevendasPage from './pages/RevendasPage'
 import RevisaoPedido from './pages/RevisaoPedido'
 import RevenderIngressoPage from './pages/RevenderIngressoPage'
 import SorteioPage from './pages/SorteioPage'
+import GrupoCompraPage from './pages/GrupoCompraPage'
 import MapaAssentosPage from './pages/MapaAssentosPage'
 import CheckInPage from './pages/CheckInPage'
 import DenunciasPage from './pages/DenunciasPage'
@@ -51,6 +52,9 @@ export default function App() {
         } />
         <Route path="/sorteios" element={
           <RotaProtegida><SorteioPage /></RotaProtegida>
+        } />
+        <Route path="/grupos-compra" element={
+          <RotaProtegida><GrupoCompraPage /></RotaProtegida>
         } />
         <Route path="/mapa-assentos" element={
           <RotaProtegida><MapaAssentosPage /></RotaProtegida>

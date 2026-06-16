@@ -199,3 +199,36 @@ docker compose logs -f backend
 # Na raiz do projeto (requer Maven instalado localmente)
 mvn test
 ```
+
+---
+
+## Como descobrir IDs para testes manuais
+
+Útil quando uma funcionalidade pede um `usuarioId` ou `tipoIngressoId` diretamente (ex.: Compra em Grupo).
+
+### Passo 1 — ID do usuário
+
+```bash
+docker compose exec postgres psql -U ingressify -d ingressify -c \
+  "SELECT id, nome, email FROM usuarios ORDER BY id;"
+```
+
+Alternativa sem acessar o banco: faça login via `POST /auth/login` (`{ "email": "...", "senha": "..." }`) — a resposta traz o campo `id` do usuário logado.
+
+### Passo 2 — ID do evento
+
+```bash
+docker compose exec postgres psql -U ingressify -d ingressify -c \
+  "SELECT id, nome FROM eventos ORDER BY id;"
+```
+
+### Passo 3 — ID do tipo de ingresso de um evento
+
+Use o id do evento obtido no Passo 2 no lugar de `{eventoId}`:
+
+```bash
+docker compose exec postgres psql -U ingressify -d ingressify -c \
+  "SELECT id, nome, quantidade_disponivel, quantidade_total FROM tipos_ingresso WHERE evento_id = {eventoId} ORDER BY id;"
+```
+
+Alternativa via API: `GET /eventos/{eventoId}/tipos-ingresso` retorna a lista com o campo `id` de cada tipo.

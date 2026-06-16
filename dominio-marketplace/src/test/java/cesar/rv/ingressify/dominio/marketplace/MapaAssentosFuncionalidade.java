@@ -391,5 +391,10 @@ public class MapaAssentosFuncionalidade {
             }
             return resultado;
         }
+
+        @Override
+        public List<MapaAssentosId> listarTodosIds() {
+            return new ArrayList<>(mapas.keySet());
+        }
     }
 }
