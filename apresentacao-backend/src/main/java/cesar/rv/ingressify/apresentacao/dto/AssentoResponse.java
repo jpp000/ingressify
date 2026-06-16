@@ -9,6 +9,7 @@ import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.TipoAssento;
 
 public record AssentoResponse(
         int id,
+        int eventoId,
         String secao,
         String codigo,
         TipoAssento tipo,
@@ -20,6 +21,7 @@ public record AssentoResponse(
     public static AssentoResponse fromDomain(Assento a) {
         return new AssentoResponse(
                 a.getId().getId(),
+                a.getEventoId().getId(),
                 a.getSecao(),
                 a.getCodigo(),
                 a.getTipo(),

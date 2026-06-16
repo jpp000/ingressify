@@ -179,6 +179,13 @@ public class MapaAssentosController {
         }
     }
 
+    @GetMapping("/meus")
+    public ResponseEntity<List<AssentoResponse>> meusAssentos(
+            @RequestHeader("X-Usuario-Id") int usuarioId) {
+        List<Assento> assentos = mapaServico.listarPorComprador(new UsuarioId(usuarioId));
+        return ResponseEntity.ok(assentos.stream().map(AssentoResponse::fromDomain).toList());
+    }
+
     @PostMapping("/{id}/liberar-expirados")
     public ResponseEntity<Void> liberarExpirados(@PathVariable int id) {
         mapaServico.liberarReservasExpiradas(new MapaAssentosId(id));

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { eventoService, tipoIngressoService, analyticsService, cupomService } from '../services/api'
+import { eventoService, tipoIngressoService, analyticsService, cupomService, mapaAssentosService } from '../services/api'
 import Navbar from '../components/Navbar'
 import { CATEGORIAS, formatMoeda } from '../constants'
 import { useAuth } from '../context/AuthContext'
@@ -433,6 +433,7 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
 }) {
   const { usuario } = useAuth()
   const [eventoComCupons, setEventoComCupons] = useState<number | null>(null)
+  const [eventoAssento, setEventoAssento] = useState<Evento | null>(null)
 
   const toggleCupons = (eventoId: number) =>
     setEventoComCupons(prev => prev === eventoId ? null : eventoId)
@@ -478,11 +479,12 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
                       Sorteios
                     </button>
                   </Link>
-                  <Link to={`/mapa-assentos?eventoId=${ev.id}`}>
-                    <button style={{ background: 'var(--brand-soft)', color: '#7c3aed', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                      Mapa
-                    </button>
-                  </Link>
+                  <button
+                    onClick={() => setEventoAssento(ev)}
+                    style={{ background: 'var(--brand-soft)', color: '#7c3aed', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    💺 Assentos
+                  </button>
                   <Link to={`/check-in?eventoId=${ev.id}`}>
                     <button style={{ background: '#f0f9ff', color: '#0284c7', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                       Check-in
@@ -522,6 +524,10 @@ function MeusEventos({ eventos, onCancelar, onExcluir }: {
             </div>
           ))}
         </div>
+      )}
+
+      {eventoAssento && (
+        <ModalAssentosOrganizador evento={eventoAssento} onFechar={() => setEventoAssento(null)} />
       )}
     </>
   )
@@ -1519,6 +1525,235 @@ interface CupomItem {
   valorMinimo: number; limiteUsos: number; usos: number
   validoDe: string; validoAte: string; ativo: boolean
 }
+
+// ─── Modal de Assentos do Organizador ────────────────────────────────────────
+
+interface AssentoDetalhe {
+  id: number
+  codigo: string
+  secao: string
+  tipo: string
+  preco: number
+  status: string
+  reservadoPor?: number
+}
+
+interface MapaDetalhe {
+  id: number
+  totalLinhas: number
+  totalColunas: number
+  assentos: AssentoDetalhe[]
+}
+
+type FiltroAssento = 'TODOS' | 'VENDIDO' | 'RESERVADO' | 'DISPONIVEL' | 'BLOQUEADO'
+
+const COR_TIPO: Record<string, string> = {
+  NORMAL: '#3b82f6',
+  VIP: '#a855f7',
+  ACESSIBILIDADE: '#06b6d4',
+  BLOQUEADO: '#6b7280',
+}
+
+function ModalAssentosOrganizador({ evento, onFechar }: { evento: Evento; onFechar: () => void }) {
+  const [mapa, setMapa] = useState<MapaDetalhe | null>(null)
+  const [carregando, setCarregando] = useState(true)
+  const [filtro, setFiltro] = useState<FiltroAssento>('TODOS')
+
+  useEffect(() => {
+    mapaAssentosService.obterPorEvento(evento.id)
+      .then(r => setMapa(r.data))
+      .catch(() => setMapa(null))
+      .finally(() => setCarregando(false))
+  }, [evento.id])
+
+  const assentosFiltrados = (mapa?.assentos ?? []).filter(
+    a => filtro === 'TODOS' || a.status === filtro
+  )
+
+  const stats = mapa ? {
+    total: mapa.assentos.length,
+    vendidos: mapa.assentos.filter(a => a.status === 'VENDIDO').length,
+    reservados: mapa.assentos.filter(a => a.status === 'RESERVADO').length,
+    disponiveis: mapa.assentos.filter(a => a.status === 'DISPONIVEL').length,
+    bloqueados: mapa.assentos.filter(a => a.status === 'BLOQUEADO').length,
+    receita: mapa.assentos.filter(a => a.status === 'VENDIDO').reduce((s, a) => s + a.preco, 0),
+  } : null
+
+  const FILTROS: { valor: FiltroAssento; label: string }[] = [
+    { valor: 'TODOS', label: 'Todos' },
+    { valor: 'VENDIDO', label: 'Vendidos' },
+    { valor: 'RESERVADO', label: 'Reservados' },
+    { valor: 'DISPONIVEL', label: 'Disponíveis' },
+    { valor: 'BLOQUEADO', label: 'Bloqueados' },
+  ]
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      onClick={e => { if (e.target === e.currentTarget) onFechar() }}
+    >
+      <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 960, maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
+
+        {/* Header */}
+        <div style={{ padding: '22px 28px 18px', borderBottom: '1px solid var(--surface-2)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexShrink: 0 }}>
+          <div>
+            <h2 style={{ fontSize: 19, fontWeight: 800, color: 'var(--ink)', marginBottom: 3 }}>
+              💺 Mapa de Assentos — {evento.nome}
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--ink-muted)' }}>Visão do organizador: ocupação, vendas e detalhes por assento.</p>
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
+            <Link to={`/mapa-assentos?eventoId=${evento.id}`} style={{ textDecoration: 'none' }}>
+              <button style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                Modo Bloqueio
+              </button>
+            </Link>
+            <button
+              onClick={onFechar}
+              style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 8, width: 36, height: 36, fontSize: 18, cursor: 'pointer', color: 'var(--ink-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ overflowY: 'auto', padding: '24px 28px', flex: 1 }}>
+          {carregando ? (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--ink-muted)' }}>Carregando mapa...</div>
+          ) : !mapa ? (
+            <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>💺</div>
+              <p style={{ color: 'var(--ink-2)', fontSize: 15, marginBottom: 20 }}>Nenhum mapa de assentos configurado para este evento.</p>
+              <Link to={`/mapa-assentos?eventoId=${evento.id}`} style={{ textDecoration: 'none' }}>
+                <button style={{ background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  + Criar Mapa de Assentos
+                </button>
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Cards de estatísticas */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
+                {[
+                  { label: 'Total', value: stats!.total, cor: 'var(--ink)' },
+                  { label: 'Vendidos', value: stats!.vendidos, cor: '#16a34a' },
+                  { label: 'Reservados', value: stats!.reservados, cor: '#d97706' },
+                  { label: 'Disponíveis', value: stats!.disponiveis, cor: 'var(--brand-strong)' },
+                  { label: 'Bloqueados', value: stats!.bloqueados, cor: '#6b7280' },
+                ].map(({ label, value, cor }) => (
+                  <div key={label} style={{ background: '#f9fafb', borderRadius: 10, padding: '14px 12px', textAlign: 'center', border: '1px solid var(--border)' }}>
+                    <p style={{ fontSize: 28, fontWeight: 800, color: cor, marginBottom: 4, lineHeight: 1 }}>{value}</p>
+                    <p style={{ fontSize: 11, color: 'var(--ink-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Receita */}
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '14px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ fontSize: 12, color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Receita de assentos vendidos</p>
+                  <p style={{ fontSize: 12, color: '#15803d' }}>{stats!.vendidos} assento(s) × preço médio</p>
+                </div>
+                <span style={{ fontSize: 22, fontWeight: 800, color: '#16a34a' }}>{formatMoeda(stats!.receita)}</span>
+              </div>
+
+              {/* Filtros */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+                {FILTROS.map(({ valor, label }) => (
+                  <button
+                    key={valor}
+                    onClick={() => setFiltro(valor)}
+                    style={{
+                      background: filtro === valor ? 'var(--brand-strong)' : 'var(--surface-2)',
+                      color: filtro === valor ? '#fff' : 'var(--ink-2)',
+                      border: 'none', borderRadius: 6, padding: '6px 14px',
+                      fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    }}
+                  >
+                    {label}
+                    {valor !== 'TODOS' && (
+                      <span style={{ marginLeft: 6, opacity: 0.75 }}>
+                        ({mapa.assentos.filter(a => a.status === valor).length})
+                      </span>
+                    )}
+                  </button>
+                ))}
+                <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-muted)', alignSelf: 'center' }}>
+                  {assentosFiltrados.length} assento(s)
+                </span>
+              </div>
+
+              {/* Tabela */}
+              {assentosFiltrados.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--ink-muted)', border: '2px dashed var(--border)', borderRadius: 10 }}>
+                  Nenhum assento neste filtro.
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 10 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: '#f9fafb', borderBottom: '2px solid var(--border)' }}>
+                        {['Assento', 'Tipo', 'Seção', 'Preço', 'Status', 'Comprador / Reservado por'].map(h => (
+                          <th key={h} style={{ padding: '10px 14px', fontSize: 11, fontWeight: 700, color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: 0.5, textAlign: h === 'Preço' ? 'right' : 'left', whiteSpace: 'nowrap' }}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assentosFiltrados
+                        .slice()
+                        .sort((a, b) => a.codigo.localeCompare(b.codigo))
+                        .map((a, idx) => (
+                          <tr key={a.id} style={{ borderBottom: '1px solid var(--surface-2)', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
+                            <td style={{ padding: '10px 14px', fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{a.codigo}</td>
+                            <td style={{ padding: '10px 14px' }}>
+                              <span style={{
+                                fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                                background: a.tipo === 'VIP' ? '#f3e8ff' : a.tipo === 'ACESSIBILIDADE' ? '#e0f2fe' : a.tipo === 'BLOQUEADO' ? '#f3f4f6' : '#eff6ff',
+                                color: COR_TIPO[a.tipo] ?? COR_TIPO.NORMAL,
+                              }}>
+                                {a.tipo}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 14px', fontSize: 13, color: 'var(--ink-2)' }}>{a.secao || '—'}</td>
+                            <td style={{ padding: '10px 14px', fontSize: 14, fontWeight: 600, color: 'var(--brand-strong)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              {formatMoeda(a.preco)}
+                            </td>
+                            <td style={{ padding: '10px 14px' }}>
+                              <span style={{
+                                fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                                background:
+                                  a.status === 'VENDIDO' ? '#dcfce7' :
+                                  a.status === 'RESERVADO' ? '#fef3c7' :
+                                  a.status === 'BLOQUEADO' ? '#f3f4f6' : '#eff6ff',
+                                color:
+                                  a.status === 'VENDIDO' ? '#16a34a' :
+                                  a.status === 'RESERVADO' ? '#b45309' :
+                                  a.status === 'BLOQUEADO' ? '#6b7280' : '#2563eb',
+                              }}>
+                                {a.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 14px', fontSize: 13, color: a.reservadoPor ? 'var(--ink)' : 'var(--ink-muted)' }}>
+                              {a.reservadoPor ? `Usuário #${a.reservadoPor}` : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Painel de Cupons ─────────────────────────────────────────────────────────
 
 const CUPOM_FORM_INICIAL = {
   codigo: '', tipo: 'PERCENTUAL', valor: '', valorMinimo: '',

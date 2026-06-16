@@ -3,6 +3,7 @@ package cesar.rv.ingressify.dominio.marketplace.mapaAssentos;
 import java.util.List;
 import java.util.Optional;
 
+import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 
 public interface MapaAssentosRepositorio {
@@ -20,6 +21,8 @@ public interface MapaAssentosRepositorio {
     List<Assento> listarAssentosPorMapa(MapaAssentosId mapaId);
 
     List<Assento> listarAssentosPorEvento(EventoId eventoId);
+
+    List<Assento> listarAssentosCompradosPor(UsuarioId usuarioId);
 
     List<MapaAssentosId> listarTodosIds();
 }

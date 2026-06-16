@@ -190,6 +190,8 @@ export const sorteioService = {
 
 // Mapa de Assentos
 export const mapaAssentosService = {
+  meusAssentos: (usuarioId: number) =>
+    api.get('/mapas-assentos/meus', { headers: { 'X-Usuario-Id': usuarioId } }),
   obterPorEvento: (eventoId: number) =>
     api.get('/mapas-assentos', { params: { eventoId } }),
   listarAssentos: (mapaId: number) =>

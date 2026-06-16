@@ -5,7 +5,9 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
+import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
+import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.StatusAssento;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.Assento;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.AssentoId;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentos;
@@ -78,6 +80,13 @@ public class MapaAssentosRepositorioPersistencia implements MapaAssentosReposito
         return assentoSpringData.findByEventoId(eventoId.getId()).stream()
                 .map(AssentoJpa::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<Assento> listarAssentosCompradosPor(UsuarioId usuarioId) {
+        return assentoSpringData
+                .findByReservadoPorAndStatus(usuarioId.getId(), StatusAssento.VENDIDO)
+                .stream().map(AssentoJpa::toDomain).toList();
     }
 
     @Override

@@ -151,4 +151,8 @@ public class MapaAssentosServico {
     public Assento obterAssento(AssentoId assentoId) {
         return repositorio.obterAssento(assentoId);
     }
+
+    public List<Assento> listarPorComprador(UsuarioId usuarioId) {
+        return repositorio.listarAssentosCompradosPor(usuarioId);
+    }
 }

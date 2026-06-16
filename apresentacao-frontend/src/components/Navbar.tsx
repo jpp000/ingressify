@@ -33,7 +33,7 @@ const DESTINOS: Destino[] = [
   { to: '/revendas', label: 'Revendas', Icon: Repeat, match: p => p.startsWith('/revendas'), visivel: r => r.comprador },
   { to: '/sorteios', label: 'Sorteios', Icon: Dices, match: p => p.startsWith('/sorteios'), visivel: r => r.comprador || r.organizador },
   { to: '/grupos-compra', label: 'Compra em grupo', Icon: Users, match: p => p.startsWith('/grupos-compra'), visivel: r => r.comprador },
-  { to: '/mapa-assentos', label: 'Mapa de assentos', Icon: Armchair, match: p => p.startsWith('/mapa-assentos'), visivel: r => r.organizador },
+  { to: '/mapa-assentos', label: 'Mapa de assentos', Icon: Armchair, match: p => p.startsWith('/mapa-assentos'), visivel: r => r.comprador },
   { to: '/saldo', label: 'Saldo', Icon: Wallet, match: p => p === '/saldo', visivel: r => r.comprador },
 ]
 
