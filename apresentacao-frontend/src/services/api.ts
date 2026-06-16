@@ -205,6 +205,25 @@ export const mapaAssentosService = {
   comprar: (mapaId: number, usuarioId: number, assentoIds: number[]) =>
     api.post(`/mapas-assentos/${mapaId}/comprar`, { assentoIds },
       { headers: { 'X-Usuario-Id': usuarioId } }),
+  bloquear: (mapaId: number, usuarioId: number, assentoIds: number[]) =>
+    api.post(`/mapas-assentos/${mapaId}/bloquear`, { assentoIds },
+      { headers: { 'X-Usuario-Id': usuarioId } }),
+  desbloquear: (mapaId: number, usuarioId: number, assentoIds: number[]) =>
+    api.post(`/mapas-assentos/${mapaId}/desbloquear`, { assentoIds },
+      { headers: { 'X-Usuario-Id': usuarioId } }),
   liberarExpirados: (mapaId: number) =>
     api.post(`/mapas-assentos/${mapaId}/liberar-expirados`),
+}
+
+// Fila de Espera
+export const filaEsperaService = {
+  entrar: (mapaId: number, usuarioId: number) =>
+    api.post(`/mapas-assentos/${mapaId}/fila/entrar`, {},
+      { headers: { 'X-Usuario-Id': usuarioId } }),
+  sair: (mapaId: number, usuarioId: number) =>
+    api.delete(`/mapas-assentos/${mapaId}/fila/sair`,
+      { headers: { 'X-Usuario-Id': usuarioId } }),
+  consultarPosicao: (mapaId: number, usuarioId: number) =>
+    api.get(`/mapas-assentos/${mapaId}/fila/posicao`,
+      { headers: { 'X-Usuario-Id': usuarioId } }),
 }

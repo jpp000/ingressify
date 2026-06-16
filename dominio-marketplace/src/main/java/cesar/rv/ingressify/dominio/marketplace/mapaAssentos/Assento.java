@@ -97,6 +97,20 @@ public class Assento {
         this.reservadoAte = null;
     }
 
+    public void bloquear() {
+        if (status != StatusAssento.DISPONIVEL) {
+            throw new IllegalStateException("assento " + codigo + " não está disponível para bloqueio");
+        }
+        this.status = StatusAssento.BLOQUEADO;
+    }
+
+    public void desbloquear() {
+        if (status != StatusAssento.BLOQUEADO) {
+            throw new IllegalStateException("assento " + codigo + " não está bloqueado");
+        }
+        this.status = StatusAssento.DISPONIVEL;
+    }
+
     public boolean reservaExpirada() {
         return status == StatusAssento.RESERVADO
                 && reservadoAte != null

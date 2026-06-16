@@ -18,7 +18,9 @@ import cesar.rv.ingressify.aplicacao.marketplace.evento.EventoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.feed.FeedServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.ingresso.IngressoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.CompraAssentoServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.FilaEsperaServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.MapaAssentosServicoAplicacao;
+import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.FilaEsperaRepositorio;
 import cesar.rv.ingressify.aplicacao.marketplace.padroes.estrategia.SorteioAleatorioEstrategia;
 import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.ObservadorCancelamento;
 import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.PublicadorEvento;
@@ -390,5 +392,12 @@ public class IngressifyConfiguration {
 			SaldoServico saldoServico,
 			TransacaoServico transacaoServico) {
 		return new CompraAssentoServicoAplicacao(mapaAssentosServico, saldoServico, transacaoServico);
+	}
+
+	@Bean
+	public FilaEsperaServicoAplicacao filaEsperaServicoAplicacao(
+			FilaEsperaRepositorio filaEsperaRepositorio,
+			MapaAssentosServico mapaAssentosServico) {
+		return new FilaEsperaServicoAplicacao(filaEsperaRepositorio, mapaAssentosServico);
 	}
 }

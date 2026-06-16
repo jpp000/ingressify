@@ -46,7 +46,7 @@ public class EventoJpa {
 	@Column(nullable = false)
 	private int capacidade;
 
-	@Column(name = "capacidade_numerada", nullable = false)
+	@Column(name = "capacidade_numerada", nullable = false, columnDefinition = "int not null default 0")
 	private int capacidadeNumerada;
 
 	@Column(name = "imagem_capa_url", columnDefinition = "TEXT")

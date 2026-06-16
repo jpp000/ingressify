@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.CompraAssentoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.mapaAssentos.MapaAssentosServicoAplicacao;
+import cesar.rv.ingressify.apresentacao.dto.BloquearAssentosRequest;
 import cesar.rv.ingressify.apresentacao.dto.AssentoResponse;
 import cesar.rv.ingressify.apresentacao.dto.CompraAssentoResponse;
 import cesar.rv.ingressify.apresentacao.dto.ComprarAssentosRequest;
@@ -147,6 +148,34 @@ public class MapaAssentosController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("motivo", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{id}/bloquear")
+    public ResponseEntity<?> bloquear(
+            @PathVariable int id,
+            @RequestHeader("X-Usuario-Id") int usuarioId,
+            @RequestBody BloquearAssentosRequest req) {
+        try {
+            List<AssentoId> ids = req.assentoIds().stream().map(AssentoId::new).toList();
+            mapaServico.bloquearAssentos(new MapaAssentosId(id), ids, new UsuarioId(usuarioId));
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("motivo", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/desbloquear")
+    public ResponseEntity<?> desbloquear(
+            @PathVariable int id,
+            @RequestHeader("X-Usuario-Id") int usuarioId,
+            @RequestBody BloquearAssentosRequest req) {
+        try {
+            List<AssentoId> ids = req.assentoIds().stream().map(AssentoId::new).toList();
+            mapaServico.desbloquearAssentos(new MapaAssentosId(id), ids, new UsuarioId(usuarioId));
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("motivo", e.getMessage()));
         }
     }
 

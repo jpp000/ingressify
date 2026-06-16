@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import SeletorEvento from '../components/SeletorEvento'
-import { api, mapaAssentosService } from '../services/api'
+import { api, filaEsperaService, mapaAssentosService } from '../services/api'
 
 interface Assento {
   id: number
@@ -24,6 +24,12 @@ interface MapaAssentos {
   assentos: Assento[]
 }
 
+interface FilaStatus {
+  naFila: boolean
+  posicao?: number
+  tamanhoFila: number
+}
+
 type Etapa = 'selecao' | 'reservado' | 'sucesso'
 
 const MINUTOS_RESERVA = 5
@@ -32,14 +38,14 @@ const corStatus: Record<string, string> = {
   DISPONIVEL: '#22c55e',
   RESERVADO: '#f59e0b',
   VENDIDO: 'var(--ink-2)',
-  BLOQUEADO: 'var(--ink)',
+  BLOQUEADO: '#6b7280',
 }
 
 const corTipo: Record<string, string> = {
   NORMAL: 'var(--brand)',
   VIP: '#a855f7',
   ACESSIBILIDADE: '#06b6d4',
-  BLOQUEADO: 'var(--ink)',
+  BLOQUEADO: '#6b7280',
 }
 
 const formatMoeda = (v: number) =>
@@ -66,6 +72,17 @@ export default function MapaAssentosPage() {
   const [tempoRestante, setTempoRestante] = useState(MINUTOS_RESERVA * 60)
   const [comprando, setComprando] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Organizer block mode
+  const [modoOrganizador, setModoOrganizador] = useState(false)
+  const [paraBloquear, setParaBloquear] = useState<number[]>([])
+  const [paraDesbloquear, setParaDesbloquear] = useState<number[]>([])
+  const [aplicandoBloqueio, setAplicandoBloqueio] = useState(false)
+
+  // Fila de espera
+  const [filaStatus, setFilaStatus] = useState<FilaStatus | null>(null)
+  const [processandoFila, setProcessandoFila] = useState(false)
 
   // Form criar mapa (organizador)
   const [criando, setCriando] = useState(false)
@@ -76,16 +93,41 @@ export default function MapaAssentosPage() {
     precoVip: '150.00',
   })
 
-  const carregarMapa = () => {
+  const ehOrganizador = usuario?.papeis?.includes('ORGANIZADOR')
+
+  const carregarMapa = useCallback(() => {
     if (!eventoId) return
-    setCarregando(true)
     api.get('/mapas-assentos', { params: { eventoId } })
       .then(r => setMapa(r.data))
       .catch(() => setMapa(null))
-      .finally(() => setCarregando(false))
-  }
+  }, [eventoId])
 
-  useEffect(() => { carregarMapa() }, [eventoId])
+  const carregarFila = useCallback((mapaId: number) => {
+    if (!usuario) return
+    filaEsperaService.consultarPosicao(mapaId, usuario.id)
+      .then(r => setFilaStatus(r.data))
+      .catch(() => {})
+  }, [usuario])
+
+  // Carga inicial
+  useEffect(() => {
+    if (!eventoId) return
+    setCarregando(true)
+    api.get('/mapas-assentos', { params: { eventoId } })
+      .then(r => {
+        setMapa(r.data)
+        if (!ehOrganizador) carregarFila(r.data.id)
+      })
+      .catch(() => setMapa(null))
+      .finally(() => setCarregando(false))
+  }, [eventoId])
+
+  // Polling a cada 30s para atualizar estado dos assentos
+  useEffect(() => {
+    if (etapa !== 'selecao' || !eventoId) return
+    pollRef.current = setInterval(carregarMapa, 30_000)
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [etapa, eventoId, carregarMapa])
 
   // Countdown timer quando em etapa 'reservado'
   useEffect(() => {
@@ -113,7 +155,22 @@ export default function MapaAssentosPage() {
     setTimeout(() => setMensagem(null), 5000)
   }
 
+  const temDisponivel = mapa?.assentos.some(a => a.status === 'DISPONIVEL') ?? false
+
+  // ─── Compra normal ───────────────────────────────────────────────────
   const toggleSelecionado = (assento: Assento) => {
+    if (modoOrganizador) {
+      if (assento.status === 'DISPONIVEL') {
+        setParaBloquear(prev =>
+          prev.includes(assento.id) ? prev.filter(id => id !== assento.id) : [...prev, assento.id]
+        )
+      } else if (assento.status === 'BLOQUEADO') {
+        setParaDesbloquear(prev =>
+          prev.includes(assento.id) ? prev.filter(id => id !== assento.id) : [...prev, assento.id]
+        )
+      }
+      return
+    }
     if (assento.status !== 'DISPONIVEL') return
     if (selecionados.length >= 6 && !selecionados.includes(assento.id)) {
       exibirMensagem('Limite de 6 assentos por compra.', 'erro')
@@ -130,9 +187,8 @@ export default function MapaAssentosPage() {
     if (!mapa || selecionados.length === 0) return
     try {
       await mapaAssentosService.reservar(mapa.id, usuario!.id, selecionados)
-      await carregarMapa()
-      // Captura os assentos recém-reservados para exibir no resumo
       const resp = await api.get('/mapas-assentos', { params: { eventoId } })
+      setMapa(resp.data)
       const todosAssentos: Assento[] = resp.data.assentos
       const reservados = todosAssentos.filter(
         a => selecionados.includes(a.id) && a.status === 'RESERVADO'
@@ -167,6 +223,69 @@ export default function MapaAssentosPage() {
     carregarMapa()
   }
 
+  // ─── Bloqueio de assentos (organizador) ─────────────────────────────
+  const aplicarBloqueio = async () => {
+    if (!mapa) return
+    setAplicandoBloqueio(true)
+    try {
+      if (paraBloquear.length > 0) {
+        await mapaAssentosService.bloquear(mapa.id, usuario!.id, paraBloquear)
+      }
+      if (paraDesbloquear.length > 0) {
+        await mapaAssentosService.desbloquear(mapa.id, usuario!.id, paraDesbloquear)
+      }
+      const bloqueados = paraBloquear.length
+      const desbloqueados = paraDesbloquear.length
+      setParaBloquear([])
+      setParaDesbloquear([])
+      carregarMapa()
+      const partes = []
+      if (bloqueados > 0) partes.push(`${bloqueados} bloqueado(s)`)
+      if (desbloqueados > 0) partes.push(`${desbloqueados} desbloqueado(s)`)
+      exibirMensagem(partes.join(', ') + '.', 'ok')
+    } catch (err: any) {
+      exibirMensagem(err.response?.data?.motivo ?? 'Erro ao aplicar bloqueio.', 'erro')
+    } finally {
+      setAplicandoBloqueio(false)
+    }
+  }
+
+  const cancelarModoOrganizador = () => {
+    setModoOrganizador(false)
+    setParaBloquear([])
+    setParaDesbloquear([])
+  }
+
+  // ─── Fila de espera ──────────────────────────────────────────────────
+  const entrarFila = async () => {
+    if (!mapa || !usuario) return
+    setProcessandoFila(true)
+    try {
+      const r = await filaEsperaService.entrar(mapa.id, usuario.id)
+      setFilaStatus({ naFila: true, posicao: r.data.posicao, tamanhoFila: r.data.posicao })
+      exibirMensagem(r.data.mensagem, 'ok')
+    } catch (err: any) {
+      exibirMensagem(err.response?.data?.motivo ?? 'Erro ao entrar na fila.', 'erro')
+    } finally {
+      setProcessandoFila(false)
+    }
+  }
+
+  const sairFila = async () => {
+    if (!mapa || !usuario) return
+    setProcessandoFila(true)
+    try {
+      await filaEsperaService.sair(mapa.id, usuario.id)
+      setFilaStatus(prev => ({ naFila: false, tamanhoFila: Math.max(0, (prev?.tamanhoFila ?? 1) - 1) }))
+      exibirMensagem('Você saiu da fila de espera.', 'ok')
+    } catch (err: any) {
+      exibirMensagem(err.response?.data?.motivo ?? 'Erro ao sair da fila.', 'erro')
+    } finally {
+      setProcessandoFila(false)
+    }
+  }
+
+  // ─── Criar mapa ──────────────────────────────────────────────────────
   const criarMapa = (e: React.FormEvent) => {
     e.preventDefault()
     if (!eventoId) return
@@ -187,8 +306,6 @@ export default function MapaAssentosPage() {
       })
   }
 
-  const ehOrganizador = usuario?.papeis?.includes('ORGANIZADOR')
-
   const agruparPorFileira = (assentos: Assento[]) => {
     const fileiras = new Map<string, Assento[]>()
     assentos.forEach(a => {
@@ -205,7 +322,6 @@ export default function MapaAssentosPage() {
   }, 0)
 
   const totalReservado = assentosReservados.reduce((acc, a) => acc + a.preco, 0)
-
   const corContagem = tempoRestante < 60 ? '#dc2626' : tempoRestante < 120 ? '#f59e0b' : '#16a34a'
 
   return (
@@ -244,16 +360,26 @@ export default function MapaAssentosPage() {
               {etapa === 'sucesso' ? 'Compra Realizada!' : 'Mapa de Assentos'}
             </h1>
             <p style={{ color: 'var(--ink-2)', marginTop: 4 }}>
-              {etapa === 'selecao' && 'Selecione seus assentos e reserve por 5 minutos'}
+              {etapa === 'selecao' && !modoOrganizador && 'Selecione seus assentos e reserve por 5 minutos'}
+              {etapa === 'selecao' && modoOrganizador && 'Modo organizador: clique para selecionar assentos a bloquear/desbloquear'}
               {etapa === 'reservado' && 'Seus assentos estão reservados. Confirme a compra antes do tempo esgotar!'}
               {etapa === 'sucesso' && 'Seus assentos foram confirmados e o saldo foi debitado.'}
             </p>
           </div>
-          {ehOrganizador && eventoId && !mapa && !criando && (
-            <button onClick={() => setCriando(true)} style={btnStyle('var(--brand-strong)')}>
-              + Criar Mapa
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {ehOrganizador && mapa && etapa === 'selecao' && (
+              <button
+                onClick={() => modoOrganizador ? cancelarModoOrganizador() : setModoOrganizador(true)}
+                style={btnStyle(modoOrganizador ? '#dc2626' : '#7c3aed')}>
+                {modoOrganizador ? 'Cancelar Modo' : 'Modo Bloqueio'}
+              </button>
+            )}
+            {ehOrganizador && eventoId && !mapa && !criando && (
+              <button onClick={() => setCriando(true)} style={btnStyle('var(--brand-strong)')}>
+                + Criar Mapa
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Mensagem */}
@@ -304,7 +430,6 @@ export default function MapaAssentosPage() {
         {/* ─── ETAPA RESERVADO ─── */}
         {etapa === 'reservado' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'start' }}>
-            {/* Resumo dos assentos reservados */}
             <div>
               <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Seus Assentos Reservados</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -333,12 +458,10 @@ export default function MapaAssentosPage() {
               </div>
             </div>
 
-            {/* Painel de pagamento */}
             <div style={{
               background: 'var(--surface-2)', border: '1.5px solid var(--border)',
               borderRadius: 16, padding: 24, position: 'sticky', top: 24
             }}>
-              {/* Countdown */}
               <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <p style={{ color: 'var(--ink-2)', fontSize: 13, margin: '0 0 6px' }}>
                   Reserva expira em
@@ -399,7 +522,6 @@ export default function MapaAssentosPage() {
         {/* ─── ETAPA SELEÇÃO ─── */}
         {etapa === 'selecao' && (
           <>
-            {/* Form criar mapa */}
             {criando && (
               <form onSubmit={criarMapa} style={{
                 background: 'var(--surface-2)', border: '1px solid var(--border)',
@@ -460,21 +582,131 @@ export default function MapaAssentosPage() {
             ) : (
               <>
                 {/* Legenda */}
-                <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: 'var(--ink-2)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Legenda:
+                  </span>
                   {[
                     { label: 'Disponível', cor: corStatus.DISPONIVEL },
                     { label: 'Reservado', cor: corStatus.RESERVADO },
                     { label: 'Vendido', cor: corStatus.VENDIDO },
-                    { label: 'Normal', cor: corTipo.NORMAL },
-                    { label: 'VIP', cor: corTipo.VIP },
-                    { label: 'Acessível', cor: corTipo.ACESSIBILIDADE },
-                  ].map(({ label, cor }) => (
+                    { label: 'Bloqueado', cor: corStatus.BLOQUEADO },
+                    { label: 'Normal', cor: corTipo.NORMAL, dashed: true },
+                    { label: 'VIP', cor: corTipo.VIP, dashed: true },
+                    { label: 'Acessível', cor: corTipo.ACESSIBILIDADE, dashed: true },
+                  ].map(({ label, cor, dashed }) => (
                     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                      <span style={{ width: 16, height: 16, borderRadius: 4, background: cor, display: 'inline-block' }} />
+                      <span style={{
+                        width: 16, height: 16, borderRadius: 4, background: cor,
+                        display: 'inline-block',
+                        outline: dashed ? '2px dashed rgba(0,0,0,0.25)' : 'none',
+                        outlineOffset: -2,
+                      }} />
                       <span style={{ color: 'var(--ink-2)' }}>{label}</span>
                     </div>
                   ))}
+                  <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-2)' }}>
+                    Atualiza a cada 30s
+                  </span>
                 </div>
+
+                {/* Fila de espera — quando não há assentos disponíveis */}
+                {!temDisponivel && !ehOrganizador && (
+                  <div style={{
+                    background: filaStatus?.naFila ? '#fef3c7' : '#fef9c3',
+                    border: `1.5px solid ${filaStatus?.naFila ? '#f59e0b' : '#facc15'}`,
+                    borderRadius: 12, padding: '16px 20px', marginBottom: 24,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap'
+                  }}>
+                    <div>
+                      <p style={{ fontWeight: 700, color: '#92400e', margin: '0 0 4px', fontSize: 15 }}>
+                        Esgotado — Fila de Espera
+                      </p>
+                      {filaStatus?.naFila ? (
+                        <p style={{ color: '#78350f', margin: 0, fontSize: 14 }}>
+                          Você está na posição <strong>{filaStatus.posicao}</strong> de {filaStatus.tamanhoFila} na fila.
+                          Será reservado automaticamente quando um assento abrir.
+                        </p>
+                      ) : (
+                        <p style={{ color: '#78350f', margin: 0, fontSize: 14 }}>
+                          {filaStatus && filaStatus.tamanhoFila > 0
+                            ? `${filaStatus.tamanhoFila} pessoa(s) já na fila. `
+                            : ''}
+                          Entre na fila para ser atendido automaticamente quando um assento ficar disponível.
+                        </p>
+                      )}
+                    </div>
+                    {filaStatus?.naFila ? (
+                      <button
+                        onClick={sairFila}
+                        disabled={processandoFila}
+                        style={{ ...btnStyle('#dc2626'), opacity: processandoFila ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+                        {processandoFila ? 'Aguarde...' : 'Sair da Fila'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={entrarFila}
+                        disabled={processandoFila}
+                        style={{ ...btnStyle('#d97706'), opacity: processandoFila ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+                        {processandoFila ? 'Aguarde...' : 'Entrar na Fila'}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Aviso quando há assentos mas usuário ainda está na fila */}
+                {temDisponivel && filaStatus?.naFila && !ehOrganizador && (
+                  <div style={{
+                    background: '#dcfce7', border: '1.5px solid #86efac',
+                    borderRadius: 12, padding: '14px 20px', marginBottom: 24,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap'
+                  }}>
+                    <p style={{ color: '#166534', margin: 0, fontWeight: 600 }}>
+                      Assentos disponíveis! Você está na posição {filaStatus.posicao} da fila.
+                      Selecione e reserve agora, ou aguarde a promoção automática.
+                    </p>
+                    <button
+                      onClick={sairFila}
+                      disabled={processandoFila}
+                      style={{ ...btnStyle('#dc2626'), opacity: processandoFila ? 0.7 : 1, whiteSpace: 'nowrap', fontSize: 13 }}>
+                      Sair da Fila
+                    </button>
+                  </div>
+                )}
+
+                {/* Modo organizador — painel de controle */}
+                {modoOrganizador && (
+                  <div style={{
+                    background: '#f5f3ff', border: '1.5px solid #a78bfa',
+                    borderRadius: 12, padding: '14px 20px', marginBottom: 24,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap'
+                  }}>
+                    <div style={{ fontSize: 14, color: '#5b21b6' }}>
+                      <span style={{ fontWeight: 700 }}>Modo Bloqueio ativo — </span>
+                      {(paraBloquear.length > 0 || paraDesbloquear.length > 0)
+                        ? [
+                          paraBloquear.length > 0 && `${paraBloquear.length} para bloquear`,
+                          paraDesbloquear.length > 0 && `${paraDesbloquear.length} para desbloquear`,
+                        ].filter(Boolean).join(', ')
+                        : 'Clique nos assentos verdes (bloquear) ou cinzas (desbloquear).'
+                      }
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={aplicarBloqueio}
+                        disabled={aplicandoBloqueio || (paraBloquear.length === 0 && paraDesbloquear.length === 0)}
+                        style={{
+                          ...btnStyle('#7c3aed'),
+                          opacity: (aplicandoBloqueio || (paraBloquear.length === 0 && paraDesbloquear.length === 0)) ? 0.5 : 1
+                        }}>
+                        {aplicandoBloqueio ? 'Aplicando...' : 'Aplicar'}
+                      </button>
+                      <button onClick={cancelarModoOrganizador} style={btnStyle('#6b7280')}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Palco */}
                 <div style={{
@@ -497,7 +729,18 @@ export default function MapaAssentosPage() {
                         .map(a => {
                           const isSelecionado = selecionados.includes(a.id)
                           const ehMeuReservado = a.reservadoPor === usuario?.id
-                          const corBase = a.status === 'DISPONIVEL' ? corTipo[a.tipo] : corStatus[a.status]
+                          const marcadoParaBloquear = paraBloquear.includes(a.id)
+                          const marcadoParaDesbloquear = paraDesbloquear.includes(a.id)
+                          const marcadoOrg = marcadoParaBloquear || marcadoParaDesbloquear
+
+                          const corBase = a.status === 'DISPONIVEL'
+                            ? (corTipo[a.tipo] ?? corTipo.NORMAL)
+                            : (corStatus[a.status] ?? corStatus.VENDIDO)
+
+                          const clicavel = modoOrganizador
+                            ? (a.status === 'DISPONIVEL' || a.status === 'BLOQUEADO')
+                            : a.status === 'DISPONIVEL'
+
                           return (
                             <button
                               key={a.id}
@@ -505,18 +748,24 @@ export default function MapaAssentosPage() {
                               title={`${a.codigo} — ${a.tipo} — ${formatMoeda(a.preco)} — ${a.status}`}
                               style={{
                                 width: 36, height: 36, borderRadius: 6,
-                                border: isSelecionado ? '3px solid #fbbf24' : ehMeuReservado ? '3px solid #f59e0b' : '2px solid transparent',
-                                background: isSelecionado ? '#fbbf24' : corBase,
-                                cursor: a.status === 'DISPONIVEL' ? 'pointer' : 'not-allowed',
-                                fontSize: 9, color: '#fff', fontWeight: 600,
+                                border: marcadoOrg
+                                  ? '3px solid #7c3aed'
+                                  : isSelecionado
+                                    ? '3px solid #fbbf24'
+                                    : ehMeuReservado
+                                      ? '3px solid #f59e0b'
+                                      : '2px solid transparent',
+                                background: marcadoOrg ? '#ddd6fe' : isSelecionado ? '#fbbf24' : corBase,
+                                cursor: clicavel ? 'pointer' : 'not-allowed',
+                                fontSize: 9, color: marcadoOrg ? '#5b21b6' : '#fff', fontWeight: 700,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                opacity: a.status === 'BLOQUEADO' ? 0.4 : 1,
+                                opacity: (a.status === 'BLOQUEADO' && !modoOrganizador) ? 0.4 : 1,
                                 transition: 'transform 0.1s',
-                                transform: isSelecionado ? 'scale(1.1)' : 'scale(1)',
+                                transform: (isSelecionado || marcadoOrg) ? 'scale(1.1)' : 'scale(1)',
                                 flexShrink: 0,
                               }}
                             >
-                              {a.codigo.substring(1)}
+                              {marcadoParaBloquear ? '✕' : marcadoParaDesbloquear ? '↩' : a.codigo.substring(1)}
                             </button>
                           )
                         })}
@@ -524,8 +773,8 @@ export default function MapaAssentosPage() {
                   ))}
                 </div>
 
-                {/* Painel de seleção */}
-                {selecionados.length > 0 && (
+                {/* Painel sticky de seleção (comprador) */}
+                {!modoOrganizador && selecionados.length > 0 && (
                   <div style={{
                     position: 'sticky', bottom: 20, marginTop: 32,
                     background: 'var(--ink)', borderRadius: 12, padding: '16px 24px',

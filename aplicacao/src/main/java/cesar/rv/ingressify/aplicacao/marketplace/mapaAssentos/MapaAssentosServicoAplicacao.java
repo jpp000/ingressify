@@ -49,6 +49,24 @@ public class MapaAssentosServicoAplicacao {
         return mapa.getId();
     }
 
+    public void bloquearAssentos(MapaAssentosId mapaId, List<AssentoId> assentoIds, UsuarioId organizadorId) {
+        MapaAssentos mapa = mapaServico.obterPorId(mapaId);
+        Evento evento = eventoServico.obter(mapa.getEventoId());
+        if (!evento.getOrganizadorId().equals(organizadorId)) {
+            throw new IllegalStateException("somente o organizador pode bloquear assentos");
+        }
+        mapaServico.bloquearAssentos(assentoIds);
+    }
+
+    public void desbloquearAssentos(MapaAssentosId mapaId, List<AssentoId> assentoIds, UsuarioId organizadorId) {
+        MapaAssentos mapa = mapaServico.obterPorId(mapaId);
+        Evento evento = eventoServico.obter(mapa.getEventoId());
+        if (!evento.getOrganizadorId().equals(organizadorId)) {
+            throw new IllegalStateException("somente o organizador pode desbloquear assentos");
+        }
+        mapaServico.desbloquearAssentos(assentoIds);
+    }
+
     public void reservarAssentos(List<AssentoId> assentoIds, UsuarioId usuarioId) {
         mapaServico.reservarAssentos(assentoIds, usuarioId);
     }

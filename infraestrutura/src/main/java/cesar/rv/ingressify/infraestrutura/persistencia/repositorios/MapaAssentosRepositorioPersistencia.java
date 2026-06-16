@@ -79,4 +79,11 @@ public class MapaAssentosRepositorioPersistencia implements MapaAssentosReposito
                 .map(AssentoJpa::toDomain)
                 .toList();
     }
+
+    @Override
+    public List<MapaAssentosId> listarTodosIds() {
+        return mapaSpringData.findAll().stream()
+                .map(jpa -> new MapaAssentosId(jpa.getId()))
+                .toList();
+    }
 }

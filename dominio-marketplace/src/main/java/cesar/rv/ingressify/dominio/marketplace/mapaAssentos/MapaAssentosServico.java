@@ -114,6 +114,10 @@ public class MapaAssentosServico {
         }
     }
 
+    public MapaAssentos obterPorId(MapaAssentosId mapaId) {
+        return repositorio.obter(mapaId);
+    }
+
     public MapaAssentos obterPorEvento(EventoId eventoId) {
         return repositorio.buscarPorEvento(eventoId)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -122,6 +126,26 @@ public class MapaAssentosServico {
 
     public List<Assento> listarAssentos(MapaAssentosId mapaId) {
         return repositorio.listarAssentosPorMapa(mapaId);
+    }
+
+    public void bloquearAssentos(List<AssentoId> assentoIds) {
+        for (AssentoId id : assentoIds) {
+            Assento a = repositorio.obterAssento(id);
+            a.bloquear();
+            repositorio.salvarAssento(a);
+        }
+    }
+
+    public void desbloquearAssentos(List<AssentoId> assentoIds) {
+        for (AssentoId id : assentoIds) {
+            Assento a = repositorio.obterAssento(id);
+            a.desbloquear();
+            repositorio.salvarAssento(a);
+        }
+    }
+
+    public List<MapaAssentosId> listarTodosIds() {
+        return repositorio.listarTodosIds();
     }
 
     public Assento obterAssento(AssentoId assentoId) {

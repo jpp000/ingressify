@@ -20,4 +20,6 @@ public interface MapaAssentosRepositorio {
     List<Assento> listarAssentosPorMapa(MapaAssentosId mapaId);
 
     List<Assento> listarAssentosPorEvento(EventoId eventoId);
+
+    List<MapaAssentosId> listarTodosIds();
 }
