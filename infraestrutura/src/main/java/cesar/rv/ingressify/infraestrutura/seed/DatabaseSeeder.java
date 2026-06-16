@@ -203,12 +203,43 @@ public class DatabaseSeeder implements ApplicationRunner {
 
 		criarIngressosPassado(festivalPassado, passadoTipo, ana, pedro, lucia);
 
-		SorteioId sorteio = sorteioServico.criar(festival, pista, maria, 30, 50,
-				agora.plusDays(60), 48);
-		sorteioServico.abrirInscricoes(sorteio, maria);
-		for (int i = 0; i < Math.min(15, compradores.size()); i++) {
-			sorteioServico.inscrever(sorteio, compradores.get(i));
+		// ── Sorteios em diferentes estados para a apresentação ──────────────
+		// Cada sorteio fica num estado distinto para demonstrar uma operação ao vivo.
+		// Atores: organizador = maria@ ; comprador de demo = ana@.
+
+		// (1) CONFIGURADO — maria pode demonstrar "Abrir Inscrições" ao vivo.
+		sorteioServico.criar(tech, workshop, maria, 20, 10, agora.plusDays(40), 48);
+
+		// (2) INSCRIÇÕES ABERTAS — ana ainda NÃO está inscrita: pode "Inscrever-se" ao vivo.
+		//     maria também pode demonstrar "Encerrar Inscrições".
+		SorteioId sorteioAberto = sorteioServico.criar(festival, pista, maria, 30, 50,
+				agora.plusDays(55), 48);
+		sorteioServico.abrirInscricoes(sorteioAberto, maria);
+		for (int i = 3; i <= 14 && i < compradores.size(); i++) { // comprador1..comprador12 (sem ana/pedro/lucia)
+			sorteioServico.inscrever(sorteioAberto, compradores.get(i));
 		}
+
+		// (3) AGUARDANDO SORTEIO — 12 inscritos para 4 vagas: maria demonstra "Realizar
+		//     Sorteio" ao vivo e o resultado mostra contemplados + lista de espera.
+		SorteioId sorteioPronto = sorteioServico.criar(eletronica, vip, maria, 4, 4,
+				agora.plusDays(16), 48);
+		sorteioServico.abrirInscricoes(sorteioPronto, maria);
+		for (int i = 1; i <= 12 && i < compradores.size(); i++) {
+			sorteioServico.inscrever(sorteioPronto, compradores.get(i));
+		}
+		sorteioServico.encerrarInscricoes(sorteioPronto, maria);
+
+		// (4) SORTEADO — já executado; ana é contemplada (vagas >= inscritos) e pode
+		//     demonstrar "Confirmar Participação" ao vivo.
+		SorteioId sorteioFinalizado = sorteioServico.criar(festival, camarote, maria, 8, 4,
+				agora.plusDays(50), 48);
+		sorteioServico.abrirInscricoes(sorteioFinalizado, maria);
+		sorteioServico.inscrever(sorteioFinalizado, ana);
+		for (int i = 3; i <= 6 && i < compradores.size(); i++) {
+			sorteioServico.inscrever(sorteioFinalizado, compradores.get(i));
+		}
+		sorteioServico.encerrarInscricoes(sorteioFinalizado, maria);
+		sorteioServico.executarSorteio(sorteioFinalizado);
 
 		EventoId esgotado = criarEvento(maria, "Indie Rock Night — Lotado",
 				agora.plusDays(15), "Tato Coletivo", "Casa lotada: venda oficial encerrada.",
@@ -246,6 +277,11 @@ public class DatabaseSeeder implements ApplicationRunner {
 		log.info("  Operador:    carlos@ingressify.local (OPERADOR_PORTA)");
 		log.info("  Compradores: ana@, pedro@, lucia@, comprador1@ ... comprador15@ingressify.local");
 		log.info("  Eventos:     10 | Usuários: {} | Compras em massa realizadas", usuarios.size());
+		log.info("── Sorteios para a apresentação (organizador maria@, comprador ana@) ──");
+		log.info("  Tech Conference CESAR  → CONFIGURADO        (maria: Abrir Inscrições)");
+		log.info("  Festival de Verão 2026 → INSCRIÇÕES ABERTAS (ana: Inscrever-se / maria: Encerrar)");
+		log.info("  Noite Eletrônica       → AGUARDANDO SORTEIO (maria: Realizar Sorteio ao vivo)");
+		log.info("  Festival de Verão 2026 → SORTEADO           (ana contemplada: Confirmar Participação)");
 
 		exitIfRequested();
 	}

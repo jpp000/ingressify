@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import {
+  Dices, Plus, Target, Trophy, Clock, CheckCircle2, AlertTriangle, DoorOpen, Lock, Ban,
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import SeletorEvento from '../components/SeletorEvento'
@@ -26,22 +29,22 @@ interface InscricaoSorteio {
   posicao: number
 }
 
-const statusLabel: Record<string, { label: string; cor: string }> = {
-  CONFIGURADO:       { label: 'Configurado',        cor: 'var(--ink-2)' },
-  INSCRICOES_ABERTAS:{ label: 'Inscrições Abertas', cor: '#16a34a' },
-  AGUARDANDO_SORTEIO:{ label: 'Aguardando Sorteio', cor: '#d97706' },
-  SORTEADO:          { label: 'Sorteado',           cor: 'var(--brand)' },
-  ENCERRADO:         { label: 'Encerrado',          cor: 'var(--ink)' },
-  CANCELADO:         { label: 'Cancelado',          cor: '#dc2626' },
+const statusLabel: Record<string, { label: string; variant: string }> = {
+  CONFIGURADO:        { label: 'Configurado',        variant: 'badge' },
+  INSCRICOES_ABERTAS: { label: 'Inscrições Abertas', variant: 'badge badge--success' },
+  AGUARDANDO_SORTEIO: { label: 'Aguardando Sorteio', variant: 'badge badge--warn' },
+  SORTEADO:           { label: 'Sorteado',           variant: 'badge badge--brand' },
+  ENCERRADO:          { label: 'Encerrado',          variant: 'badge' },
+  CANCELADO:          { label: 'Cancelado',          variant: 'badge badge--danger' },
 }
 
-const inscricaoLabel: Record<string, { label: string; cor: string }> = {
-  INSCRITO:     { label: 'Inscrito',          cor: 'var(--ink-2)' },
-  CONTEMPLADO:  { label: '🏆 Contemplado',   cor: '#16a34a' },
-  LISTA_ESPERA: { label: '⏳ Lista de Espera', cor: '#d97706' },
-  CONFIRMADO:   { label: '✅ Confirmado',    cor: 'var(--brand)' },
-  EXPIRADO:     { label: 'Expirado',          cor: '#dc2626' },
-  CANCELADO:    { label: 'Cancelado',         cor: '#dc2626' },
+const inscricaoLabel: Record<string, { label: string; variant: string; Icon?: typeof Trophy }> = {
+  INSCRITO:     { label: 'Inscrito',        variant: 'badge' },
+  CONTEMPLADO:  { label: 'Contemplado',     variant: 'badge badge--success', Icon: Trophy },
+  LISTA_ESPERA: { label: 'Lista de Espera', variant: 'badge badge--warn', Icon: Clock },
+  CONFIRMADO:   { label: 'Confirmado',      variant: 'badge badge--brand', Icon: CheckCircle2 },
+  EXPIRADO:     { label: 'Expirado',        variant: 'badge badge--danger' },
+  CANCELADO:    { label: 'Cancelado',       variant: 'badge badge--danger' },
 }
 
 const formatData = (iso: string) =>
@@ -54,7 +57,7 @@ export default function SorteioPage() {
 
   const [sorteios, setSorteios] = useState<Sorteio[]>([])
   const [sorteioSelecionado, setSorteioSelecionado] = useState<Sorteio | null>(null)
-  const [inscricoes, setInscricoes] = useState<InscricaoSorteioResponse[]>([])
+  const [inscricoes, setInscricoes] = useState<InscricaoSorteio[]>([])
   const [minhaInscricao, setMinhaInscricao] = useState<InscricaoSorteio | null>(null)
   const [carregando, setCarregando] = useState(false)
   const [mensagem, setMensagem] = useState<{ texto: string; tipo: 'ok' | 'erro' } | null>(null)
@@ -136,94 +139,70 @@ export default function SorteioPage() {
   return (
     <>
       <Navbar />
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 16px' }}>
+      <div className="app-container page page--mid">
 
         {/* Cabeçalho */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>
-              Sorteio de Ingressos
-            </h1>
-            <p style={{ color: 'var(--ink-2)', marginTop: 4 }}>
-              Inscreva-se para concorrer a ingressos por sorteio justo
-            </p>
+        <div className="page-head between wrap" style={{ gap: 'var(--sp-3)' }}>
+          <div className="row" style={{ gap: 'var(--sp-3)' }}>
+            <span className="list-ico list-ico--out" style={{ width: 48, height: 48 }}><Dices size={24} /></span>
+            <div>
+              <h1>Sorteio de Ingressos</h1>
+              <p className="secondary">Inscreva-se para concorrer a ingressos por sorteio justo.</p>
+            </div>
           </div>
           {ehOrganizador && eventoId && !criando && (
-            <button
-              onClick={() => setCriando(true)}
-              style={{
-                background: 'var(--brand-strong)', color: '#fff', border: 'none',
-                borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 600
-              }}>
-              + Criar Sorteio
+            <button className="btn btn--sm" onClick={() => setCriando(true)}>
+              <Plus size={16} /> Criar Sorteio
             </button>
           )}
         </div>
 
         {/* Mensagem feedback */}
         {mensagem && (
-          <div style={{
-            background: mensagem.tipo === 'ok' ? '#dcfce7' : '#fee2e2',
-            color: mensagem.tipo === 'ok' ? '#166534' : '#991b1b',
-            borderRadius: 8, padding: '12px 16px', marginBottom: 20, fontWeight: 500
-          }}>
+          <div className={`auth-alert ${mensagem.tipo === 'ok' ? 'auth-alert--ok' : 'auth-alert--err'}`}>
+            {mensagem.tipo === 'ok' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
             {mensagem.texto}
           </div>
         )}
 
         {/* Formulário de criação (organizador) */}
         {criando && eventoId && (
-          <form onSubmit={criarSorteio} style={{
-            background: 'var(--surface-2)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: 24, marginBottom: 32
-          }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Novo Sorteio</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <form onSubmit={criarSorteio} className="surface surface--pad" style={{ marginBottom: 'var(--sp-6)' }}>
+            <h3 style={{ marginBottom: 'var(--sp-4)' }}>Novo Sorteio</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
               {[
                 { label: 'ID Tipo de Ingresso', field: 'tipoIngressoId', type: 'number' },
                 { label: 'Quantidade de Ingressos', field: 'quantidadeIngressos', type: 'number' },
                 { label: 'Vagas na Lista de Espera', field: 'quantidadeListaEspera', type: 'number' },
                 { label: 'Horas para Confirmação', field: 'prazoConfirmacaoHoras', type: 'number' },
               ].map(({ label, field, type }) => (
-                <label key={field} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 500 }}>{label}</span>
+                <div key={field} className="field">
+                  <span className="label">{label}</span>
                   <input
+                    className="input"
                     type={type}
-                    value={(form as any)[field]}
+                    value={(form as Record<string, string>)[field]}
                     onChange={e => setForm(prev => ({ ...prev, [field]: e.target.value }))}
                     required
-                    style={{
-                      padding: '8px 12px', borderRadius: 6, border: '1px solid var(--ink-muted)',
-                      fontSize: 14, outline: 'none'
-                    }}
                   />
-                </label>
+                </div>
               ))}
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: '1 / -1' }}>
-                <span style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 500 }}>Prazo para Inscrições</span>
+              <div className="field" style={{ gridColumn: '1 / -1' }}>
+                <span className="label">Prazo para Inscrições</span>
                 <input
+                  className="input"
                   type="datetime-local"
                   value={form.prazoInscricao}
                   onChange={e => setForm(prev => ({ ...prev, prazoInscricao: e.target.value }))}
                   required
-                  style={{
-                    padding: '8px 12px', borderRadius: 6, border: '1px solid var(--ink-muted)',
-                    fontSize: 14, outline: 'none'
-                  }}
                 />
-              </label>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-              <button type="submit" style={{
-                background: '#16a34a', color: '#fff', border: 'none',
-                borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 600
-              }}>
-                Criar Sorteio
+            <div className="row" style={{ gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
+              <button type="submit" className="btn">
+                <Plus size={16} /> Criar Sorteio
               </button>
-              <button type="button" onClick={() => setCriando(false)} style={{
-                background: 'var(--border)', color: 'var(--ink-2)', border: 'none',
-                borderRadius: 8, padding: '10px 20px', cursor: 'pointer'
-              }}>
+              <button type="button" className="btn btn--ghost" onClick={() => setCriando(false)}>
                 Cancelar
               </button>
             </div>
@@ -239,158 +218,138 @@ export default function SorteioPage() {
             icone="🎲"
           />
         ) : carregando ? (
-          <p style={{ color: 'var(--ink-2)', textAlign: 'center', padding: 40 }}>Carregando sorteios...</p>
+          <div className="stack" style={{ gap: 'var(--sp-3)' }}>
+            {Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 110 }} />)}
+          </div>
         ) : sorteios.length === 0 ? (
-          <div style={{
-            textAlign: 'center', padding: '60px 20px', background: 'var(--surface-2)',
-            borderRadius: 12, border: '2px dashed var(--border)'
-          }}>
-            <p style={{ fontSize: 48, margin: '0 0 16px' }}>🎲</p>
-            <p style={{ color: 'var(--ink-2)', fontSize: 16 }}>Nenhum sorteio disponível para este evento.</p>
+          <div className="empty">
+            <Dices size={40} />
+            <h3>Nenhum sorteio</h3>
+            <p className="muted">Nenhum sorteio disponível para este evento.</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="stack" style={{ gap: 'var(--sp-4)' }}>
             {sorteios.map(s => {
-              const st = statusLabel[s.status] ?? { label: s.status, cor: 'var(--ink-2)' }
+              const st = statusLabel[s.status] ?? { label: s.status, variant: 'badge' }
               const aberto = s.status === 'INSCRICOES_ABERTAS'
+              const selecionado = sorteioSelecionado?.id === s.id
               return (
-                <div key={s.id} style={{
-                  border: '1px solid var(--border)', borderRadius: 12,
-                  background: '#fff', overflow: 'hidden',
-                  boxShadow: sorteioSelecionado?.id === s.id ? '0 0 0 2px var(--brand-strong)' : 'none'
-                }}>
+                <div
+                  key={s.id}
+                  className="surface"
+                  style={{ overflow: 'hidden', boxShadow: selecionado ? '0 0 0 2px var(--brand)' : undefined }}
+                >
                   <div
                     onClick={() => carregarInscricoes(s)}
-                    style={{
-                      padding: 20, cursor: 'pointer',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                    }}>
+                    className="between"
+                    style={{ padding: 'var(--sp-5)', cursor: 'pointer', gap: 'var(--sp-3)' }}
+                  >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                        <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>
+                      <div className="row" style={{ gap: 'var(--sp-2)', marginBottom: 6 }}>
+                        <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--ink)' }}>
                           Sorteio #{s.id}
                         </span>
-                        <span style={{
-                          background: st.cor, color: '#fff', borderRadius: 20,
-                          padding: '2px 12px', fontSize: 12, fontWeight: 600
-                        }}>
-                          {st.label}
-                        </span>
+                        <span className={st.variant}>{st.label}</span>
                       </div>
-                      <p style={{ color: 'var(--ink-2)', margin: 0, fontSize: 14 }}>
+                      <p className="secondary" style={{ fontSize: '0.875rem' }}>
                         {s.quantidadeIngressos} ingresso(s) · {s.quantidadeListaEspera} na lista de espera
                       </p>
-                      <p style={{ color: 'var(--ink-muted)', margin: '4px 0 0', fontSize: 13 }}>
+                      <p className="muted" style={{ fontSize: '0.8125rem', marginTop: 4 }}>
                         Inscrições até: {formatData(s.prazoInscricao)}
                       </p>
                     </div>
                     {aberto && (
-                      <span style={{ color: 'var(--brand-strong)', fontWeight: 600, fontSize: 14 }}>
-                        Clique para se inscrever →
+                      <span className="row" style={{ gap: 6, color: 'var(--brand-strong)', fontWeight: 600, fontSize: '0.875rem' }}>
+                        <Target size={16} /> Clique para se inscrever
                       </span>
                     )}
                   </div>
 
                   {/* Painel expandido */}
-                  {sorteioSelecionado?.id === s.id && (
-                    <div style={{ borderTop: '1px solid var(--border)', padding: 20, background: 'var(--surface-2)' }}>
+                  {selecionado && (
+                    <div style={{ borderTop: '1px solid var(--border)', padding: 'var(--sp-5)', background: 'var(--surface-2)' }}>
 
                       {/* Ações do comprador */}
                       {!ehOrganizador && (
-                        <div style={{ marginBottom: 20 }}>
+                        <div style={{ marginBottom: 'var(--sp-5)' }}>
                           {minhaInscricao ? (
-                            <div style={{
-                              display: 'flex', alignItems: 'center', gap: 12,
-                              background: '#fff', border: '1px solid var(--border)',
-                              borderRadius: 8, padding: '12px 16px'
-                            }}>
-                              <span style={{ fontSize: 16 }}>Sua situação:</span>
-                              <span style={{
-                                background: inscricaoLabel[minhaInscricao.status]?.cor ?? 'var(--ink-2)',
-                                color: '#fff', borderRadius: 20, padding: '4px 14px',
-                                fontWeight: 600, fontSize: 13
-                              }}>
-                                {inscricaoLabel[minhaInscricao.status]?.label ?? minhaInscricao.status}
-                              </span>
+                            <div className="surface between wrap" style={{ gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)' }}>
+                              <div className="row" style={{ gap: 'var(--sp-3)' }}>
+                                <span className="secondary">Sua situação:</span>
+                                {(() => {
+                                  const il = inscricaoLabel[minhaInscricao.status] ?? { label: minhaInscricao.status, variant: 'badge' }
+                                  return (
+                                    <span className={il.variant}>
+                                      {il.Icon && <il.Icon size={14} />} {il.label}
+                                    </span>
+                                  )
+                                })()}
+                              </div>
                               {(minhaInscricao.status === 'CONTEMPLADO' || minhaInscricao.status === 'LISTA_ESPERA') && (
-                                <button
-                                  onClick={() => acao(`/sorteios/${s.id}/confirmar`)}
-                                  style={{
-                                    background: '#16a34a', color: '#fff', border: 'none',
-                                    borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontWeight: 600
-                                  }}>
-                                  Confirmar Participação
+                                <button className="btn btn--sm" onClick={() => acao(`/sorteios/${s.id}/confirmar`)}>
+                                  <CheckCircle2 size={16} /> Confirmar Participação
                                 </button>
                               )}
                             </div>
                           ) : aberto ? (
-                            <button
-                              onClick={() => acao(`/sorteios/${s.id}/inscrever`)}
-                              style={{
-                                background: 'var(--brand-strong)', color: '#fff', border: 'none',
-                                borderRadius: 8, padding: '12px 24px', cursor: 'pointer',
-                                fontWeight: 600, fontSize: 15
-                              }}>
-                              🎯 Inscrever-se no Sorteio
+                            <button className="btn" onClick={() => acao(`/sorteios/${s.id}/inscrever`)}>
+                              <Target size={18} /> Inscrever-se no Sorteio
                             </button>
                           ) : (
-                            <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>Inscrições não disponíveis no momento.</p>
+                            <p className="secondary" style={{ fontSize: '0.875rem' }}>Inscrições não disponíveis no momento.</p>
                           )}
                         </div>
                       )}
 
                       {/* Ações do organizador */}
                       {ehOrganizador && s.organizadorId === usuario?.id && (
-                        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+                        <div className="row wrap" style={{ gap: 'var(--sp-2)', marginBottom: 'var(--sp-5)' }}>
                           {s.status === 'CONFIGURADO' && (
-                            <button onClick={() => acao(`/sorteios/${s.id}/abrir`)} style={btnStyle('#16a34a')}>
-                              Abrir Inscrições
+                            <button className="btn btn--sm" onClick={() => acao(`/sorteios/${s.id}/abrir`)}>
+                              <DoorOpen size={16} /> Abrir Inscrições
                             </button>
                           )}
                           {s.status === 'INSCRICOES_ABERTAS' && (
-                            <button onClick={() => acao(`/sorteios/${s.id}/encerrar-inscricoes`)} style={btnStyle('#d97706')}>
-                              Encerrar Inscrições
+                            <button className="btn btn--sm btn--ghost" onClick={() => acao(`/sorteios/${s.id}/encerrar-inscricoes`)}>
+                              <Lock size={16} /> Encerrar Inscrições
                             </button>
                           )}
                           {s.status === 'AGUARDANDO_SORTEIO' && (
-                            <button onClick={() => acao(`/sorteios/${s.id}/sortear`)} style={btnStyle('var(--brand-strong)')}>
-                              🎲 Realizar Sorteio
+                            <button className="btn btn--sm" onClick={() => acao(`/sorteios/${s.id}/sortear`)}>
+                              <Dices size={16} /> Realizar Sorteio
                             </button>
                           )}
                           {!['ENCERRADO', 'CANCELADO'].includes(s.status) && (
-                            <button onClick={() => acao(`/sorteios/${s.id}/cancelar`)} style={btnStyle('#dc2626')}>
-                              Cancelar Sorteio
+                            <button className="btn btn--sm btn--danger" onClick={() => acao(`/sorteios/${s.id}/cancelar`)}>
+                              <Ban size={16} /> Cancelar Sorteio
                             </button>
                           )}
                         </div>
                       )}
 
                       {/* Lista de inscrições */}
-                      <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 12 }}>
+                      <h4 className="secondary" style={{ marginBottom: 'var(--sp-3)' }}>
                         Inscrições ({inscricoes.length})
-                      </h3>
+                      </h4>
                       {inscricoes.length === 0 ? (
-                        <p style={{ color: 'var(--ink-muted)', fontSize: 14 }}>Nenhuma inscrição ainda.</p>
+                        <p className="muted" style={{ fontSize: '0.875rem' }}>Nenhuma inscrição ainda.</p>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto' }}>
-                          {inscricoes.map(i => {
-                            const il = inscricaoLabel[i.status] ?? { label: i.status, cor: 'var(--ink-2)' }
+                        <div className="surface" style={{ maxHeight: 240, overflowY: 'auto' }}>
+                          {inscricoes.map((i, idx) => {
+                            const il = inscricaoLabel[i.status] ?? { label: i.status, variant: 'badge' }
                             return (
-                              <div key={i.id} style={{
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                background: '#fff', borderRadius: 6, padding: '8px 14px',
-                                border: '1px solid var(--border)', fontSize: 13
-                              }}>
-                                <span style={{ color: 'var(--ink-2)' }}>Participante #{i.participanteId}</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div
+                                key={i.id}
+                                className="between"
+                                style={{ padding: 'var(--sp-3) var(--sp-4)', gap: 'var(--sp-3)', borderTop: idx === 0 ? undefined : '1px solid var(--border)', fontSize: '0.875rem' }}
+                              >
+                                <span className="secondary">Participante #{i.participanteId}</span>
+                                <div className="row" style={{ gap: 'var(--sp-2)' }}>
                                   {i.posicao > 0 && (
-                                    <span style={{ color: 'var(--ink-muted)', fontSize: 12 }}>#{i.posicao}</span>
+                                    <span className="muted" style={{ fontSize: '0.75rem' }}>#{i.posicao}</span>
                                   )}
-                                  <span style={{
-                                    background: il.cor, color: '#fff',
-                                    borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 600
-                                  }}>
-                                    {il.label}
+                                  <span className={il.variant}>
+                                    {il.Icon && <il.Icon size={12} />} {il.label}
                                   </span>
                                 </div>
                               </div>
@@ -409,11 +368,3 @@ export default function SorteioPage() {
     </>
   )
 }
-
-const btnStyle = (bg: string): React.CSSProperties => ({
-  background: bg, color: '#fff', border: 'none',
-  borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontWeight: 600, fontSize: 13
-})
-
-// Necessário para tipagem local
-type InscricaoSorteioResponse = InscricaoSorteio
