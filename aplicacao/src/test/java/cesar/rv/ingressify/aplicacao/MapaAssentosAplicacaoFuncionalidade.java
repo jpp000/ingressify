@@ -25,6 +25,7 @@ import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentos;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentosId;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentosRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.MapaAssentosServico;
+import cesar.rv.ingressify.dominio.marketplace.mapaAssentos.StatusAssento;
 import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.Então;
 import io.cucumber.java.pt.Quando;
@@ -187,6 +188,18 @@ public class MapaAssentosAplicacaoFuncionalidade {
             List<Assento> resultado = new ArrayList<>();
             for (Assento a : assentos.values()) {
                 if (a.getEventoId().equals(eventoId)) resultado.add(a);
+            }
+            return resultado;
+        }
+
+        @Override
+        public List<Assento> listarAssentosCompradosPor(UsuarioId usuarioId) {
+            List<Assento> resultado = new ArrayList<>();
+            for (Assento a : assentos.values()) {
+                if (a.getStatus() == StatusAssento.VENDIDO
+                        && usuarioId.equals(a.getReservadoPor())) {
+                    resultado.add(a);
+                }
             }
             return resultado;
         }

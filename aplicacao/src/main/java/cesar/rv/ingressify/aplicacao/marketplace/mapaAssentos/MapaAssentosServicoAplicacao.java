@@ -86,4 +86,8 @@ public class MapaAssentosServicoAplicacao {
     public List<Assento> listarAssentos(MapaAssentosId mapaId) {
         return mapaServico.listarAssentos(mapaId);
     }
+
+    public List<Assento> listarPorComprador(UsuarioId usuarioId) {
+        return mapaServico.listarPorComprador(usuarioId);
+    }
 }

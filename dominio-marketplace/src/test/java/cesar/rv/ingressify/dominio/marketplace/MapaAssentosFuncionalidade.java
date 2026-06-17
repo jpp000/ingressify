@@ -393,6 +393,18 @@ public class MapaAssentosFuncionalidade {
         }
 
         @Override
+        public List<Assento> listarAssentosCompradosPor(UsuarioId usuarioId) {
+            List<Assento> resultado = new ArrayList<>();
+            for (Assento a : assentos.values()) {
+                if (a.getStatus() == StatusAssento.VENDIDO
+                        && usuarioId.equals(a.getReservadoPor())) {
+                    resultado.add(a);
+                }
+            }
+            return resultado;
+        }
+
+        @Override
         public List<MapaAssentosId> listarTodosIds() {
             return new ArrayList<>(mapas.keySet());
         }
