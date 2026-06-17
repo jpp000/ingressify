@@ -2,12 +2,22 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import {
   Calendar, Clock, MapPin, Star, Dices, Repeat, Armchair, Megaphone, Ticket,
-  Minus, Plus, Lock, Pin, ArrowRight, Percent, Music2, Drama, Trophy, Mic, Disc3, UtensilsCrossed, type LucideIcon,
+  Minus, Plus, Lock, Pin, ArrowRight, Percent, Music2, Drama, Trophy, Mic, Disc3, UtensilsCrossed,
+  Send, MessageCircle, FlaskConical, CheckCircle2, AlertTriangle, Flag, X,
+  type LucideIcon,
 } from 'lucide-react'
-import { eventoService, tipoIngressoService, avaliacaoService, revendaService, feedService } from '../services/api'
+import { eventoService, tipoIngressoService, avaliacaoService, revendaService, feedService, denunciaEventoService } from '../services/api'
 import Navbar from '../components/Navbar'
 import { formatMoeda, corCategoria } from '../constants'
 import { useAuth } from '../context/AuthContext'
+
+const MOCK_AVALIACOES_DEMO: Avaliacao[] = [
+  { id: 901, nota: 5, comentario: 'Evento incrível! Organização impecável, som perfeito e estrutura excelente.', respostaOrganizador: 'Obrigado pelo feedback! Esperamos você na próxima edição.' },
+  { id: 902, nota: 4, comentario: 'Muito bom! Só achei a fila na entrada um pouco longa, mas valeu a pena.', respostaOrganizador: undefined },
+  { id: 903, nota: 3, comentario: 'Razoável. Esperava mais atrações para o preço cobrado.', respostaOrganizador: 'Agradecemos o feedback! Estamos investindo em mais atrações para a próxima edição.' },
+  { id: 904, nota: 5, comentario: 'Melhor show que já fui em Recife! Voltarei com certeza.', respostaOrganizador: undefined },
+  { id: 905, nota: 2, comentario: 'Tive problemas com o QR Code do ingresso na entrada, demorou para resolver.', respostaOrganizador: 'Pedimos desculpas pela experiência. Estamos melhorando o sistema de check-in.' },
+]
 
 interface Evento { id: number; nome: string; dataHora: string; local: string; descricao?: string; imagemCapaUrl?: string; status: string; aberturaPortoes?: string; categoria?: string; temAssentosNumerados?: boolean }
 interface Lote { id: number; nome: string; preco: number; quantidadeDisponivel: number; ativo: boolean }
@@ -23,7 +33,7 @@ const ICONE_CATEGORIA: Record<string, LucideIcon> = {
 export default function EventoDetalhe() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { usuario, isOrganizador } = useAuth()
+  const { usuario, isOrganizador, isAdmin } = useAuth()
   const eventoId = Number(id)
 
   const [evento, setEvento] = useState<Evento | null>(null)
@@ -38,6 +48,23 @@ export default function EventoDetalhe() {
   const [msgRevenda, setMsgRevenda] = useState('')
   const [novoPost, setNovoPost] = useState({ titulo: '', conteudo: '' })
   const [publicandoPost, setPublicandoPost] = useState(false)
+  // Avaliações
+  const [notaNova, setNotaNova] = useState(0)
+  const [notaHover, setNotaHover] = useState(0)
+  const [comentarioNovo, setComentarioNovo] = useState('')
+  const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false)
+  const [msgAvaliacao, setMsgAvaliacao] = useState<{ ok: boolean; texto: string } | null>(null)
+  const [mockAvaliacoes, setMockAvaliacoes] = useState(false)
+  // Denúncia de evento
+  const [modalDenuncia, setModalDenuncia] = useState(false)
+  const [motivoDenuncia, setMotivoDenuncia] = useState('')
+  const [descricaoDenuncia, setDescricaoDenuncia] = useState('')
+  const [enviandoDenuncia, setEnviandoDenuncia] = useState(false)
+  const [msgDenuncia, setMsgDenuncia] = useState<{ ok: boolean; texto: string } | null>(null)
+  // Resposta do organizador
+  const [respostaAberta, setRespostaAberta] = useState<number | null>(null)
+  const [respostaTexto, setRespostaTexto] = useState('')
+  const [enviandoResposta, setEnviandoResposta] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -94,6 +121,76 @@ export default function EventoDetalhe() {
   const temSelecionado = Object.values(selecoes).some(q => q > 0) || Object.values(selecoesMeia).some(q => q > 0)
   const mediaAval = avaliacoes.length ? avaliacoes.reduce((s, a) => s + a.nota, 0) / avaliacoes.length : 0
 
+  const ativarMockAvaliacoes = () => {
+    setAvaliacoes(MOCK_AVALIACOES_DEMO)
+    setMockAvaliacoes(true)
+    setMsgAvaliacao({ ok: true, texto: 'Dados demo carregados. Ações são simuladas localmente.' })
+    setTimeout(() => setMsgAvaliacao(null), 4000)
+  }
+
+  const enviarAvaliacao = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!usuario || notaNova === 0) return
+    setEnviandoAvaliacao(true); setMsgAvaliacao(null)
+    if (mockAvaliacoes) {
+      const nova: Avaliacao = { id: Date.now(), nota: notaNova, comentario: comentarioNovo.trim() || undefined, respostaOrganizador: undefined }
+      setAvaliacoes(prev => [nova, ...prev])
+      setNotaNova(0); setComentarioNovo('')
+      setMsgAvaliacao({ ok: true, texto: '[Demo] Avaliação adicionada localmente.' })
+      setTimeout(() => setMsgAvaliacao(null), 3000)
+      setEnviandoAvaliacao(false)
+      return
+    }
+    try {
+      await avaliacaoService.avaliar(eventoId, usuario.id, { nota: notaNova, comentario: comentarioNovo.trim() || null })
+      setNotaNova(0); setComentarioNovo('')
+      setMsgAvaliacao({ ok: true, texto: 'Avaliação enviada com sucesso!' })
+      const novas = await avaliacaoService.listar(eventoId)
+      setAvaliacoes(novas.data)
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } }
+      setMsgAvaliacao({ ok: false, texto: err.response?.data?.message ?? 'Não foi possível enviar a avaliação. Verifique se você tem ingresso para este evento e se ele já ocorreu.' })
+    } finally {
+      setEnviandoAvaliacao(false)
+      setTimeout(() => setMsgAvaliacao(null), 5000)
+    }
+  }
+
+  const enviarResposta = async (avaliacaoId: number) => {
+    if (!usuario || !respostaTexto.trim()) return
+    setEnviandoResposta(true)
+    if (mockAvaliacoes) {
+      setAvaliacoes(prev => prev.map(a => a.id === avaliacaoId ? { ...a, respostaOrganizador: respostaTexto.trim() } : a))
+      setRespostaAberta(null); setRespostaTexto('')
+      setEnviandoResposta(false)
+      return
+    }
+    try {
+      await avaliacaoService.responder(eventoId, avaliacaoId, usuario.id, respostaTexto.trim())
+      setRespostaAberta(null); setRespostaTexto('')
+      const novas = await avaliacaoService.listar(eventoId)
+      setAvaliacoes(novas.data)
+    } catch {
+      // silently fail — resposta do organizador é opcional
+    } finally {
+      setEnviandoResposta(false)
+    }
+  }
+
+  const enviarDenuncia = async () => {
+    if (!usuario || !motivoDenuncia) return
+    setEnviandoDenuncia(true); setMsgDenuncia(null)
+    try {
+      await denunciaEventoService.denunciar(eventoId, usuario.id, motivoDenuncia, descricaoDenuncia.trim())
+      setMsgDenuncia({ ok: true, texto: 'Denúncia enviada. Nossa equipe irá analisar em breve.' })
+      setMotivoDenuncia(''); setDescricaoDenuncia('')
+      setTimeout(() => { setModalDenuncia(false); setMsgDenuncia(null) }, 3000)
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { motivo?: string } } }
+      setMsgDenuncia({ ok: false, texto: err.response?.data?.motivo ?? 'Erro ao enviar denúncia.' })
+    } finally { setEnviandoDenuncia(false) }
+  }
+
   const irParaRevisao = () => {
     if (!temSelecionado || !evento) return
     const itens: { tipoId: number; quantidade: number; meia: boolean }[] = []
@@ -147,6 +244,11 @@ export default function EventoDetalhe() {
             <Link to={`/revendas?eventoId=${eventoId}`} className="chip"><Repeat size={15} /> Revendas</Link>
             {evento.temAssentosNumerados && (
               <Link to={`/mapa-assentos?eventoId=${eventoId}`} className="chip"><Armchair size={15} /> Escolher assento</Link>
+            )}
+            {usuario && !isOrganizador() && !isAdmin() && (
+              <button className="chip" style={{ cursor: 'pointer', color: 'var(--danger)' }} onClick={() => setModalDenuncia(true)}>
+                <Flag size={15} /> Denunciar evento
+              </button>
             )}
           </div>
 
@@ -222,23 +324,136 @@ export default function EventoDetalhe() {
             )}
           </section>
 
-          {/* Avaliações */}
-          {avaliacoes.length > 0 && (
-            <section>
-              <h2 style={{ marginBottom: 'var(--sp-3)' }}>Avaliações</h2>
+          {/* ── Avaliações ── */}
+          <section>
+            <div className="between" style={{ marginBottom: 'var(--sp-3)' }}>
+              <h2 className="row" style={{ gap: 8 }}>
+                <Star size={20} /> Avaliações
+                {avaliacoes.length > 0 && <span className="badge badge--accent">{avaliacoes.length}</span>}
+              </h2>
+              {!mockAvaliacoes && avaliacoes.length === 0 && (
+                <button className="btn btn--sm btn--ghost" onClick={ativarMockAvaliacoes}>
+                  <FlaskConical size={14} /> Dados demo
+                </button>
+              )}
+              {mockAvaliacoes && (
+                <span className="badge badge--warn" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <FlaskConical size={12} /> Modo demo
+                </span>
+              )}
+            </div>
+
+            {msgAvaliacao && (
+              <div className={`auth-alert ${msgAvaliacao.ok ? 'auth-alert--ok' : 'auth-alert--err'}`} style={{ marginBottom: 'var(--sp-3)' }}>
+                {msgAvaliacao.ok ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />} {msgAvaliacao.texto}
+              </div>
+            )}
+
+            {/* Formulário de nova avaliação */}
+            {usuario && (
+              <form onSubmit={enviarAvaliacao} className="surface surface--pad stack" style={{ gap: 'var(--sp-3)', marginBottom: 'var(--sp-4)' }}>
+                <div>
+                  <p style={{ fontWeight: 600, marginBottom: 'var(--sp-2)', fontSize: '0.9375rem' }}>
+                    <MessageCircle size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                    Avaliar este evento
+                  </p>
+                  <div className="row" style={{ gap: 4, marginBottom: 'var(--sp-2)' }}>
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const val = i + 1
+                      const ativa = val <= (notaHover || notaNova)
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setNotaNova(val)}
+                          onMouseEnter={() => setNotaHover(val)}
+                          onMouseLeave={() => setNotaHover(0)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px' }}
+                          aria-label={`${val} estrela${val > 1 ? 's' : ''}`}
+                        >
+                          <Star size={26} fill={ativa ? '#f59e0b' : 'none'} style={{ color: ativa ? '#f59e0b' : 'var(--border-strong)', transition: 'color 0.1s' }} />
+                        </button>
+                      )
+                    })}
+                    {notaNova > 0 && <span className="muted" style={{ fontSize: '0.8125rem', marginLeft: 6 }}>{notaNova} de 5</span>}
+                  </div>
+                  <textarea
+                    className="textarea"
+                    placeholder="Comentário opcional..."
+                    value={comentarioNovo}
+                    onChange={e => setComentarioNovo(e.target.value)}
+                    style={{ minHeight: 72, resize: 'vertical' }}
+                  />
+                </div>
+                <button
+                  className="btn btn--sm"
+                  type="submit"
+                  disabled={notaNova === 0 || enviandoAvaliacao}
+                  style={{ alignSelf: 'flex-start' }}
+                >
+                  <Send size={14} /> {enviandoAvaliacao ? 'Enviando...' : 'Enviar avaliação'}
+                </button>
+              </form>
+            )}
+
+            {/* Lista de avaliações */}
+            {avaliacoes.length === 0 ? (
+              <div className="surface surface--flat" style={{ borderStyle: 'dashed' }}>
+                <div className="empty" style={{ padding: 'var(--sp-6)' }}>
+                  <Star size={32} />
+                  <p className="muted">Nenhuma avaliação ainda. Seja o primeiro!</p>
+                  {!usuario && <p className="muted" style={{ fontSize: '0.8125rem' }}>Faça login para avaliar.</p>}
+                </div>
+              </div>
+            ) : (
               <div className="stack" style={{ gap: 'var(--sp-3)' }}>
                 {avaliacoes.slice(0, 5).map(a => (
                   <div key={a.id} className="surface surface--pad">
                     <div className="review-stars" style={{ marginBottom: 6 }}>
-                      {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={16} fill={i < a.nota ? 'currentColor' : 'none'} style={{ color: i < a.nota ? 'var(--warn)' : 'var(--border-strong)' }} />)}
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} size={16} fill={i < a.nota ? 'currentColor' : 'none'} style={{ color: i < a.nota ? 'var(--warn)' : 'var(--border-strong)' }} />
+                      ))}
                     </div>
-                    {a.comentario && <p className="secondary">{a.comentario}</p>}
-                    {a.respostaOrganizador && <div className="org-reply"><strong>Organizador:</strong> {a.respostaOrganizador}</div>}
+                    {a.comentario && <p className="secondary" style={{ marginBottom: 'var(--sp-2)' }}>{a.comentario}</p>}
+                    {a.respostaOrganizador && (
+                      <div className="org-reply"><strong>Organizador:</strong> {a.respostaOrganizador}</div>
+                    )}
+                    {isOrganizador() && !a.respostaOrganizador && respostaAberta !== a.id && (
+                      <button
+                        className="btn btn--sm btn--ghost"
+                        style={{ marginTop: 'var(--sp-2)' }}
+                        onClick={() => { setRespostaAberta(a.id); setRespostaTexto('') }}
+                      >
+                        <MessageCircle size={14} /> Responder
+                      </button>
+                    )}
+                    {isOrganizador() && respostaAberta === a.id && (
+                      <div className="stack" style={{ gap: 'var(--sp-2)', marginTop: 'var(--sp-2)' }}>
+                        <textarea
+                          className="textarea"
+                          placeholder="Sua resposta..."
+                          value={respostaTexto}
+                          onChange={e => setRespostaTexto(e.target.value)}
+                          style={{ minHeight: 60, resize: 'vertical' }}
+                          autoFocus
+                        />
+                        <div className="row" style={{ gap: 'var(--sp-2)' }}>
+                          <button
+                            className="btn btn--sm"
+                            disabled={!respostaTexto.trim() || enviandoResposta}
+                            onClick={() => enviarResposta(a.id)}
+                          >
+                            <Send size={13} /> {enviandoResposta ? 'Enviando...' : 'Publicar resposta'}
+                          </button>
+                          <button className="btn btn--sm btn--ghost" onClick={() => setRespostaAberta(null)}>Cancelar</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-            </section>
-          )}
+            )}
+          </section>
         </div>
 
         {/* Direita — seletor */}
@@ -304,6 +519,57 @@ export default function EventoDetalhe() {
           </div>
         </div>
       </div>
+
+      {/* Modal Denúncia de Evento */}
+      {modalDenuncia && (
+        <div className="modal-backdrop" onClick={() => setModalDenuncia(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal__head">
+              <h3 className="row" style={{ gap: 8 }}><Flag size={18} style={{ color: 'var(--danger)' }} /> Denunciar evento</h3>
+              <button className="modal__x" onClick={() => setModalDenuncia(false)}><X size={18} /></button>
+            </div>
+            <p className="secondary" style={{ marginBottom: 'var(--sp-4)', fontSize: '0.9rem' }}>
+              Denúncias são analisadas pela nossa equipe. Use com responsabilidade.
+            </p>
+            <div className="field" style={{ marginBottom: 'var(--sp-3)' }}>
+              <label className="label">Motivo *</label>
+              <select className="input" value={motivoDenuncia} onChange={e => setMotivoDenuncia(e.target.value)}>
+                <option value="">Selecione o motivo…</option>
+                <option value="FRAUDE">Fraude / golpe</option>
+                <option value="CONTEUDO_INAPROPRIADO">Conteúdo inapropriado</option>
+                <option value="EVENTO_FALSO">Evento falso ou inexistente</option>
+                <option value="SEGURANCA">Risco à segurança</option>
+                <option value="OUTRO">Outro</option>
+              </select>
+            </div>
+            <div className="field" style={{ marginBottom: 'var(--sp-4)' }}>
+              <label className="label">Descrição complementar</label>
+              <textarea
+                className="textarea"
+                placeholder="Descreva o problema com mais detalhes (opcional)…"
+                value={descricaoDenuncia}
+                onChange={e => setDescricaoDenuncia(e.target.value)}
+                style={{ minHeight: 80, resize: 'vertical' }}
+              />
+            </div>
+            {msgDenuncia && (
+              <div className={`auth-alert ${msgDenuncia.ok ? 'auth-alert--ok' : 'auth-alert--err'}`} style={{ marginBottom: 'var(--sp-3)' }}>
+                {msgDenuncia.ok ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />} {msgDenuncia.texto}
+              </div>
+            )}
+            <div className="row" style={{ gap: 'var(--sp-2)' }}>
+              <button className="btn btn--ghost grow" onClick={() => setModalDenuncia(false)}>Cancelar</button>
+              <button
+                className="btn btn--danger grow"
+                disabled={!motivoDenuncia || enviandoDenuncia}
+                onClick={enviarDenuncia}
+              >
+                <Flag size={16} /> {enviandoDenuncia ? 'Enviando…' : 'Enviar denúncia'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

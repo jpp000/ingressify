@@ -123,12 +123,43 @@ export const revendaService = {
     api.post(`/revendas/anuncios/${id}/denunciar`, dados, { headers: { 'X-Usuario-Id': usuarioId } })
 }
 
-// Denúncias (moderação)
+// Denúncias de revendas (moderação)
 export const denunciaService = {
   listar: (usuarioId: number) =>
     api.get('/denuncias', { headers: { 'X-Usuario-Id': usuarioId } }),
   decidir: (id: number, usuarioId: number, decisao: string) =>
     api.post(`/denuncias/${id}/decidir`, { decisao }, { headers: { 'X-Usuario-Id': usuarioId } }),
+}
+
+// Denúncias de eventos
+export const denunciaEventoService = {
+  denunciar: (eventoId: number, usuarioId: number, motivo: string, descricao: string) =>
+    api.post(`/denuncias/eventos/${eventoId}`, { motivo, descricao }, { headers: { 'X-Usuario-Id': usuarioId } }),
+  listar: (usuarioId: number) =>
+    api.get('/denuncias/eventos', { headers: { 'X-Usuario-Id': usuarioId } }),
+  analisar: (id: number, usuarioId: number) =>
+    api.post(`/denuncias/eventos/${id}/analisar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  aprovar: (id: number, usuarioId: number) =>
+    api.post(`/denuncias/eventos/${id}/aprovar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  rejeitar: (id: number, usuarioId: number) =>
+    api.post(`/denuncias/eventos/${id}/rejeitar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+}
+
+// Reembolsos (usuário e admin)
+export const reembolsoService = {
+  meus: (usuarioId: number) =>
+    api.get('/meus-reembolsos', { headers: { 'X-Usuario-Id': usuarioId } }),
+  cancelar: (id: number, usuarioId: number) =>
+    api.post(`/reembolsos/${id}/cancelar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  // admin
+  listarTodos: (usuarioId: number) =>
+    api.get('/admin/reembolsos', { headers: { 'X-Usuario-Id': usuarioId } }),
+  analisar: (id: number, usuarioId: number) =>
+    api.post(`/admin/reembolsos/${id}/analisar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  aprovar: (id: number, usuarioId: number) =>
+    api.post(`/admin/reembolsos/${id}/aprovar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
+  recusar: (id: number, usuarioId: number) =>
+    api.post(`/admin/reembolsos/${id}/recusar`, {}, { headers: { 'X-Usuario-Id': usuarioId } }),
 }
 
 // Avaliações

@@ -189,15 +189,99 @@ docker compose logs -f backend
 
 **Infra:** Docker · Docker Compose
 
-**Padrões de Design:** Observer · Strategy · Template Method · Proxy · Iterator · Decorator
+**Padrões de Design:** Observer · Strategy · Template Method · Proxy · Iterator · Decorator · State
+
+---
+
+## Funcionalidades Não Triviais (14 no total)
+
+Cada funcionalidade possui regras de negócio de complexidade média ou alta e altera estado persistido.
+
+| # | Funcionalidade | Módulo principal | Feature BDD |
+|---|---------------|-----------------|-------------|
+| 1 | Cadastro e publicação de eventos | dominio-marketplace | `cadastrar_evento.feature` |
+| 2 | Compra de ingressos (inteira/meia) | dominio-marketplace | `realizar_compra.feature` |
+| 3 | Revenda de ingressos (anúncio + reserva + confirmação) | dominio-marketplace | `anuncio_revenda.feature` |
+| 4 | Solicitação de reembolso (voluntário / por cancelamento) | dominio-marketplace | `reembolso.feature` |
+| 5 | Gestão de reembolso pelo administrador | dominio-marketplace | `reembolso_admin.feature` |
+| 6 | Check-in de ingresso no evento | dominio-marketplace | `check_in.feature` |
+| 7 | Sorteio de ingressos (loteria) | dominio-marketplace | `sorteio.feature` |
+| 8 | Mapa de assentos numerados | dominio-marketplace | `mapa_assentos.feature` |
+| 9 | Avaliação de eventos por compradores | dominio-marketplace | `avaliacao.feature` |
+| 10 | Processamento de pagamentos | dominio-financeiro | `processar_pagamento.feature` |
+| 11 | Gestão de saldo e extrato financeiro | dominio-financeiro | `saldo.feature` / `transacao.feature` |
+| 12 | Cupom de desconto (percentual e valor fixo) | dominio-marketplace | `cupom.feature` |
+| 13 | Compra em grupo (prazo, pagamento individual, confirmação) | dominio-marketplace | `grupo_compra.feature` |
+| 14 | Denúncia de eventos por compradores | dominio-marketplace | `denuncia_evento.feature` |
+
+---
+
+## Padrões de Design Implementados
+
+| Padrão | Onde é aplicado | Arquivo de referência |
+|--------|-----------------|-----------------------|
+| **Strategy** | Cálculo de desconto em cupons (percentual vs. valor fixo) | `cupom/estrategia/EstrategiaDesconto.java` |
+| **Strategy** | Estratégia de reembolso por tipo de cancelamento | `reembolso/estrategia/EstrategiaReembolso.java` |
+| **Observer** | Notificação de eventos de domínio (compra, cancelamento) | `dominio-compartilhado/.../EventoObserver.java` |
+| **Template Method** | Fluxo de compra de ingresso (validar → reservar → pagar → confirmar) | `aplicacao/.../compra/` |
+| **Proxy** | Controle de acesso a operações administrativas via header `X-Usuario-Id` | `apresentacao-backend/.../controller/` |
+| **Iterator** | Varredura de participantes do grupo de compra e lotes de ingressos | `GrupoCompraServico.java`, `SorteioServico.java` |
+| **Decorator** | Enriquecimento de respostas HTTP com dados de domínio | DTOs em `apresentacao-backend/.../dto/` |
+| **State** | Máquina de estados para status de denúncia, reembolso e grupo de compra | `DenunciaEvento.java`, `SolicitacaoReembolso.java`, `GrupoCompra.java` |
+
+---
+
+## DDD — Níveis de Abstração
+
+| Nível | Artefato | Exemplos no projeto |
+|-------|----------|---------------------|
+| **Preliminar** | Linguagem ubíqua, glossário de negócio | Nomes de classes como `DenunciaEvento`, `SolicitacaoReembolso`, `GrupoCompra` |
+| **Estratégico** | Bounded Contexts + Context Map | Módulos `dominio-marketplace`, `dominio-financeiro`, `dominio-identidade`, `dominio-compartilhado` |
+| **Tático** | Aggregates, Value Objects, Domain Services, Repositories | `Evento` (aggregate root), `Dinheiro` (VO), `GrupoCompraServico`, `EventoRepositorio` |
+| **Operacional** | Application Services, Infrastructure, REST API | `aplicacao/*ServicoAplicacao.java`, `infraestrutura/repositorios/`, `apresentacao-backend/controller/` |
 
 ---
 
 ## Testes BDD
 
+### Rodar todos os testes
+
 ```bash
 # Na raiz do projeto (requer Maven instalado localmente)
 mvn test
+```
+
+### Rodar testes de um módulo específico
+
+```bash
+# Apenas testes do domínio de marketplace
+mvn -pl dominio-marketplace test
+
+# Apenas testes do domínio financeiro
+mvn -pl dominio-financeiro test
+```
+
+### Localização das features
+
+```
+dominio-marketplace/src/test/resources/features/marketplace/
+├── avaliacao.feature              # Avaliação de eventos
+├── cadastrar_evento.feature       # Cadastro e publicação
+├── check_in.feature               # Check-in de ingresso
+├── cupom.feature                  # Cupom de desconto
+├── denuncia_evento.feature        # Denúncia de eventos
+├── grupo_compra.feature           # Compra em grupo
+├── mapa_assentos.feature          # Mapa de assentos numerados
+├── realizar_compra.feature        # Compra de ingressos
+├── reembolso.feature              # Solicitação de reembolso
+├── reembolso_admin.feature        # Gestão de reembolso (admin)
+├── anuncio_revenda.feature        # Revenda de ingressos
+└── sorteio.feature                # Sorteio de ingressos
+
+dominio-financeiro/src/test/resources/features/financeiro/
+├── processar_pagamento.feature
+├── saldo.feature
+└── transacao.feature
 ```
 
 ---

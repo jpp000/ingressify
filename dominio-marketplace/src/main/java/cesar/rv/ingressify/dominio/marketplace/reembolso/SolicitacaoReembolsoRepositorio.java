@@ -15,4 +15,6 @@ public interface SolicitacaoReembolsoRepositorio {
 	Optional<SolicitacaoReembolso> pesquisarAtivaPorIngresso(IngressoId ingressoId);
 
 	List<SolicitacaoReembolso> pesquisarPorSolicitante(UsuarioId solicitanteId);
+
+	List<SolicitacaoReembolso> listarTodas();
 }

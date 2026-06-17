@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ShieldAlert, ShieldCheck, Store, Ban, Clock, ArrowRight, Inbox, Tag, Activity,
+  ShieldAlert, ShieldCheck, Store, Ban, Clock, ArrowRight, Inbox, Tag, Activity, BarChart3,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { denunciaService, revendaService, eventoService } from '../services/api'
@@ -90,7 +90,10 @@ export default function AdminVisaoGeral() {
               <p className="secondary">Olá, {usuario?.nome.split(' ')[0]} — visão geral da moderação e da saúde do marketplace.</p>
             </div>
           </div>
-          <Link to="/denuncias" className="btn btn--sm"><ShieldAlert size={16} /> Ir para moderação</Link>
+          <div className="row" style={{ gap: 'var(--sp-2)' }}>
+            <Link to="/admin/relatorios" className="btn btn--sm btn--ghost"><BarChart3 size={16} /> Relatórios</Link>
+            <Link to="/denuncias" className="btn btn--sm"><ShieldAlert size={16} /> Ir para moderação</Link>
+          </div>
         </div>
 
         <div className="row wrap" style={{ gap: 'var(--sp-3)', marginBottom: 'var(--sp-6)' }}>

@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Compass, Dices, Repeat, Ticket, Wallet, CalendarDays,
   ScanLine, Armchair, ShieldAlert, Search, Plus, LogOut, ChevronDown, MoreHorizontal,
-  LayoutDashboard, Store, Users,
+  LayoutDashboard, Store, Users, BarChart3, RotateCcw,
   type LucideIcon,
 } from 'lucide-react'
 import { saldoService } from '../services/api'
@@ -26,6 +26,8 @@ const DESTINOS: Destino[] = [
   { to: '/admin', label: 'Visão geral', Icon: LayoutDashboard, match: p => p === '/admin', visivel: r => r.admin },
   { to: '/denuncias', label: 'Moderação', Icon: ShieldAlert, match: p => p.startsWith('/denuncias'), visivel: r => r.admin },
   { to: '/admin/marketplace', label: 'Marketplace', Icon: Store, match: p => p.startsWith('/admin/marketplace'), visivel: r => r.admin },
+  { to: '/admin/relatorios', label: 'Relatórios', Icon: BarChart3, match: p => p.startsWith('/admin/relatorios'), visivel: r => r.admin },
+  { to: '/admin/reembolsos', label: 'Reembolsos', Icon: RotateCcw, match: p => p.startsWith('/admin/reembolsos'), visivel: r => r.admin },
   { to: '/gerenciar', label: 'Meus eventos', Icon: CalendarDays, match: p => p.startsWith('/gerenciar'), visivel: r => r.organizador },
   { to: '/check-in', label: 'Check-in', Icon: ScanLine, match: p => p.startsWith('/check-in'), visivel: r => r.operador || r.organizador },
   { to: '/', label: 'Explorar', Icon: Compass, match: p => p === '/', visivel: r => r.comprador },

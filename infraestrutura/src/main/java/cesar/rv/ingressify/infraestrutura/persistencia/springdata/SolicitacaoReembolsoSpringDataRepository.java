@@ -11,7 +11,9 @@ import cesar.rv.ingressify.infraestrutura.persistencia.jpa.SolicitacaoReembolsoJ
 
 public interface SolicitacaoReembolsoSpringDataRepository extends JpaRepository<SolicitacaoReembolsoJpa, Integer> {
 
-	Optional<SolicitacaoReembolsoJpa> findByIngressoIdAndStatus(UUID ingressoId, StatusSolicitacaoReembolso status);
+	Optional<SolicitacaoReembolsoJpa> findByIngressoIdAndStatusIn(UUID ingressoId, java.util.List<StatusSolicitacaoReembolso> statuses);
 
 	List<SolicitacaoReembolsoJpa> findBySolicitanteId(Integer solicitanteId);
+
+	List<SolicitacaoReembolsoJpa> findAllByOrderByCriadaEmDesc();
 }

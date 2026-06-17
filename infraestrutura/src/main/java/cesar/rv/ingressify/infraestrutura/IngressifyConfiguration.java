@@ -14,6 +14,8 @@ import cesar.rv.ingressify.aplicacao.marketplace.checkin.CheckinServicoAplicacao
 import cesar.rv.ingressify.aplicacao.marketplace.compra.CompraServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.cupom.CupomServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.denuncia.DenunciaServicoAplicacao;
+import cesar.rv.ingressify.aplicacao.marketplace.denuncia.DenunciaEventoServicoAplicacao;
+import cesar.rv.ingressify.dominio.marketplace.denuncia.DenunciaEventoRepositorio;
 import cesar.rv.ingressify.aplicacao.marketplace.evento.EventoServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.feed.FeedServicoAplicacao;
 import cesar.rv.ingressify.aplicacao.marketplace.grupoCompra.GrupoCompraServicoAplicacao;
@@ -192,10 +194,11 @@ public class IngressifyConfiguration {
 			PedidoRepositorio pedidoRepositorio,
 			EventoRepositorio eventoRepositorio,
 			SaldoServico saldoServico,
-			TransacaoServico transacaoServico) {
+			TransacaoServico transacaoServico,
+			UsuarioServico usuarioServico) {
 		return new ReembolsoServicoAplicacao(solicitacaoReembolsoServico, solicitacaoReembolsoRepositorio,
 				ingressoServico, tipoIngressoServico, tipoIngressoRepositorio, pedidoRepositorio,
-				eventoRepositorio, saldoServico, transacaoServico);
+				eventoRepositorio, saldoServico, transacaoServico, usuarioServico);
 	}
 
 	@Bean
@@ -275,6 +278,14 @@ public class IngressifyConfiguration {
 			UsuarioServico usuarioServico) {
 		return new DenunciaServicoAplicacao(denunciaServico, anuncioRevendaServico,
 				anuncioRevendaRepositorio, usuarioServico);
+	}
+
+	@Bean
+	public DenunciaEventoServicoAplicacao denunciaEventoServicoAplicacao(
+			DenunciaEventoRepositorio denunciaEventoRepositorio,
+			EventoRepositorio eventoRepositorio,
+			UsuarioServico usuarioServico) {
+		return new DenunciaEventoServicoAplicacao(denunciaEventoRepositorio, eventoRepositorio, usuarioServico);
 	}
 
 	@Bean

@@ -103,8 +103,9 @@ export default function MeusIngressos() {
   const reembolsar = async (id: string) => {
     try {
       await ingressoService.reembolsar(id, usuario!.id)
-      setMsg({ ok: true, texto: 'Reembolso solicitado com sucesso!' })
-      setIngressos(prev => prev.filter(e => e.ingresso.id !== id)); setIngressoAberto(null)
+      setMsg({ ok: true, texto: 'Reembolso solicitado! Nossa equipe irá analisar em breve.' })
+      setIngressoAberto(null)
+      await recarregar()
     } catch (err) {
       const motivo = axios.isAxiosError(err) && typeof err.response?.data?.motivo === 'string' ? err.response.data.motivo : null
       setMsg({ ok: false, texto: motivo ?? 'Erro ao solicitar reembolso.' })

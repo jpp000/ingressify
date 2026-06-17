@@ -39,7 +39,8 @@ public class SolicitacaoReembolsoRepositorioMemoria implements SolicitacaoReembo
 	public Optional<SolicitacaoReembolso> pesquisarAtivaPorIngresso(IngressoId ingressoId) {
 		return store.values().stream()
 				.filter(s -> s.getIngressoId().equals(ingressoId)
-						&& s.getStatus() == StatusSolicitacaoReembolso.PENDENTE)
+						&& (s.getStatus() == StatusSolicitacaoReembolso.PENDENTE
+								|| s.getStatus() == StatusSolicitacaoReembolso.EM_ANALISE))
 				.findFirst();
 	}
 
@@ -47,6 +48,13 @@ public class SolicitacaoReembolsoRepositorioMemoria implements SolicitacaoReembo
 	public List<SolicitacaoReembolso> pesquisarPorSolicitante(UsuarioId solicitanteId) {
 		return store.values().stream()
 				.filter(s -> s.getSolicitanteId().equals(solicitanteId))
+				.toList();
+	}
+
+	@Override
+	public List<SolicitacaoReembolso> listarTodas() {
+		return store.values().stream()
+				.sorted(java.util.Comparator.comparingInt(s -> s.getId().getId()))
 				.toList();
 	}
 

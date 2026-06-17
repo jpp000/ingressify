@@ -19,10 +19,12 @@ import cesar.rv.ingressify.aplicacao.marketplace.reembolso.ReembolsoServicoAplic
 import cesar.rv.ingressify.apresentacao.dto.CompraIngressoRequest;
 import cesar.rv.ingressify.apresentacao.dto.CriarPedidoRequest;
 import cesar.rv.ingressify.apresentacao.dto.IngressoResponse;
+import cesar.rv.ingressify.apresentacao.dto.ReembolsoResponse;
 import cesar.rv.ingressify.apresentacao.dto.SolicitarReembolsoRequest;
 import cesar.rv.ingressify.apresentacao.dto.TransferirIngressoRequest;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoId;
+import cesar.rv.ingressify.dominio.marketplace.reembolso.SolicitacaoReembolsoId;
 import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoId;
 import cesar.rv.ingressify.dominio.padroes.estrategia.ReembolsoNaoPermitidoException;
 
@@ -142,6 +144,25 @@ public class IngressoController {
 			return ResponseEntity.badRequest().body(java.util.Map.of("motivo", e.getMessage()));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.notFound().build();
+		}
+	}
+
+	@GetMapping("/meus-reembolsos")
+	public ResponseEntity<?> meusReembolsos(@RequestHeader("X-Usuario-Id") int usuarioId) {
+		var resp = reembolsoServico.listarPorUsuario(new UsuarioId(usuarioId))
+				.stream().map(ReembolsoResponse::fromDomain).toList();
+		return ResponseEntity.ok(resp);
+	}
+
+	@PostMapping("/reembolsos/{id}/cancelar")
+	public ResponseEntity<?> cancelarReembolso(
+			@PathVariable int id,
+			@RequestHeader("X-Usuario-Id") int usuarioId) {
+		try {
+			reembolsoServico.cancelarPeloUsuario(new SolicitacaoReembolsoId(id), new UsuarioId(usuarioId));
+			return ResponseEntity.ok().build();
+		} catch (IllegalStateException e) {
+			return ResponseEntity.badRequest().body(java.util.Map.of("motivo", e.getMessage()));
 		}
 	}
 

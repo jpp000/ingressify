@@ -14,6 +14,8 @@ import cesar.rv.ingressify.dominio.marketplace.reembolso.StatusSolicitacaoReembo
 import cesar.rv.ingressify.infraestrutura.persistencia.jpa.SolicitacaoReembolsoJpa;
 import cesar.rv.ingressify.infraestrutura.persistencia.springdata.SolicitacaoReembolsoSpringDataRepository;
 
+import static java.util.List.of;
+
 @Repository
 public class SolicitacaoReembolsoRepositorioPersistencia implements SolicitacaoReembolsoRepositorio {
 
@@ -40,13 +42,21 @@ public class SolicitacaoReembolsoRepositorioPersistencia implements SolicitacaoR
 
 	@Override
 	public Optional<SolicitacaoReembolso> pesquisarAtivaPorIngresso(IngressoId ingressoId) {
-		return jpa.findByIngressoIdAndStatus(ingressoId.getId(), StatusSolicitacaoReembolso.PENDENTE)
+		return jpa.findByIngressoIdAndStatusIn(ingressoId.getId(),
+				of(StatusSolicitacaoReembolso.PENDENTE, StatusSolicitacaoReembolso.EM_ANALISE))
 				.map(SolicitacaoReembolsoJpa::toDomain);
 	}
 
 	@Override
 	public List<SolicitacaoReembolso> pesquisarPorSolicitante(UsuarioId solicitanteId) {
 		return jpa.findBySolicitanteId(solicitanteId.getId()).stream()
+				.map(SolicitacaoReembolsoJpa::toDomain)
+				.toList();
+	}
+
+	@Override
+	public List<SolicitacaoReembolso> listarTodas() {
+		return jpa.findAllByOrderByCriadaEmDesc().stream()
 				.map(SolicitacaoReembolsoJpa::toDomain)
 				.toList();
 	}

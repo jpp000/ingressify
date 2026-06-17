@@ -59,19 +59,35 @@ public class SolicitacaoReembolso {
 		this.id = novoId;
 	}
 
-	public void aprovar(LocalDateTime agora) {
+	public void iniciarAnalise(LocalDateTime agora) {
 		if (status != StatusSolicitacaoReembolso.PENDENTE) {
 			throw new IllegalStateException("solicitação não está pendente");
+		}
+		this.status = StatusSolicitacaoReembolso.EM_ANALISE;
+		this.decididaEm = agora;
+	}
+
+	public void aprovar(LocalDateTime agora) {
+		if (status != StatusSolicitacaoReembolso.PENDENTE && status != StatusSolicitacaoReembolso.EM_ANALISE) {
+			throw new IllegalStateException("solicitação não pode ser aprovada neste status");
 		}
 		this.status = StatusSolicitacaoReembolso.APROVADA;
 		this.decididaEm = agora;
 	}
 
 	public void recusar(LocalDateTime agora) {
-		if (status != StatusSolicitacaoReembolso.PENDENTE) {
-			throw new IllegalStateException("solicitação não está pendente");
+		if (status != StatusSolicitacaoReembolso.PENDENTE && status != StatusSolicitacaoReembolso.EM_ANALISE) {
+			throw new IllegalStateException("solicitação não pode ser recusada neste status");
 		}
 		this.status = StatusSolicitacaoReembolso.RECUSADA;
+		this.decididaEm = agora;
+	}
+
+	public void cancelar(LocalDateTime agora) {
+		if (status != StatusSolicitacaoReembolso.PENDENTE && status != StatusSolicitacaoReembolso.EM_ANALISE) {
+			throw new IllegalStateException("solicitação não pode ser cancelada neste status");
+		}
+		this.status = StatusSolicitacaoReembolso.CANCELADA;
 		this.decididaEm = agora;
 	}
 

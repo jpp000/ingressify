@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, CheckCircle2, AlertCircle, ShieldCheck, Repeat, Dices } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, CheckCircle2, AlertCircle, ShieldCheck, Repeat, Dices, FlaskConical } from 'lucide-react'
 import { authService, setUsuarioId } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
@@ -95,6 +95,12 @@ export default function LoginPage() {
           <p style={{ textAlign: 'center', marginTop: 'var(--sp-5)' }} className="secondary">
             Não tem uma conta? <Link to="/cadastro" style={{ color: 'var(--brand-strong)', fontWeight: 600 }}>Criar conta agora</Link>
           </p>
+
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 'var(--sp-5)', paddingTop: 'var(--sp-4)', textAlign: 'center' }}>
+            <Link to="/demo" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--ink-muted)', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
+              <FlaskConical size={16} /> Explorar em modo demo (sem backend)
+            </Link>
+          </div>
         </div>
       </main>
     </div>
