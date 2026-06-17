@@ -19,7 +19,6 @@ import cesar.rv.ingressify.apresentacao.dto.ResultadoCheckInResponse;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.marketplace.checkin.RegistroCheckin;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
-import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoId;
 
 @RestController
 @RequestMapping("/check-in")
@@ -59,9 +58,7 @@ public class CheckInController {
 					.body(new ResultadoCheckInResponse(false, "Código do ingresso não informado", null, null));
 		}
 		try {
-			IngressoId ingressoId = checkinServico.buscarIngressoPorCodigo(req.codigoIngresso());
-			RegistroCheckin registro = checkinServico.realizarCheckin(
-					ingressoId.getId().toString(), new UsuarioId(usuarioId));
+			RegistroCheckin registro = checkinServico.realizarCheckin(req.codigoIngresso(), new UsuarioId(usuarioId));
 			return ResponseEntity.ok(ResultadoCheckInResponse.fromDomain(registro));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.notFound().build();

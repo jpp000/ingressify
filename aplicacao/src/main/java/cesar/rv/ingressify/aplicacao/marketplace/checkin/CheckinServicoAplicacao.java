@@ -2,7 +2,6 @@ package cesar.rv.ingressify.aplicacao.marketplace.checkin;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.commons.lang3.Validate;
 
@@ -43,8 +42,7 @@ public class CheckinServicoAplicacao {
 	}
 
 	public RegistroCheckin realizarCheckin(String codigoQr, UsuarioId operadorId) {
-		IngressoId ingressoId = new IngressoId(UUID.fromString(codigoQr.trim()));
-		Ingresso ingresso = ingressoRepositorio.obter(ingressoId);
+		Ingresso ingresso = ingressoRepositorio.obterPorCodigo(codigoQr);
 		Evento evento = eventoRepositorio.obter(ingresso.getEventoId());
 		var operador = usuarioRepositorio.obter(operadorId);
 		boolean pode = operador.temPapel(Papel.ADMIN)
@@ -61,9 +59,7 @@ public class CheckinServicoAplicacao {
 	}
 
 	public IngressoId buscarIngressoPorCodigo(String codigo) {
-		IngressoId id = new IngressoId(UUID.fromString(codigo.trim()));
-		ingressoRepositorio.obter(id);
-		return id;
+		return ingressoRepositorio.obterPorCodigo(codigo).getId();
 	}
 
 	public List<RegistroCheckin> relatorio(EventoId eventoId) {

@@ -1,6 +1,7 @@
 package cesar.rv.ingressify.infraestrutura.persistencia.springdata;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,8 @@ public interface IngressoSpringDataRepository extends JpaRepository<IngressoJpa,
 	List<IngressoJpa> findByEventoId(Integer eventoId);
 
 	List<IngressoJpa> findByTipoIngressoId(Integer tipoIngressoId);
+
+	Optional<IngressoJpa> findByCodigo(String codigo);
 
 	@Query("SELECT COUNT(i) FROM IngressoJpa i WHERE i.tipoIngressoId = :tipoId AND i.status != :cancelado AND i.status != :reembolsado")
 	int contarVendidosPorTipo(Integer tipoId,

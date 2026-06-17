@@ -1,6 +1,7 @@
 package cesar.rv.ingressify.infraestrutura.persistencia.repositorios;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.stereotype.Repository;
 
@@ -35,7 +36,14 @@ public class IngressoRepositorioPersistencia implements IngressoRepositorio {
 	public Ingresso obter(IngressoId id) {
 		return jpa.findById(id.getId())
 				.map(IngressoJpa::toDomain)
-				.orElseThrow(() -> new IllegalArgumentException("Ingresso não encontrado: " + id));
+				.orElseThrow(() -> new IllegalArgumentException("Ingresso nao encontrado: " + id));
+	}
+
+	@Override
+	public Ingresso obterPorCodigo(String codigo) {
+		return jpa.findByCodigo(codigo.trim().toUpperCase(Locale.ROOT))
+				.map(IngressoJpa::toDomain)
+				.orElseThrow(() -> new IllegalArgumentException("Ingresso nao encontrado para o codigo informado"));
 	}
 
 	@Override

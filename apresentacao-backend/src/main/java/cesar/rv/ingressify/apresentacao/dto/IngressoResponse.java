@@ -10,6 +10,8 @@ public record IngressoResponse(
 		int proprietarioId,
 		StatusIngresso status,
 		boolean bloqueadoPorReembolso,
+		String codigo,
+		String qrCode,
 		boolean meiaEntrada,
 		String documento) {
 
@@ -21,6 +23,8 @@ public record IngressoResponse(
 				i.getProprietario().getId(),
 				i.getStatus(),
 				i.isBloqueadoPorReembolso(),
+				i.getCodigo(),
+				i.getQrCode(),
 				i.isMeiaEntrada(),
 				i.getDocumento());
 	}

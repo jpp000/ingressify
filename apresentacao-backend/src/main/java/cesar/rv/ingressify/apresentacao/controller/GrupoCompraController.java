@@ -20,6 +20,7 @@ import cesar.rv.ingressify.apresentacao.dto.GrupoCompraResponse;
 import cesar.rv.ingressify.apresentacao.dto.ParticipanteGrupoRequest;
 import cesar.rv.ingressify.apresentacao.dto.ParticipanteGrupoResponse;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
+import cesar.rv.ingressify.dominio.identidade.usuario.UsuarioRepositorio;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
 import cesar.rv.ingressify.dominio.marketplace.grupoCompra.GrupoCompraId;
 import cesar.rv.ingressify.dominio.marketplace.grupoCompra.ParticipanteGrupoEntrada;
@@ -30,9 +31,11 @@ import cesar.rv.ingressify.dominio.marketplace.tipoIngresso.TipoIngressoId;
 public class GrupoCompraController {
 
     private final GrupoCompraServicoAplicacao grupoCompraServico;
+    private final UsuarioRepositorio usuarioRepositorio;
 
-    public GrupoCompraController(GrupoCompraServicoAplicacao grupoCompraServico) {
+    public GrupoCompraController(GrupoCompraServicoAplicacao grupoCompraServico, UsuarioRepositorio usuarioRepositorio) {
         this.grupoCompraServico = grupoCompraServico;
+        this.usuarioRepositorio = usuarioRepositorio;
     }
 
     @PostMapping
@@ -45,14 +48,15 @@ public class GrupoCompraController {
             return ResponseEntity.badRequest().build();
         }
         for (ParticipanteGrupoRequest p : req.participantes()) {
-            if (p.usuarioId() == null || p.quantidade() == null || p.quantidade() <= 0) {
+            boolean semUsuario = p.usuarioId() == null && (p.email() == null || p.email().isBlank());
+            if (semUsuario || p.quantidade() == null || p.quantidade() <= 0) {
                 return ResponseEntity.badRequest().build();
             }
         }
         try {
             List<ParticipanteGrupoEntrada> entradas = req.participantes().stream()
                     .map(p -> new ParticipanteGrupoEntrada(
-                            p.usuarioId(), p.quantidade(),
+                            resolverUsuarioId(p), p.quantidade(),
                             p.meiaEntrada() != null && p.meiaEntrada(), p.documento()))
                     .toList();
             GrupoCompraId id = grupoCompraServico.criar(
@@ -68,6 +72,13 @@ public class GrupoCompraController {
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("motivo", e.getMessage()));
         }
+    }
+
+    private int resolverUsuarioId(ParticipanteGrupoRequest participante) {
+        if (participante.usuarioId() != null) {
+            return participante.usuarioId();
+        }
+        return usuarioRepositorio.obterPorEmail(participante.email().trim()).getId().getId();
     }
 
     @GetMapping

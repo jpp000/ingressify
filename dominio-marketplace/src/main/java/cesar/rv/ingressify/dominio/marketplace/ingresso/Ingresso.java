@@ -1,5 +1,8 @@
 package cesar.rv.ingressify.dominio.marketplace.ingresso;
 
+import java.util.Locale;
+import java.util.UUID;
+
 import org.apache.commons.lang3.Validate;
 
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
@@ -14,6 +17,7 @@ public class Ingresso {
 	private UsuarioId proprietario;
 	private StatusIngresso status;
 	private boolean bloqueadoPorReembolso;
+	private String codigo;
 	private boolean meiaEntrada;
 	private String documento;
 
@@ -25,21 +29,34 @@ public class Ingresso {
 		this.eventoId = eventoId;
 		this.proprietario = proprietario;
 		this.status = StatusIngresso.ATIVO;
+		this.codigo = gerarCodigo();
 	}
 
 	public Ingresso(IngressoId id, TipoIngressoId tipoIngressoId, EventoId eventoId, UsuarioId proprietario,
 			StatusIngresso status, boolean bloqueadoPorReembolso) {
+		this(id, tipoIngressoId, eventoId, proprietario, status, bloqueadoPorReembolso, gerarCodigo());
+	}
+
+	public Ingresso(IngressoId id, TipoIngressoId tipoIngressoId, EventoId eventoId, UsuarioId proprietario,
+			StatusIngresso status, boolean bloqueadoPorReembolso, String codigo) {
 		Validate.notNull(id, "id");
 		Validate.notNull(tipoIngressoId, "tipoIngressoId");
 		Validate.notNull(eventoId, "eventoId");
 		Validate.notNull(proprietario, "proprietario");
 		Validate.notNull(status, "status");
+		Validate.notBlank(codigo, "codigo");
 		this.id = id;
 		this.tipoIngressoId = tipoIngressoId;
 		this.eventoId = eventoId;
 		this.proprietario = proprietario;
 		this.status = status;
 		this.bloqueadoPorReembolso = bloqueadoPorReembolso;
+		this.codigo = codigo.trim().toUpperCase(Locale.ROOT);
+	}
+
+	private static String gerarCodigo() {
+		String token = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+		return "ING-" + token.toUpperCase(Locale.ROOT);
 	}
 
 	public void atribuirId(IngressoId novoId) {
@@ -148,6 +165,14 @@ public class Ingresso {
 
 	public boolean isBloqueadoPorReembolso() {
 		return bloqueadoPorReembolso;
+	}
+
+	public String getCodigo() {
+		return codigo;
+	}
+
+	public String getQrCode() {
+		return codigo;
 	}
 
 	public boolean isMeiaEntrada() {
