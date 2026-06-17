@@ -2,6 +2,7 @@ package cesar.rv.ingressify.aplicacao.marketplace.sorteio;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.lang3.Validate;
 
@@ -9,8 +10,16 @@ import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.ObservadorSo
 import cesar.rv.ingressify.aplicacao.marketplace.padroes.observador.PublicadorSorteio;
 import cesar.rv.ingressify.aplicacao.marketplace.padroes.template.ContextoSorteioProcessamento;
 import cesar.rv.ingressify.aplicacao.marketplace.padroes.template.ExecutarSorteioProcessamento;
+import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
+import cesar.rv.ingressify.dominio.financeiro.transacao.Transacao;
+import cesar.rv.ingressify.dominio.financeiro.transacao.TipoTransacao;
+import cesar.rv.ingressify.dominio.financeiro.transacao.TransacaoServico;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
+import cesar.rv.ingressify.dominio.identidade.usuario.Papel;
+import cesar.rv.ingressify.dominio.identidade.usuario.UsuarioServico;
 import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
+import cesar.rv.ingressify.dominio.marketplace.ingresso.Ingresso;
+import cesar.rv.ingressify.dominio.marketplace.ingresso.IngressoServico;
 import cesar.rv.ingressify.dominio.marketplace.sorteio.InscricaoSorteio;
 import cesar.rv.ingressify.dominio.marketplace.sorteio.InscricaoSorteioId;
 import cesar.rv.ingressify.dominio.marketplace.sorteio.InscricaoSorteioRepositorio;
@@ -26,16 +35,28 @@ public class SorteioServicoAplicacao {
     private final SorteioServico sorteioServico;
     private final InscricaoSorteioRepositorio inscricaoRepositorio;
     private final EstrategiaSorteio estrategiaPadrao;
+    private final IngressoServico ingressoServico;
+    private final TransacaoServico transacaoServico;
+    private final UsuarioServico usuarioServico;
 
     public SorteioServicoAplicacao(SorteioServico sorteioServico,
             InscricaoSorteioRepositorio inscricaoRepositorio,
-            EstrategiaSorteio estrategiaPadrao) {
+            EstrategiaSorteio estrategiaPadrao,
+            IngressoServico ingressoServico,
+            TransacaoServico transacaoServico,
+            UsuarioServico usuarioServico) {
         Validate.notNull(sorteioServico, "sorteioServico");
         Validate.notNull(inscricaoRepositorio, "inscricaoRepositorio");
         Validate.notNull(estrategiaPadrao, "estrategiaPadrao");
+        Validate.notNull(ingressoServico, "ingressoServico");
+        Validate.notNull(transacaoServico, "transacaoServico");
+        Validate.notNull(usuarioServico, "usuarioServico");
         this.sorteioServico = sorteioServico;
         this.inscricaoRepositorio = inscricaoRepositorio;
         this.estrategiaPadrao = estrategiaPadrao;
+        this.ingressoServico = ingressoServico;
+        this.transacaoServico = transacaoServico;
+        this.usuarioServico = usuarioServico;
     }
 
     public SorteioId criar(EventoId eventoId, TipoIngressoId tipoIngressoId, UsuarioId organizadorId,
@@ -47,12 +68,21 @@ public class SorteioServicoAplicacao {
         return sorteio.getId();
     }
 
-    public void abrirInscricoes(SorteioId sorteioId, UsuarioId organizadorId) {
-        sorteioServico.abrirInscricoes(sorteioId, organizadorId);
+    public void abrirInscricoes(SorteioId sorteioId, UsuarioId solicitanteId) {
+        sorteioServico.abrirInscricoes(sorteioId, resolverGestor(sorteioId, solicitanteId));
     }
 
-    public void encerrarInscricoes(SorteioId sorteioId, UsuarioId organizadorId) {
-        sorteioServico.encerrarInscricoes(sorteioId, organizadorId);
+    public void encerrarInscricoes(SorteioId sorteioId, UsuarioId solicitanteId) {
+        sorteioServico.encerrarInscricoes(sorteioId, resolverGestor(sorteioId, solicitanteId));
+    }
+
+    // O admin pode gerenciar qualquer sorteio. Como a validação de domínio só
+    // reconhece o organizador dono, tratamos o admin como o próprio organizador.
+    private UsuarioId resolverGestor(SorteioId sorteioId, UsuarioId solicitanteId) {
+        if (usuarioServico.obter(solicitanteId).temPapel(Papel.ADMIN)) {
+            return sorteioServico.obter(sorteioId).getOrganizadorId();
+        }
+        return solicitanteId;
     }
 
     public InscricaoSorteioId inscrever(SorteioId sorteioId, UsuarioId participanteId) {
@@ -95,6 +125,16 @@ public class SorteioServicoAplicacao {
         inscricao.confirmar();
         sorteioServico.salvarInscricao(inscricao);
 
+        // Sorteio é gratuito: ao confirmar, o ingresso é emitido na carteira do
+        // participante e registramos uma transação SORTEIO (valor zero) para rastreabilidade.
+        Ingresso ingresso = new Ingresso(sorteio.getTipoIngressoId(), sorteio.getEventoId(), participanteId);
+        ingressoServico.salvar(ingresso);
+
+        transacaoServico.registrar(new Transacao(
+                participanteId, TipoTransacao.SORTEIO,
+                Dinheiro.ZERO, LocalDateTime.now(),
+                UUID.randomUUID()));
+
         long totalConfirmados = inscricaoRepositorio.pesquisarPorSorteio(sorteioId).stream()
                 .filter(i -> i.getStatus() == StatusInscricao.CONFIRMADO)
                 .count();
@@ -104,8 +144,8 @@ public class SorteioServicoAplicacao {
         }
     }
 
-    public void cancelar(SorteioId sorteioId, UsuarioId organizadorId) {
-        sorteioServico.cancelar(sorteioId, organizadorId);
+    public void cancelar(SorteioId sorteioId, UsuarioId solicitanteId) {
+        sorteioServico.cancelar(sorteioId, resolverGestor(sorteioId, solicitanteId));
     }
 
     public Sorteio obter(SorteioId sorteioId) {

@@ -8,5 +8,6 @@ public enum TipoTransacao {
 	REEMBOLSO,
 	DEPOSITO,
 	RECARGA,
-	SAQUE
+	SAQUE,
+	SORTEIO
 }
