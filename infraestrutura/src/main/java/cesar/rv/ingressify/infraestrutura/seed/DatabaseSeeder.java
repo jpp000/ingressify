@@ -30,6 +30,7 @@ import cesar.rv.ingressify.aplicacao.marketplace.sorteio.SorteioServicoAplicacao
 import cesar.rv.ingressify.aplicacao.marketplace.tipoIngresso.CriarLoteDto;
 import cesar.rv.ingressify.aplicacao.marketplace.tipoIngresso.TipoIngressoServicoAplicacao;
 import cesar.rv.ingressify.dominio.financeiro.Dinheiro;
+import cesar.rv.ingressify.dominio.financeiro.pontos.PontosServico;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
 import cesar.rv.ingressify.dominio.identidade.usuario.Papel;
 import cesar.rv.ingressify.dominio.identidade.usuario.UsuarioRepositorio;
@@ -74,6 +75,7 @@ public class DatabaseSeeder implements ApplicationRunner {
 	private final CheckinServicoAplicacao checkinServico;
 	private final DenunciaServicoAplicacao denunciaServico;
 	private final ReembolsoServicoAplicacao reembolsoServico;
+	private final PontosServico pontosServico;
 
 	public DatabaseSeeder(ApplicationContext context, UsuarioRepositorio usuarioRepositorio,
 			UsuarioServicoAplicacao usuarioServico, ExtratoServicoAplicacao extratoServico,
@@ -83,7 +85,8 @@ public class DatabaseSeeder implements ApplicationRunner {
 			SorteioServicoAplicacao sorteioServico, MapaAssentosServicoAplicacao mapaAssentosServico,
 			AnuncioRevendaServicoAplicacao anuncioRevendaServico, FeedServicoAplicacao feedServico,
 			AvaliacaoServicoAplicacao avaliacaoServico, CheckinServicoAplicacao checkinServico,
-			DenunciaServicoAplicacao denunciaServico, ReembolsoServicoAplicacao reembolsoServico) {
+			DenunciaServicoAplicacao denunciaServico, ReembolsoServicoAplicacao reembolsoServico,
+			PontosServico pontosServico) {
 		this.context = context;
 		this.usuarioRepositorio = usuarioRepositorio;
 		this.usuarioServico = usuarioServico;
@@ -102,6 +105,7 @@ public class DatabaseSeeder implements ApplicationRunner {
 		this.checkinServico = checkinServico;
 		this.denunciaServico = denunciaServico;
 		this.reembolsoServico = reembolsoServico;
+		this.pontosServico = pontosServico;
 	}
 
 	@Override
@@ -127,6 +131,10 @@ public class DatabaseSeeder implements ApplicationRunner {
 				.toList();
 
 		criarSaldos(compradores);
+
+		// Pontos de fidelidade: ana já começa com 1.200 pontos para demonstrar o resgate
+		// (1.000 pontos = R$ 10), deixando uma sobra de 200 pontos após o primeiro resgate.
+		pontosServico.adicionar(ana, 1200);
 
 		LocalDateTime agora = LocalDateTime.now();
 

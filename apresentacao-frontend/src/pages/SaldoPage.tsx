@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plus, Minus, RotateCcw, Ticket, ArrowDownLeft, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Plus, Minus, RotateCcw, Ticket, ArrowDownLeft, ArrowUpRight, CheckCircle2, AlertCircle, Sparkles, Gift } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { saldoService, carteiraService } from '../services/api'
 import { formatMoeda } from '../constants'
@@ -7,14 +7,16 @@ import { useAuth } from '../context/AuthContext'
 
 interface Transacao { id: number; tipo: string; valor: number; data: string }
 
-const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO', 'RECARGA'])
+const TIPO_POSITIVO = new Set(['REEMBOLSO', 'VENDA', 'DEPOSITO', 'RECARGA', 'RESGATE_PONTOS'])
 const RAPIDOS = [50, 100, 200]
 const MAX_RECARGA = 10000 // teto por operação (regra de front)
+const PONTOS_POR_BLOCO = 1000 // 1.000 pontos = R$ 10
+const REAIS_POR_BLOCO = 10
 
 const LABEL: Record<string, string> = {
   DEPOSITO: 'Recarga de saldo', RECARGA: 'Recarga de saldo', SAQUE: 'Saque',
   COMPRA: 'Compra de ingresso', VENDA: 'Venda (revenda)', REEMBOLSO: 'Reembolso',
-  TRANSFERENCIA: 'Transferência', AJUSTE_SALDO: 'Ajuste de saldo',
+  TRANSFERENCIA: 'Transferência', AJUSTE_SALDO: 'Ajuste de saldo', RESGATE_PONTOS: 'Resgate de pontos',
 }
 
 type Filtro = 'TODAS' | 'ENTRADAS' | 'SAIDAS'
@@ -22,15 +24,17 @@ type Filtro = 'TODAS' | 'ENTRADAS' | 'SAIDAS'
 export default function SaldoPage() {
   const { usuario } = useAuth()
   const [saldo, setSaldo] = useState<number | null>(null)
+  const [pontos, setPontos] = useState<number>(0)
   const [transacoes, setTransacoes] = useState<Transacao[]>([])
   const [valor, setValor] = useState('')
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null)
-  const [acao, setAcao] = useState<'recarregar' | 'sacar' | null>(null)
+  const [acao, setAcao] = useState<'recarregar' | 'sacar' | 'resgatar' | null>(null)
   const [filtro, setFiltro] = useState<Filtro>('TODAS')
 
   const carregar = () => {
     if (!usuario) return
     carteiraService.obter(usuario.id).then(r => setSaldo(r.data.valor)).catch(() => {})
+    carteiraService.pontos(usuario.id).then(r => setPontos(r.data.pontos)).catch(() => {})
     saldoService.transacoes(usuario.id, 1, 50).then(r => setTransacoes(r.data)).catch(() => {})
   }
   useEffect(() => { carregar() }, [])
@@ -74,6 +78,24 @@ export default function SaldoPage() {
     } finally { setAcao(null) }
   }
 
+  const blocosResgataveis = Math.floor(pontos / PONTOS_POR_BLOCO)
+  const podeResgatar = blocosResgataveis > 0
+  const valorResgate = blocosResgataveis * REAIS_POR_BLOCO
+  const pontosAResgatar = blocosResgataveis * PONTOS_POR_BLOCO
+
+  const resgatar = async () => {
+    if (!podeResgatar) return
+    setAcao('resgatar')
+    try {
+      const r = await carteiraService.resgatarPontos(usuario!.id)
+      setMsg({ ok: true, texto: `Você resgatou ${r.data.pontosResgatados} pontos por ${formatMoeda(r.data.valorCreditado)}!` })
+      carregar()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { motivo?: string } } }
+      setMsg({ ok: false, texto: err.response?.data?.motivo ?? 'Erro ao resgatar pontos.' })
+    } finally { setAcao(null) }
+  }
+
   const ocupado = acao !== null
 
   const { entradas, saidas } = useMemo(() => {
@@ -99,9 +121,32 @@ export default function SaldoPage() {
           <p className="secondary">Recarregue, saque e acompanhe suas movimentações.</p>
         </div>
 
-        <div className="wallet" style={{ marginBottom: 'var(--sp-5)' }}>
+        <div className="wallet" style={{ marginBottom: 'var(--sp-4)' }}>
           <div className="wallet__label">SALDO DISPONÍVEL</div>
           <div className="wallet__value">{saldo !== null ? formatMoeda(saldo) : '—'}</div>
+        </div>
+
+        {/* Pontos de fidelidade */}
+        <div className="surface surface--pad between wrap" style={{ marginBottom: 'var(--sp-5)', gap: 'var(--sp-4)' }}>
+          <div className="row" style={{ gap: 'var(--sp-3)' }}>
+            <span className="list-ico list-ico--in" style={{ width: 44, height: 44 }}><Sparkles size={22} /></span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1.25rem' }}>{pontos.toLocaleString('pt-BR')} pontos</div>
+              <div className="muted" style={{ fontSize: '0.8125rem' }}>
+                Ganhe 1 ponto por real recarregado · {PONTOS_POR_BLOCO.toLocaleString('pt-BR')} pontos = {formatMoeda(REAIS_POR_BLOCO)}
+              </div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <button className="btn btn--sm" onClick={resgatar} disabled={!podeResgatar || ocupado}>
+              <Gift size={16} />{acao === 'resgatar' ? 'Resgatando…' : 'Resgatar pontos'}
+            </button>
+            <div className="muted" style={{ fontSize: '0.75rem', marginTop: 6 }}>
+              {podeResgatar
+                ? `Resgatar ${pontosAResgatar.toLocaleString('pt-BR')} pontos → ${formatMoeda(valorResgate)}`
+                : `Faltam ${(PONTOS_POR_BLOCO - pontos).toLocaleString('pt-BR')} pontos para o 1º resgate`}
+            </div>
+          </div>
         </div>
 
         <div className="surface surface--pad" style={{ marginBottom: 'var(--sp-5)' }}>

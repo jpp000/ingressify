@@ -9,5 +9,6 @@ public enum TipoTransacao {
 	DEPOSITO,
 	RECARGA,
 	SAQUE,
-	SORTEIO
+	SORTEIO,
+	RESGATE_PONTOS
 }

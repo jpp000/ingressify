@@ -89,6 +89,10 @@ export const carteiraService = {
     api.post('/carteira/recarregar', { valor }, { headers: { 'X-Usuario-Id': usuarioId } }),
   sacar: (usuarioId: number, valor: number) =>
     api.post('/carteira/sacar', { valor }, { headers: { 'X-Usuario-Id': usuarioId } }),
+  pontos: (usuarioId: number) =>
+    api.get('/carteira/pontos', { headers: { 'X-Usuario-Id': usuarioId } }),
+  resgatarPontos: (usuarioId: number) =>
+    api.post('/carteira/resgatar-pontos', {}, { headers: { 'X-Usuario-Id': usuarioId } }),
 }
 
 // Cupons & Promoções

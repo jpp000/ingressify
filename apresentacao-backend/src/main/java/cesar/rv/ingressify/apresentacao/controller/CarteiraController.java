@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cesar.rv.ingressify.aplicacao.financeiro.carteira.CarteiraServicoAplicacao;
+import cesar.rv.ingressify.apresentacao.dto.PontosResponse;
 import cesar.rv.ingressify.apresentacao.dto.RecargaRequest;
+import cesar.rv.ingressify.apresentacao.dto.ResgatePontosResponse;
 import cesar.rv.ingressify.apresentacao.dto.SaldoResponse;
 import cesar.rv.ingressify.apresentacao.dto.SaqueRequest;
 import cesar.rv.ingressify.dominio.identidade.UsuarioId;
@@ -53,6 +55,21 @@ public class CarteiraController {
 		try {
 			var saldo = carteiraServico.sacar(new UsuarioId(usuarioId), req.valor());
 			return ResponseEntity.ok(SaldoResponse.fromDomain(saldo));
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("motivo", e.getMessage()));
+		}
+	}
+
+	@GetMapping("/pontos")
+	public ResponseEntity<PontosResponse> pontos(@RequestHeader("X-Usuario-Id") int usuarioId) {
+		return ResponseEntity.ok(new PontosResponse(carteiraServico.obterPontos(new UsuarioId(usuarioId))));
+	}
+
+	@PostMapping("/resgatar-pontos")
+	public ResponseEntity<?> resgatarPontos(@RequestHeader("X-Usuario-Id") int usuarioId) {
+		try {
+			var resultado = carteiraServico.resgatarPontos(new UsuarioId(usuarioId));
+			return ResponseEntity.ok(ResgatePontosResponse.fromResultado(resultado));
 		} catch (IllegalStateException e) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("motivo", e.getMessage()));
 		}

@@ -32,6 +32,8 @@ import cesar.rv.ingressify.aplicacao.marketplace.sorteio.SorteioServicoAplicacao
 import cesar.rv.ingressify.aplicacao.marketplace.tipoIngresso.TipoIngressoServicoAplicacao;
 import cesar.rv.ingressify.dominio.financeiro.pagamento.PagamentoRepositorio;
 import cesar.rv.ingressify.dominio.financeiro.pagamento.PagamentoServico;
+import cesar.rv.ingressify.dominio.financeiro.pontos.PontosRepositorio;
+import cesar.rv.ingressify.dominio.financeiro.pontos.PontosServico;
 import cesar.rv.ingressify.dominio.financeiro.saldo.SaldoRepositorio;
 import cesar.rv.ingressify.dominio.financeiro.saldo.SaldoServico;
 import cesar.rv.ingressify.dominio.financeiro.transacao.TransacaoRepositorio;
@@ -89,6 +91,11 @@ public class IngressifyConfiguration {
 	@Bean
 	public SaldoServico saldoServico(SaldoRepositorio saldoRepositorio) {
 		return new SaldoServico(saldoRepositorio);
+	}
+
+	@Bean
+	public PontosServico pontosServico(PontosRepositorio pontosRepositorio) {
+		return new PontosServico(pontosRepositorio);
 	}
 
 	@Bean
@@ -312,8 +319,8 @@ public class IngressifyConfiguration {
 
 	@Bean
 	public CarteiraServicoAplicacao carteiraServicoAplicacao(SaldoServico saldoServico,
-			TransacaoServico transacaoServico) {
-		return new CarteiraServicoAplicacao(saldoServico, transacaoServico);
+			TransacaoServico transacaoServico, PontosServico pontosServico) {
+		return new CarteiraServicoAplicacao(saldoServico, transacaoServico, pontosServico);
 	}
 
 	@Bean
