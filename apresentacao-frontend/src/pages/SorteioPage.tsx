@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import {
-  Dices, Plus, Target, Trophy, Clock, CheckCircle2, AlertTriangle, DoorOpen, Lock, Ban,
+  Dices, Plus, Target, Trophy, Clock, CheckCircle2, AlertTriangle, DoorOpen, Lock, Ban, Ticket,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import SeletorEvento from '../components/SeletorEvento'
-import { api } from '../services/api'
+import { api, tipoIngressoService, eventoService } from '../services/api'
+import { formatMoeda } from '../constants'
 
 interface Sorteio {
   id: number
@@ -27,6 +28,19 @@ interface InscricaoSorteio {
   inscritoEm: string
   status: string
   posicao: number
+}
+
+interface TipoIngresso {
+  id: number
+  nome: string
+  preco: number
+}
+
+interface Evento {
+  id: number
+  nome: string
+  dataHora: string
+  local: string
 }
 
 const statusLabel: Record<string, { label: string; variant: string }> = {
@@ -53,14 +67,16 @@ const formatData = (iso: string) =>
 export default function SorteioPage() {
   const [searchParams] = useSearchParams()
   const eventoId = searchParams.get('eventoId')
-  const { usuario } = useAuth()
+  const { usuario, isOrganizador, isAdmin } = useAuth()
 
   const [sorteios, setSorteios] = useState<Sorteio[]>([])
   const [sorteioSelecionado, setSorteioSelecionado] = useState<Sorteio | null>(null)
   const [inscricoes, setInscricoes] = useState<InscricaoSorteio[]>([])
   const [minhaInscricao, setMinhaInscricao] = useState<InscricaoSorteio | null>(null)
+  const [tipos, setTipos] = useState<TipoIngresso[]>([])
+  const [evento, setEvento] = useState<Evento | null>(null)
   const [carregando, setCarregando] = useState(false)
-  const [mensagem, setMensagem] = useState<{ texto: string; tipo: 'ok' | 'erro' } | null>(null)
+  const [mensagem, setMensagem] = useState<{ texto: string; tipo: 'ok' | 'erro'; link?: string } | null>(null)
 
   // Form para criar sorteio (organizador)
   const [criando, setCriando] = useState(false)
@@ -83,6 +99,16 @@ export default function SorteioPage() {
 
   useEffect(() => { carregarSorteios() }, [eventoId])
 
+  useEffect(() => {
+    if (!eventoId) { setTipos([]); setEvento(null); return }
+    tipoIngressoService.listar(Number(eventoId))
+      .then(r => setTipos(r.data))
+      .catch(() => setTipos([]))
+    eventoService.detalhe(Number(eventoId))
+      .then(r => setEvento(r.data))
+      .catch(() => setEvento(null))
+  }, [eventoId])
+
   const carregarInscricoes = (sorteio: Sorteio) => {
     setSorteioSelecionado(sorteio)
     api.get(`/sorteios/${sorteio.id}/inscricoes`)
@@ -95,15 +121,19 @@ export default function SorteioPage() {
       .catch(() => setInscricoes([]))
   }
 
-  const exibirMensagem = (texto: string, tipo: 'ok' | 'erro') => {
-    setMensagem({ texto, tipo })
-    setTimeout(() => setMensagem(null), 4000)
+  const exibirMensagem = (texto: string, tipo: 'ok' | 'erro', link?: string) => {
+    setMensagem({ texto, tipo, link })
+    setTimeout(() => setMensagem(null), link ? 8000 : 4000)
   }
 
-  const acao = (url: string, metodo: 'post' | 'delete' = 'post') => {
+  const acao = (
+    url: string,
+    metodo: 'post' | 'delete' = 'post',
+    sucesso?: { texto: string; link?: string },
+  ) => {
     api({ method: metodo, url, headers: { 'X-Usuario-Id': usuario?.id } })
       .then(() => {
-        exibirMensagem('Operação realizada com sucesso!', 'ok')
+        exibirMensagem(sucesso?.texto ?? 'Operação realizada com sucesso!', 'ok', sucesso?.link)
         carregarSorteios()
         if (sorteioSelecionado) carregarInscricoes(sorteioSelecionado)
       })
@@ -134,7 +164,12 @@ export default function SorteioPage() {
       })
   }
 
-  const ehOrganizador = usuario?.papeis?.includes('ORGANIZADOR')
+  const ehOrganizador = isOrganizador()
+  const ehAdmin = isAdmin()
+  // Todo usuário é COMPRADOR por construção; a UI de comprador (inscrever/confirmar)
+  // só faz sentido para quem NÃO gerencia sorteios (nem organizador, nem admin).
+  const ehCompradorPuro = !ehOrganizador && !ehAdmin
+  const semTipos = tipos.length === 0
 
   return (
     <>
@@ -147,7 +182,15 @@ export default function SorteioPage() {
             <span className="list-ico list-ico--out" style={{ width: 48, height: 48 }}><Dices size={24} /></span>
             <div>
               <h1>Sorteio de Ingressos</h1>
-              <p className="secondary">Inscreva-se para concorrer a ingressos por sorteio justo.</p>
+              {evento ? (
+                <p className="secondary">
+                  <strong style={{ color: 'var(--ink)' }}>{evento.nome}</strong>
+                  {evento.local && <> · {evento.local}</>}
+                  {evento.dataHora && <> · {formatData(evento.dataHora)}</>}
+                </p>
+              ) : (
+                <p className="secondary">Inscreva-se para concorrer a ingressos por sorteio justo.</p>
+              )}
             </div>
           </div>
           {ehOrganizador && eventoId && !criando && (
@@ -161,7 +204,12 @@ export default function SorteioPage() {
         {mensagem && (
           <div className={`auth-alert ${mensagem.tipo === 'ok' ? 'auth-alert--ok' : 'auth-alert--err'}`}>
             {mensagem.tipo === 'ok' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
-            {mensagem.texto}
+            <span>{mensagem.texto}</span>
+            {mensagem.link && (
+              <Link to={mensagem.link} className="row" style={{ gap: 6, fontWeight: 700, marginLeft: 'auto' }}>
+                <Ticket size={16} /> Ver em Meus Ingressos
+              </Link>
+            )}
           </div>
         )}
 
@@ -169,9 +217,29 @@ export default function SorteioPage() {
         {criando && eventoId && (
           <form onSubmit={criarSorteio} className="surface surface--pad" style={{ marginBottom: 'var(--sp-6)' }}>
             <h3 style={{ marginBottom: 'var(--sp-4)' }}>Novo Sorteio</h3>
+            {semTipos && (
+              <div className="auth-alert auth-alert--err" style={{ marginBottom: 'var(--sp-4)' }}>
+                <AlertTriangle size={18} />
+                <span>Cadastre um tipo de ingresso para este evento antes de criar um sorteio.</span>
+              </div>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
+              <div className="field" style={{ gridColumn: '1 / -1' }}>
+                <span className="label">Tipo de Ingresso</span>
+                <select
+                  className="input"
+                  value={form.tipoIngressoId}
+                  onChange={e => setForm(prev => ({ ...prev, tipoIngressoId: e.target.value }))}
+                  required
+                  disabled={semTipos}
+                >
+                  <option value="" disabled>Selecione o tipo de ingresso</option>
+                  {tipos.map(t => (
+                    <option key={t.id} value={t.id}>{t.nome} — {formatMoeda(Number(t.preco))}</option>
+                  ))}
+                </select>
+              </div>
               {[
-                { label: 'ID Tipo de Ingresso', field: 'tipoIngressoId', type: 'number' },
                 { label: 'Quantidade de Ingressos', field: 'quantidadeIngressos', type: 'number' },
                 { label: 'Vagas na Lista de Espera', field: 'quantidadeListaEspera', type: 'number' },
                 { label: 'Horas para Confirmação', field: 'prazoConfirmacaoHoras', type: 'number' },
@@ -199,7 +267,7 @@ export default function SorteioPage() {
               </div>
             </div>
             <div className="row" style={{ gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
-              <button type="submit" className="btn">
+              <button type="submit" className="btn" disabled={semTipos}>
                 <Plus size={16} /> Criar Sorteio
               </button>
               <button type="button" className="btn btn--ghost" onClick={() => setCriando(false)}>
@@ -258,7 +326,7 @@ export default function SorteioPage() {
                         Inscrições até: {formatData(s.prazoInscricao)}
                       </p>
                     </div>
-                    {aberto && (
+                    {aberto && ehCompradorPuro && (
                       <span className="row" style={{ gap: 6, color: 'var(--brand-strong)', fontWeight: 600, fontSize: '0.875rem' }}>
                         <Target size={16} /> Clique para se inscrever
                       </span>
@@ -270,7 +338,7 @@ export default function SorteioPage() {
                     <div style={{ borderTop: '1px solid var(--border)', padding: 'var(--sp-5)', background: 'var(--surface-2)' }}>
 
                       {/* Ações do comprador */}
-                      {!ehOrganizador && (
+                      {ehCompradorPuro && (
                         <div style={{ marginBottom: 'var(--sp-5)' }}>
                           {minhaInscricao ? (
                             <div className="surface between wrap" style={{ gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)' }}>
@@ -286,7 +354,13 @@ export default function SorteioPage() {
                                 })()}
                               </div>
                               {(minhaInscricao.status === 'CONTEMPLADO' || minhaInscricao.status === 'LISTA_ESPERA') && (
-                                <button className="btn btn--sm" onClick={() => acao(`/sorteios/${s.id}/confirmar`)}>
+                                <button
+                                  className="btn btn--sm"
+                                  onClick={() => acao(`/sorteios/${s.id}/confirmar`, 'post', {
+                                    texto: 'Ingresso garantido! 🎉 Ele já está na sua carteira.',
+                                    link: '/meus-ingressos',
+                                  })}
+                                >
                                   <CheckCircle2 size={16} /> Confirmar Participação
                                 </button>
                               )}
@@ -301,8 +375,8 @@ export default function SorteioPage() {
                         </div>
                       )}
 
-                      {/* Ações do organizador */}
-                      {ehOrganizador && s.organizadorId === usuario?.id && (
+                      {/* Ações de gestão (organizador dono ou admin) */}
+                      {((ehOrganizador && s.organizadorId === usuario?.id) || ehAdmin) && (
                         <div className="row wrap" style={{ gap: 'var(--sp-2)', marginBottom: 'var(--sp-5)' }}>
                           {s.status === 'CONFIGURADO' && (
                             <button className="btn btn--sm" onClick={() => acao(`/sorteios/${s.id}/abrir`)}>

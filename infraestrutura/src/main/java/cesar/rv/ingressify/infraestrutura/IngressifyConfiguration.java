@@ -383,8 +383,12 @@ public class IngressifyConfiguration {
 	@Bean
 	public SorteioServicoAplicacao sorteioServicoAplicacao(SorteioServico sorteioServico,
 			InscricaoSorteioRepositorio inscricaoSorteioRepositorio,
-			EstrategiaSorteio estrategiaSorteio) {
-		return new SorteioServicoAplicacao(sorteioServico, inscricaoSorteioRepositorio, estrategiaSorteio);
+			EstrategiaSorteio estrategiaSorteio,
+			IngressoServico ingressoServico,
+			TransacaoServico transacaoServico,
+			UsuarioServico usuarioServico) {
+		return new SorteioServicoAplicacao(sorteioServico, inscricaoSorteioRepositorio, estrategiaSorteio,
+				ingressoServico, transacaoServico, usuarioServico);
 	}
 
 	// ── Mapa de Assentos ─────────────────────────────────────────────────────
