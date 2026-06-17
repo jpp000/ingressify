@@ -488,8 +488,18 @@ hr { height: 1px; background: var(--border); border: 0; }
 .modal__x { width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: var(--surface-2); border-radius: 50%; color: var(--ink-2); }
 .modal__x:hover { background: var(--surface-3); color: var(--ink); }
 .qr { background: var(--ink); border-radius: var(--r-md); padding: var(--sp-5); text-align: center; }
-.qr__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; max-width: 150px; margin: 0 auto; }
-.qr__grid div { aspect-ratio: 1; border-radius: 1px; }
+.qr__grid {
+  display: grid;
+  grid-template-columns: repeat(29, 1fr);
+  width: min(180px, 70vw);
+  aspect-ratio: 1;
+  padding: 14px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+}
+.qr__dot { aspect-ratio: 1; background: #fff; }
+.qr__dot--on { background: #05050a; }
 .qr__code { color: oklch(0.7 0.02 285); font-size: 0.7rem; margin-top: 12px; font-family: ui-monospace, monospace; letter-spacing: 0.1em; }
 .kv { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.9375rem; }
 .kv + .kv { border-top: 1px solid var(--border); }
@@ -551,4 +561,3 @@ hr { height: 1px; background: var(--border); border: 0; }
 .choice--active .choice__ico { background: var(--brand); color: var(--brand-contrast); }
 .choice__t { font-weight: 600; font-size: 0.9375rem; }
 .choice__d { font-size: 0.75rem; color: var(--ink-muted); }
-

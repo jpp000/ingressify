@@ -8,6 +8,7 @@ import { ingressoService, eventoService, tipoIngressoService, saldoService, reve
 import Navbar from '../components/Navbar'
 import { formatMoeda, formatDataBadge } from '../constants'
 import { useAuth } from '../context/AuthContext'
+import { gerarQrCode } from '../utils/qrCode'
 
 interface IngressoRaw { id: string; eventoId: number; tipoIngressoId: number; proprietarioId: number; status: string; bloqueadoPorReembolso: boolean }
 interface Evento { id: number; nome: string; dataHora: string; local: string; imagemCapaUrl?: string; aberturaPortoes?: string; status: string }
@@ -219,11 +220,7 @@ export default function MeusIngressos() {
             </div>
 
             <div className="qr" style={{ marginBottom: 'var(--sp-4)' }}>
-              <div className="qr__grid">
-                {Array.from({ length: 49 }).map((_, i) => (
-                  <div key={i} style={{ background: (i * 7 + i % 5 + ingressoAberto.ingresso.id.charCodeAt(i % ingressoAberto.ingresso.id.length)) % 2 === 0 ? '#fff' : 'transparent' }} />
-                ))}
-              </div>
+              <QrCode valor={ingressoAberto.ingresso.id} />
               <div className="qr__code">{ingressoAberto.ingresso.id.substring(0, 8).toUpperCase()}</div>
             </div>
 
@@ -252,6 +249,20 @@ export default function MeusIngressos() {
         </div>
       )}
     </>
+  )
+}
+
+function QrCode({ valor }: { valor: string }) {
+  const matriz = gerarQrCode(valor)
+
+  return (
+    <div className="qr__grid" aria-label={`QR Code do ingresso ${valor}`}>
+      {matriz.map((linha, y) =>
+        linha.map((escuro, x) => (
+          <span key={`${y}-${x}`} className={escuro ? 'qr__dot qr__dot--on' : 'qr__dot'} />
+        ))
+      )}
+    </div>
   )
 }
 
