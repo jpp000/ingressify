@@ -170,10 +170,10 @@ public class IngressoController {
 	public ResponseEntity<String> qrcode(@PathVariable String id) {
 		try {
 			UUID uuid = UUID.fromString(id);
-			ingressoServico.obter(new IngressoId(uuid));
+			var ingresso = ingressoServico.obter(new IngressoId(uuid));
 			return ResponseEntity.ok()
 					.header("Content-Type", "text/plain")
-					.body(id);
+					.body(ingresso.getQrCode());
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.notFound().build();
 		}

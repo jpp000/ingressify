@@ -12,6 +12,8 @@ public interface IngressoRepositorio {
 
 	Ingresso obter(IngressoId id);
 
+	Ingresso obterPorCodigo(String codigo);
+
 	List<Ingresso> pesquisarPorProprietario(UsuarioId proprietario);
 
 	List<Ingresso> pesquisarPorEvento(EventoId eventoId);

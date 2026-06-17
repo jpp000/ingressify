@@ -10,7 +10,7 @@ import { formatMoeda, formatDataBadge } from '../constants'
 import { useAuth } from '../context/AuthContext'
 import { gerarQrCode } from '../utils/qrCode'
 
-interface IngressoRaw { id: string; eventoId: number; tipoIngressoId: number; proprietarioId: number; status: string; bloqueadoPorReembolso: boolean }
+interface IngressoRaw { id: string; eventoId: number; tipoIngressoId: number; proprietarioId: number; status: string; bloqueadoPorReembolso: boolean; codigo: string; qrCode: string }
 interface Evento { id: number; nome: string; dataHora: string; local: string; imagemCapaUrl?: string; aberturaPortoes?: string; status: string }
 interface TipoIngresso { id: number; nome: string; preco: number }
 interface IngressoEnriquecido { ingresso: IngressoRaw; evento: Evento; tipo: TipoIngresso }
@@ -221,8 +221,8 @@ export default function MeusIngressos() {
             </div>
 
             <div className="qr" style={{ marginBottom: 'var(--sp-4)' }}>
-              <QrCode valor={ingressoAberto.ingresso.id} />
-              <div className="qr__code">{ingressoAberto.ingresso.id.substring(0, 8).toUpperCase()}</div>
+              <QrCode valor={ingressoAberto.ingresso.qrCode || ingressoAberto.ingresso.codigo} />
+              <div className="qr__code">{ingressoAberto.ingresso.codigo}</div>
             </div>
 
             <div className="kv"><span className="muted">Tipo</span><span style={{ fontWeight: 600 }}>{ingressoAberto.tipo.nome}</span></div>

@@ -176,6 +176,14 @@ public class CheckInFuncionalidade {
 		}
 
 		@Override
+		public Ingresso obterPorCodigo(String codigo) {
+			return dados.values().stream()
+					.filter(i -> i.getCodigo().equalsIgnoreCase(codigo.trim()))
+					.findFirst()
+					.orElseThrow(() -> new IllegalArgumentException("Ingresso nao encontrado para o codigo informado"));
+		}
+
+		@Override
 		public List<Ingresso> pesquisarPorProprietario(UsuarioId p) {
 			return dados.values().stream().filter(i -> i.getProprietario().equals(p)).toList();
 		}

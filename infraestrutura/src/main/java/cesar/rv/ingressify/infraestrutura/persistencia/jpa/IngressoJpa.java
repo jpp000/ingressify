@@ -42,6 +42,9 @@ public class IngressoJpa {
 	@Column(name = "bloqueado_por_reembolso", nullable = false)
 	private boolean bloqueadoPorReembolso;
 
+	@Column(name = "codigo", nullable = false, unique = true, length = 16)
+	private String codigo;
+
 	@Column(name = "meia_entrada", nullable = false, columnDefinition = "boolean default false")
 	private boolean meiaEntrada;
 
@@ -58,6 +61,7 @@ public class IngressoJpa {
 		jpa.proprietarioId = i.getProprietario().getId();
 		jpa.status = i.getStatus();
 		jpa.bloqueadoPorReembolso = i.isBloqueadoPorReembolso();
+		jpa.codigo = i.getCodigo();
 		jpa.meiaEntrada = i.isMeiaEntrada();
 		jpa.documento = i.getDocumento();
 		return jpa;
@@ -67,7 +71,7 @@ public class IngressoJpa {
 		Ingresso ingresso = new Ingresso(
 				new IngressoId(id), new TipoIngressoId(tipoIngressoId),
 				new EventoId(eventoId), new UsuarioId(proprietarioId),
-				status, bloqueadoPorReembolso);
+				status, bloqueadoPorReembolso, codigo);
 		ingresso.reconstituirMeiaEntrada(meiaEntrada, documento);
 		return ingresso;
 	}
@@ -77,4 +81,5 @@ public class IngressoJpa {
 	public Integer getEventoId() { return eventoId; }
 	public Integer getProprietarioId() { return proprietarioId; }
 	public StatusIngresso getStatus() { return status; }
+	public String getCodigo() { return codigo; }
 }

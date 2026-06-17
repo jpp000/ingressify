@@ -1,6 +1,7 @@
 package cesar.rv.ingressify.dominio.marketplace;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.UUID;
@@ -24,6 +25,9 @@ public class IngressoFuncionalidade extends MarketplaceFuncionalidade {
         Ingresso ingresso = new Ingresso(new TipoIngressoId(1), new EventoId(1), new UsuarioId(1));
         ingressoServico.salvar(ingresso);
         ingressoId = ingresso.getId();
+        assertNotNull(ingresso.getCodigo());
+        assertFalse(ingresso.getCodigo().isBlank());
+        assertEquals(ingresso.getCodigo(), ingresso.getQrCode());
     }
 
     @When("transfiro o ingresso para o usuário 2")

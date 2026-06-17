@@ -6,7 +6,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import SeletorEvento from '../components/SeletorEvento'
-import { grupoCompraService } from '../services/api'
+import { grupoCompraService, tipoIngressoService } from '../services/api'
 import { formatMoeda } from '../constants'
 
 interface GrupoCompra {
@@ -32,8 +32,17 @@ interface ParticipanteGrupo {
   pagoEm: string | null
 }
 
+interface TipoIngresso {
+  id: number
+  nome: string
+  preco: number
+  quantidadeDisponivel: number
+  precoMeia: number | null
+  meiaEntradaHabilitada: boolean
+}
+
 interface LinhaParticipante {
-  usuarioId: string
+  email: string
   quantidade: string
   meiaEntrada: boolean
   documento: string
@@ -55,8 +64,8 @@ const statusParticipanteLabel: Record<string, { label: string; variant: string }
 const formatData = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 
-const linhaVazia = (usuarioId = ''): LinhaParticipante =>
-  ({ usuarioId, quantidade: '1', meiaEntrada: false, documento: '' })
+const linhaVazia = (email = ''): LinhaParticipante =>
+  ({ email, quantidade: '1', meiaEntrada: false, documento: '' })
 
 export default function GrupoCompraPage() {
   const [searchParams] = useSearchParams()
@@ -64,6 +73,7 @@ export default function GrupoCompraPage() {
   const { usuario } = useAuth()
 
   const [grupos, setGrupos] = useState<GrupoCompra[]>([])
+  const [tiposIngresso, setTiposIngresso] = useState<TipoIngresso[]>([])
   const [grupoSelecionado, setGrupoSelecionado] = useState<GrupoCompra | null>(null)
   const [participantes, setParticipantes] = useState<ParticipanteGrupo[]>([])
   const [carregando, setCarregando] = useState(false)
@@ -82,7 +92,16 @@ export default function GrupoCompraPage() {
       .finally(() => setCarregando(false))
   }
 
-  useEffect(() => { carregarGrupos() }, [eventoId])
+  useEffect(() => {
+    carregarGrupos()
+    if (!eventoId) {
+      setTiposIngresso([])
+      return
+    }
+    tipoIngressoService.listar(Number(eventoId))
+      .then(r => setTiposIngresso(r.data))
+      .catch(() => setTiposIngresso([]))
+  }, [eventoId])
 
   const carregarParticipantes = (grupo: GrupoCompra) => {
     setGrupoSelecionado(grupo)
@@ -117,8 +136,8 @@ export default function GrupoCompraPage() {
   }
 
   const abrirFormulario = () => {
-    setLinhas([linhaVazia(usuario ? String(usuario.id) : '')])
-    setForm({ tipoIngressoId: '', prazoPagamento: '' })
+    setLinhas([linhaVazia(usuario?.email ?? '')])
+    setForm({ tipoIngressoId: tiposIngresso[0]?.id ? String(tiposIngresso[0].id) : '', prazoPagamento: '' })
     setCriando(true)
   }
 
@@ -132,7 +151,7 @@ export default function GrupoCompraPage() {
     e.preventDefault()
     if (!eventoId || !usuario) return
     const participantesPayload = linhas.map(l => ({
-      usuarioId: Number(l.usuarioId),
+      email: l.email.trim(),
       quantidade: Number(l.quantidade),
       meiaEntrada: l.meiaEntrada,
       documento: l.meiaEntrada ? l.documento : null,
@@ -183,14 +202,20 @@ export default function GrupoCompraPage() {
             <h3 style={{ marginBottom: 'var(--sp-4)' }}>Novo Grupo de Compra</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
               <div className="field">
-                <span className="label">ID Tipo de Ingresso</span>
-                <input
+                <span className="label">Tipo de Ingresso</span>
+                <select
                   className="input"
-                  type="number"
                   value={form.tipoIngressoId}
                   onChange={e => setForm(prev => ({ ...prev, tipoIngressoId: e.target.value }))}
                   required
-                />
+                >
+                  <option value="" disabled>Selecione um tipo</option>
+                  {tiposIngresso.map(tipo => (
+                    <option key={tipo.id} value={tipo.id}>
+                      {tipo.nome} - {formatMoeda(tipo.preco)} - {tipo.quantidadeDisponivel} disponiveis
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="field">
                 <span className="label">Prazo para Pagamento</span>
@@ -209,12 +234,13 @@ export default function GrupoCompraPage() {
               {linhas.map((linha, idx) => (
                 <div key={idx} className="row wrap" style={{ gap: 'var(--sp-3)', alignItems: 'flex-end' }}>
                   <div className="field" style={{ flex: '1 1 120px' }}>
-                    <span className="label">ID Usuário</span>
+                    <span className="label">E-mail do convidado</span>
                     <input
                       className="input"
-                      type="number"
-                      value={linha.usuarioId}
-                      onChange={e => atualizarLinha(idx, 'usuarioId', e.target.value)}
+                      type="email"
+                      value={linha.email}
+                      onChange={e => atualizarLinha(idx, 'email', e.target.value)}
+                      placeholder="nome@email.com"
                       required
                     />
                   </div>
