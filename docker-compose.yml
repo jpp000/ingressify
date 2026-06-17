@@ -1,14 +1,16 @@
 services:
   postgres:
-    image: postgres:18
+    image: postgres:16
     environment:
       POSTGRES_DB: ingressify
       POSTGRES_USER: ingressify
       POSTGRES_PASSWORD: ingressify
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - ingressify_pg_data:/var/lib/postgresql
+      - ingressify_pg_data:/var/lib/postgresql/data
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ingressify -d ingressify"]
       interval: 3s
@@ -26,20 +28,24 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: desenvolvimento
+      SPRING_PROFILES_ACTIVE: desenvolvimento,seed
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ingressify
       SPRING_DATASOURCE_USERNAME: ingressify
       SPRING_DATASOURCE_PASSWORD: ingressify
-      APP_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      APP_CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+    restart: always
 
   frontend:
     build:
-      context: ./presentation-frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.frontend
     depends_on:
       - backend
     ports:
-      - "5173:5173"
+      - "3000:80"
+    restart: always
 
 volumes:
   ingressify_pg_data:

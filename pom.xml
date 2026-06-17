@@ -12,14 +12,14 @@
 	<description>Ingressify — agregador Maven (DDD multi-módulo)</description>
 
 	<modules>
-		<module>parent</module>
-		<module>domain-shared</module>
-		<module>domain-identidade</module>
-		<module>domain-marketplace</module>
-		<module>domain-financeiro</module>
-		<module>application</module>
-		<module>infrastructure</module>
-		<module>presentation-backend</module>
+		<module>pai</module>
+		<module>dominio-compartilhado</module>
+		<module>dominio-identidade</module>
+		<module>dominio-marketplace</module>
+		<module>dominio-financeiro</module>
+		<module>aplicacao</module>
+		<module>infraestrutura</module>
+		<module>apresentacao-backend</module>
 	</modules>
 
 	<properties>

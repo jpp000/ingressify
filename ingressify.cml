@@ -1,3 +1,16 @@
+/**
+ * Ingressify — Modelo de Domínio
+ *
+ * Padrões GoF implementados no código (referência cruzada):
+ *   - Decorator  : dominio-compartilhado › padroes.decorador  (benefícios/descontos em Ingresso)
+ *   - Strategy   : Cupom.estrategia() / EstrategiaReembolso / EstrategiaSorteio
+ *   - State      : Sorteio (EstadoSorteio e subclasses)
+ *   - Observer   : ObservadorCancelamento / PublicadorBase
+ *   - Proxy      : UsuarioServicoProxy (bloqueio de revenda) / AssentoReservaProxy
+ *   - Template   : ProcessamentoPagamentoTemplate / RevendaProcessamento
+ *   - Iterator   : ColecaoTransacoes / AssentoIterador
+ */
+
 Domain Ingressify {
 	Subdomain Marketplace
 	Subdomain Financeiro
@@ -18,23 +31,52 @@ ContextMap {
 	Identidade Shared-Kernel SharedKernel
 }
 
+/* =====================================================================
+   BOUNDED CONTEXT: Marketplace
+   ===================================================================== */
+
 BoundedContext Marketplace implements Marketplace {
+
+	/* -----------------------------------------------------------------
+	   Aggregate: Evento
+	   ----------------------------------------------------------------- */
 	Aggregate Evento {
+
+		Service EventoServico {
+			@Evento criar(@UsuarioId organizadorId, String nome, DateTime dataHora, String local,
+			              String descricao, int capacidade, int capacidadeNumerada, String imagemCapaUrl,
+			              int prazoReembolsoDias, DateTime aberturaPortoes, String categoria);
+			@Evento obter(@EventoId id);
+			void atualizar(@EventoId id, String nome, DateTime dataHora, String local, String descricao,
+			               int capacidade, int capacidadeNumerada, String imagemCapaUrl,
+			               int prazoReembolsoDias, DateTime aberturaPortoes, String categoria);
+			void cancelar(@EventoId id);
+		}
+
 		Entity Evento {
 			aggregateRoot
 
 			-EventoId id
+			-UsuarioId organizadorId
 			String nome
 			DateTime dataHora
 			String local
 			String descricao
 			-StatusEvento status
 			int capacidade
+			int capacidadeNumerada
+			String imagemCapaUrl nullable
+			int prazoReembolsoDias
+			DateTime aberturaPortoes
+			String categoria nullable
 
-			def boolean iniciado();  // return dataHora.isBefore(now)
-			def boolean ativo();     // return status == ATIVO && !iniciado()
-
-			def void atualizar(String nome, DateTime dataHora, String local, String descricao, int capacidade);
+			def boolean iniciado();
+			def boolean ativo();
+			def boolean temAssentosNumerados();
+			def int getCapacidadeOrdemChegada();
+			def void atualizar(String nome, DateTime dataHora, String local, String descricao,
+			                   int capacidade, int capacidadeNumerada, String imagemCapaUrl,
+			                   int prazoReembolsoDias, DateTime aberturaPortoes, String categoria);
 			def void cancelar();
 
 			Repository EventoRepository {
@@ -55,7 +97,12 @@ BoundedContext Marketplace implements Marketplace {
 		}
 	}
 
+	/* -----------------------------------------------------------------
+	   Aggregate: TipoIngresso
+	   (inclui Lote e suporte a meia-entrada / benefícios — Decorator)
+	   ----------------------------------------------------------------- */
 	Aggregate TipoIngresso {
+
 		Service TipoIngressoServico {
 			void salvar(@TipoIngresso tipo);
 			@TipoIngresso obter(@TipoIngressoId id);
@@ -66,14 +113,28 @@ BoundedContext Marketplace implements Marketplace {
 			aggregateRoot
 
 			-TipoIngressoId id
-			-EventoId evento
+			-EventoId eventoId
 			String nome
 			-Dinheiro preco
 			int quantidadeDisponivel
 			int quantidadeTotal
+			String descricao nullable
+			List<String> beneficios
+			-List<Lote> lotes
+			boolean meiaEntradaHabilitada
+			int percentualMeia          // padrão 50
+			int cotaMeia
+			int cotaMeiaDisponivel
 
-			def void reservar(int qtd);   // quantidadeDisponivel -= qtd
-			def void devolver(int qtd);   // quantidadeDisponivel += qtd
+			def void reservar(int qtd);
+			def void devolver(int qtd);
+			def void reservarMeia(int qtd);
+			def void devolverMeia(int qtd);
+			def @Dinheiro precoMeia();
+			def void configurarMeiaEntrada(boolean habilitada, int percentual, int cota);
+			def void adicionarLote(@Lote lote);
+			def void definirBeneficios(List<String> beneficios);
+			def void atualizar(String nome, @Dinheiro preco, int novaQuantidadeTotal, String descricao);
 
 			Repository TipoIngressoRepository {
 				@TipoIngresso obter(@TipoIngressoId id);
@@ -82,12 +143,36 @@ BoundedContext Marketplace implements Marketplace {
 			}
 		}
 
+		Entity Lote {
+			-LoteId id
+			int numero
+			String nome
+			-Dinheiro preco
+			int quantidadeTotal
+			int quantidadeDisponivel
+			DateTime dataInicio nullable
+			DateTime dataFim nullable
+
+			def boolean ativo(DateTime agora);
+			def void reservar(int qtd);
+			def void devolver(int qtd);
+		}
+
 		ValueObject TipoIngressoId {
+			int id
+		}
+
+		ValueObject LoteId {
 			int id
 		}
 	}
 
+	/* -----------------------------------------------------------------
+	   Aggregate: Ingresso
+	   (suporta meia-entrada, bloqueio por reembolso, revenda)
+	   ----------------------------------------------------------------- */
 	Aggregate Ingresso {
+
 		Service IngressoServico {
 			void salvar(@Ingresso ingresso);
 			@Ingresso obter(@IngressoId id);
@@ -109,16 +194,24 @@ BoundedContext Marketplace implements Marketplace {
 			aggregateRoot
 
 			-IngressoId id
-			-TipoIngressoId tipoIngresso
-			-EventoId evento
+			-TipoIngressoId tipoIngressoId
+			-EventoId eventoId
 			-UsuarioId proprietario
 			-StatusIngresso status
+			boolean bloqueadoPorReembolso
+			boolean meiaEntrada
+			String documento nullable         // comprovante de meia-entrada
 
-			def void transferir(@UsuarioId novoDono);       // status deve ser ATIVO
-			def void marcarEmRevenda();                     // status ATIVO -> EM_REVENDA
-			def void concluirRevenda(@UsuarioId comprador); // status EM_REVENDA -> REVENDIDO
+			def void transferir(@UsuarioId novoDono);
+			def void marcarEmRevenda();
+			def void concluirRevenda(@UsuarioId comprador);
 			def void cancelar();
-			def void desmarcarRevenda();                    // status EM_REVENDA -> ATIVO
+			def void desmarcarRevenda();
+			def void marcarUtilizado();
+			def void marcarReembolsado();
+			def void bloquearParaReembolso();
+			def void desbloquearReembolso();
+			def void definirMeiaEntrada(String documento);
 
 			Repository IngressoRepository {
 				@Ingresso obter(@IngressoId id);
@@ -140,7 +233,11 @@ BoundedContext Marketplace implements Marketplace {
 		}
 	}
 
+	/* -----------------------------------------------------------------
+	   Aggregate: AnuncioRevenda
+	   ----------------------------------------------------------------- */
 	Aggregate AnuncioRevenda {
+
 		Service AnuncioRevendaServico {
 			@AnuncioRevenda criar(List<@IngressoId> ingressoIds, @Dinheiro preco, @UsuarioId vendedorId);
 			@AnuncioRevenda reservar(@AnuncioRevendaId anuncioId, @UsuarioId comprador, String correlacaoPagamento);
@@ -163,10 +260,10 @@ BoundedContext Marketplace implements Marketplace {
 			-StatusAnuncio status
 			String correlacaoPagamento nullable  // UUID
 
-			def void reservar(@UsuarioId comprador, String correlacao);  // status DISPONIVEL -> RESERVADO
+			def void reservar(@UsuarioId comprador, String correlacao);
 			def void cancelar();
-			def void cancelarReserva();  // status RESERVADO -> DISPONIVEL
-			def void concluir();         // status RESERVADO -> VENDIDO
+			def void cancelarReserva();
+			def void concluir();
 			def void alterarPreco(@Dinheiro novoPreco);
 
 			Repository AnuncioRevendaRepository {
@@ -188,7 +285,11 @@ BoundedContext Marketplace implements Marketplace {
 		}
 	}
 
+	/* -----------------------------------------------------------------
+	   Aggregate: Pedido (compra direta)
+	   ----------------------------------------------------------------- */
 	Aggregate Pedido {
+
 		Entity Pedido {
 			aggregateRoot
 
@@ -207,12 +308,535 @@ BoundedContext Marketplace implements Marketplace {
 			}
 		}
 	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: GrupoCompra
+	   (compra coletiva com participantes e prazo de pagamento)
+	   ----------------------------------------------------------------- */
+	Aggregate GrupoCompra {
+
+		Service GrupoCompraServico {
+			@GrupoCompra criar(@EventoId eventoId, @TipoIngressoId tipoIngressoId, @UsuarioId liderId,
+			                   int quantidadeTotal, DateTime prazoPagamento);
+			void confirmar(@GrupoCompraId id);
+			void expirar(@GrupoCompraId id);
+			void cancelar(@GrupoCompraId id);
+			@GrupoCompra obter(@GrupoCompraId id);
+		}
+
+		Entity GrupoCompra {
+			aggregateRoot
+
+			-GrupoCompraId id
+			-EventoId eventoId
+			-TipoIngressoId tipoIngressoId
+			-UsuarioId liderId
+			int quantidadeTotal
+			DateTime prazoPagamento
+			-StatusGrupoCompra status
+			DateTime criadoEm
+
+			def void confirmar();
+			def void expirar();
+			def void cancelar();
+			def boolean prazoExpirado(DateTime agora);
+
+			Repository GrupoCompraRepository {
+				@GrupoCompra obter(@GrupoCompraId id);
+				void salvar(@GrupoCompra grupo);
+			}
+		}
+
+		Entity ParticipanteGrupo {
+			-ParticipanteGrupoId id
+			-GrupoCompraId grupoCompraId
+			-UsuarioId usuarioId
+			int quantidade
+			boolean meiaEntrada
+			String documento nullable
+			-Dinheiro valor
+			-StatusParticipanteGrupo status
+			DateTime pagoEm nullable
+
+			def void marcarPago();
+			def void marcarReembolsado();
+		}
+
+		ValueObject GrupoCompraId {
+			int id
+		}
+
+		ValueObject ParticipanteGrupoId {
+			int id
+		}
+
+		enum StatusGrupoCompra {
+			ABERTO,
+			CONFIRMADO,
+			EXPIRADO,
+			CANCELADO
+		}
+
+		enum StatusParticipanteGrupo {
+			PENDENTE,
+			PAGO,
+			REEMBOLSADO
+		}
+	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: Cupom
+	   (Strategy: DescontoPercentualEstrategia / DescontoValorFixoEstrategia)
+	   ----------------------------------------------------------------- */
+	Aggregate Cupom {
+
+		Service CupomServico {
+			@Cupom criar(String codigo, @TipoCupom tipo, BigDecimal valor, @EventoId eventoId,
+			             @Dinheiro valorMinimo, int limiteUsos, DateTime validoDe, DateTime validoAte);
+			@Cupom obterPorCodigo(String codigo);
+			@Dinheiro aplicar(String codigo, @Dinheiro valorCompra, @EventoId eventoId, DateTime agora);
+			void desativar(@CupomId id);
+		}
+
+		Entity Cupom {
+			aggregateRoot
+
+			-CupomId id
+			String codigo
+			-TipoCupom tipo
+			BigDecimal valor
+			-EventoId eventoId
+			-Dinheiro valorMinimo
+			int limiteUsos
+			int usos
+			DateTime validoDe nullable
+			DateTime validoAte nullable
+			boolean ativo
+
+			def void validarAplicavel(@Dinheiro valorCompra, @EventoId eventoId, DateTime agora);
+			def @Dinheiro aplicar(@Dinheiro valorOriginal);
+			def void registrarUso();
+			def void desativar();
+			def boolean atingiuLimite();
+
+			Repository CupomRepository {
+				@Cupom obter(@CupomId id);
+				@Cupom obterPorCodigo(String codigo);
+				void salvar(@Cupom cupom);
+			}
+		}
+
+		ValueObject CupomId {
+			int id
+		}
+
+		enum TipoCupom {
+			PERCENTUAL,
+			VALOR_FIXO
+		}
+	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: MapaAssentos
+	   (Proxy: AssentoReservaProxy; Iterator: AssentoIterador / ColecaoAssentos)
+	   ----------------------------------------------------------------- */
+	Aggregate MapaAssentos {
+
+		Entity MapaAssentos {
+			aggregateRoot
+
+			-MapaAssentosId id
+			-EventoId eventoId
+			int totalLinhas
+			int totalColunas
+
+			Repository MapaAssentosRepository {
+				@MapaAssentos obter(@MapaAssentosId id);
+				@MapaAssentos obterPorEvento(@EventoId eventoId);
+				void salvar(@MapaAssentos mapa);
+			}
+		}
+
+		Entity Assento {
+			-AssentoId id
+			-MapaAssentosId mapaId
+			-EventoId eventoId
+			String secao
+			String codigo
+			-TipoAssento tipo
+			BigDecimal preco
+			-StatusAssento status
+			-UsuarioId reservadoPor nullable
+			DateTime reservadoAte nullable
+
+			def void reservar(@UsuarioId usuarioId, int minutosReserva);
+			def void liberarReserva();
+			def void confirmarVenda();
+			def void bloquear();
+			def void desbloquear();
+			def boolean reservaExpirada();
+		}
+
+		ValueObject MapaAssentosId {
+			int id
+		}
+
+		ValueObject AssentoId {
+			int id
+		}
+
+		enum TipoAssento {
+			NORMAL,
+			VIP,
+			ACESSIBILIDADE,
+			BLOQUEADO
+		}
+
+		enum StatusAssento {
+			DISPONIVEL,
+			RESERVADO,
+			VENDIDO,
+			BLOQUEADO
+		}
+	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: Sorteio
+	   (State: EstadoConfigurado → EstadoInscricoesAbertas → EstadoAguardandoSorteio
+	           → EstadoSorteado → EstadoEncerrado | EstadoCancelado;
+	    Strategy: EstrategiaSorteio)
+	   ----------------------------------------------------------------- */
+	Aggregate Sorteio {
+
+		Service SorteioServico {
+			@Sorteio criar(@EventoId eventoId, @TipoIngressoId tipoIngressoId, @UsuarioId organizadorId,
+			               int quantidadeIngressos, int quantidadeListaEspera,
+			               DateTime prazoInscricao, int prazoConfirmacaoHoras);
+			void abrirInscricoes(@SorteioId id);
+			void encerrarInscricoes(@SorteioId id);
+			void executarSorteio(@SorteioId id);
+			void encerrar(@SorteioId id);
+			void cancelar(@SorteioId id);
+			@Sorteio obter(@SorteioId id);
+		}
+
+		Entity Sorteio {
+			aggregateRoot
+
+			-SorteioId id
+			-EventoId eventoId
+			-TipoIngressoId tipoIngressoId
+			-UsuarioId organizadorId
+			int quantidadeIngressos
+			int quantidadeListaEspera
+			DateTime prazoInscricao
+			int prazoConfirmacaoHoras
+			-StatusSorteio status
+
+			def void abrirInscricoes();
+			def void encerrarInscricoes();
+			def void executarSorteio();
+			def void encerrar();
+			def void cancelar();
+
+			Repository SorteioRepository {
+				@Sorteio obter(@SorteioId id);
+				void salvar(@Sorteio sorteio);
+				List<@Sorteio> pesquisarPorEvento(@EventoId eventoId);
+			}
+		}
+
+		Entity InscricaoSorteio {
+			-InscricaoSorteioId id
+			-SorteioId sorteioId
+			-UsuarioId participanteId
+			DateTime inscritoEm
+			-StatusInscricao status
+			int posicao
+
+			def void contemplar(int posicao);
+			def void marcarListaEspera(int posicao);
+			def void confirmar();
+			def void expirar();
+			def void cancelar();
+		}
+
+		ValueObject SorteioId {
+			int id
+		}
+
+		ValueObject InscricaoSorteioId {
+			int id
+		}
+
+		enum StatusSorteio {
+			CONFIGURADO,
+			INSCRICOES_ABERTAS,
+			AGUARDANDO_SORTEIO,
+			SORTEADO,
+			ENCERRADO,
+			CANCELADO
+		}
+
+		enum StatusInscricao {
+			INSCRITO,
+			CONTEMPLADO,
+			LISTA_ESPERA,
+			CONFIRMADO,
+			EXPIRADO,
+			CANCELADO
+		}
+	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: Avaliacao
+	   ----------------------------------------------------------------- */
+	Aggregate Avaliacao {
+
+		Service AvaliacaoServico {
+			@Avaliacao criar(@EventoId eventoId, @UsuarioId usuarioId, int nota, String comentario, DateTime agora);
+			void editar(@AvaliacaoId id, int nota, String comentario, DateTime agora);
+			void responder(@AvaliacaoId id, String texto, DateTime agora);
+		}
+
+		Entity Avaliacao {
+			aggregateRoot
+
+			-AvaliacaoId id
+			-EventoId eventoId
+			-UsuarioId usuarioId
+			int nota                           // 1 a 5
+			String comentario nullable
+			String respostaOrganizador nullable
+			DateTime criadaEm
+			DateTime atualizadaEm nullable
+
+			def void editar(int nota, String comentario, DateTime agora);
+			def void responder(String texto, DateTime agora);
+
+			Repository AvaliacaoRepository {
+				@Avaliacao obter(@AvaliacaoId id);
+				void salvar(@Avaliacao avaliacao);
+				List<@Avaliacao> pesquisarPorEvento(@EventoId eventoId);
+			}
+		}
+
+		ValueObject AvaliacaoId {
+			int id
+		}
+	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: CheckIn
+	   ----------------------------------------------------------------- */
+	Aggregate CheckIn {
+
+		Service CheckinServico {
+			@RegistroCheckin escanearQR(String qrCode, @UsuarioId operadorId, DateTime agora);
+			@RegistroCheckin buscarManual(@IngressoId ingressoId, @UsuarioId operadorId, DateTime agora);
+			List<@RegistroCheckin> listarPorEvento(@EventoId eventoId);
+		}
+
+		Entity RegistroCheckin {
+			aggregateRoot
+
+			String id                          // UUID
+			-IngressoId ingressoId
+			-EventoId eventoId
+			-UsuarioId operadorId
+			DateTime dataHora
+
+			Repository RegistroCheckinRepository {
+				@RegistroCheckin obter(String id);
+				void salvar(@RegistroCheckin registro);
+				List<@RegistroCheckin> pesquisarPorEvento(@EventoId eventoId);
+				boolean existeParaIngresso(@IngressoId ingressoId);
+			}
+		}
+	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: SolicitacaoReembolso
+	   (Strategy: EstrategiaReembolso / ReembolsoNaoPermitidoException;
+	    Observer: ObservadorCancelamento / IngressoCancelado)
+	   ----------------------------------------------------------------- */
+	Aggregate SolicitacaoReembolso {
+
+		Service SolicitacaoReembolsoServico {
+			@SolicitacaoReembolso solicitar(@IngressoId ingressoId, @UsuarioId solicitanteId,
+			                                @MotivoReembolso motivo, @Dinheiro valor, DateTime agora);
+			void aprovar(@SolicitacaoReembolsoId id, DateTime agora);
+			void recusar(@SolicitacaoReembolsoId id, DateTime agora);
+			@SolicitacaoReembolso obter(@SolicitacaoReembolsoId id);
+		}
+
+		Entity SolicitacaoReembolso {
+			aggregateRoot
+
+			-SolicitacaoReembolsoId id
+			-IngressoId ingressoId
+			-UsuarioId solicitanteId
+			-MotivoReembolso motivo
+			-StatusSolicitacaoReembolso status
+			-Dinheiro valor
+			DateTime criadaEm
+			DateTime decididaEm nullable
+
+			def void aprovar(DateTime agora);
+			def void recusar(DateTime agora);
+
+			Repository SolicitacaoReembolsoRepository {
+				@SolicitacaoReembolso obter(@SolicitacaoReembolsoId id);
+				void salvar(@SolicitacaoReembolso solicitacao);
+				List<@SolicitacaoReembolso> pesquisarPorIngresso(@IngressoId ingressoId);
+			}
+		}
+
+		ValueObject SolicitacaoReembolsoId {
+			int id
+		}
+
+		enum MotivoReembolso {
+			VOLUNTARIO,
+			EVENTO_CANCELADO
+		}
+
+		enum StatusSolicitacaoReembolso {
+			PENDENTE,
+			APROVADA,
+			RECUSADA
+		}
+	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: Denuncia
+	   ----------------------------------------------------------------- */
+	Aggregate Denuncia {
+
+		Service DenunciaServico {
+			@Denuncia registrar(@AnuncioRevendaId anuncioId, @UsuarioId denuncianteId,
+			                    @MotivoDenuncia motivo, String descricao, DateTime agora);
+			void decidir(@DenunciaId id, @DecisaoModeracao decisao, DateTime agora);
+			@Denuncia obter(@DenunciaId id);
+		}
+
+		Entity Denuncia {
+			aggregateRoot
+
+			-DenunciaId id
+			-AnuncioRevendaId anuncioId
+			-UsuarioId denuncianteId
+			-MotivoDenuncia motivo
+			String descricao nullable
+			-StatusDenuncia status
+			-DecisaoModeracao decisao nullable
+			DateTime criadaEm
+			DateTime decididaEm nullable
+
+			def void decidir(@DecisaoModeracao decisao, DateTime agora);
+
+			Repository DenunciaRepository {
+				@Denuncia obter(@DenunciaId id);
+				void salvar(@Denuncia denuncia);
+				List<@Denuncia> pesquisarPorAnuncio(@AnuncioRevendaId anuncioId);
+			}
+		}
+
+		ValueObject DenunciaId {
+			int id
+		}
+
+		enum MotivoDenuncia {
+			PRECO_ABUSIVO,
+			INGRESSO_SUSPEITO,
+			COMPORTAMENTO_INADEQUADO,
+			OUTRO
+		}
+
+		enum StatusDenuncia {
+			PENDENTE,
+			RESOLVIDA
+		}
+
+		enum DecisaoModeracao {
+			ARQUIVADA,
+			ANUNCIO_REMOVIDO,
+			VENDEDOR_AVISADO,
+			VENDEDOR_BLOQUEADO
+		}
+	}
+
+	/* -----------------------------------------------------------------
+	   Aggregate: Feed
+	   (Postagem de organizadores e comentários de participantes)
+	   ----------------------------------------------------------------- */
+	Aggregate Feed {
+
+		Service FeedServico {
+			@Postagem publicar(@EventoId eventoId, @UsuarioId autorId, String titulo,
+			                   String conteudo, String imagemUrl, boolean fixada, DateTime agora);
+			void editar(@PostagemId id, String titulo, String conteudo, String imagemUrl);
+			void fixar(@PostagemId id);
+			void desfixar(@PostagemId id);
+			@Comentario comentar(@PostagemId postagemId, @UsuarioId autorId, String texto, DateTime agora);
+		}
+
+		Entity Postagem {
+			aggregateRoot
+
+			-PostagemId id
+			-EventoId eventoId
+			-UsuarioId autorId
+			String titulo
+			String conteudo
+			String imagemUrl nullable
+			boolean fixada
+			DateTime criadaEm
+
+			def void editar(String titulo, String conteudo, String imagemUrl);
+			def void fixar();
+			def void desfixar();
+
+			Repository PostagemRepository {
+				@Postagem obter(@PostagemId id);
+				void salvar(@Postagem postagem);
+				List<@Postagem> pesquisarPorEvento(@EventoId eventoId);
+			}
+		}
+
+		Entity Comentario {
+			-ComentarioId id
+			-PostagemId postagemId
+			-UsuarioId autorId
+			String texto
+			DateTime criadaEm
+		}
+
+		ValueObject PostagemId {
+			int id
+		}
+
+		ValueObject ComentarioId {
+			int id
+		}
+	}
 }
 
+/* =====================================================================
+   BOUNDED CONTEXT: Financeiro
+   ===================================================================== */
+
 BoundedContext Financeiro implements Financeiro {
+
+	/* -----------------------------------------------------------------
+	   Aggregate: Pagamento
+	   (Template Method: ProcessamentoPagamentoTemplate / RevendaProcessamento)
+	   ----------------------------------------------------------------- */
 	Aggregate Pagamento {
+
 		Service PagamentoServico {
-			@Pagamento criarPendente(@Dinheiro valor, @UsuarioId comprador, @UsuarioId vendedor, @TipoOperacao tipo, String correlacaoId);
+			@Pagamento criarPendente(@Dinheiro valor, @UsuarioId comprador, @UsuarioId vendedor,
+			                         @TipoOperacao tipo, String correlacaoId);
 			@Pagamento confirmar(@PagamentoId id);
 			@Pagamento rejeitar(@PagamentoId id);
 			@Pagamento obter(@PagamentoId id);
@@ -229,8 +853,8 @@ BoundedContext Financeiro implements Financeiro {
 			-StatusPagamento status
 			String correlacaoId  // UUID
 
-			def void confirmar();  // status PENDENTE -> CONFIRMADO
-			def void rejeitar();   // status PENDENTE -> REJEITADO
+			def void confirmar();
+			def void rejeitar();
 			def @Divisao dividir(BigDecimal percentualPlataforma);
 
 			Repository PagamentoRepository {
@@ -260,7 +884,11 @@ BoundedContext Financeiro implements Financeiro {
 		}
 	}
 
+	/* -----------------------------------------------------------------
+	   Aggregate: Saldo
+	   ----------------------------------------------------------------- */
 	Aggregate Saldo {
+
 		Service SaldoServico {
 			@Saldo obter(@UsuarioId usuario);
 			void creditar(@UsuarioId usuario, @Dinheiro quantia);
@@ -283,7 +911,17 @@ BoundedContext Financeiro implements Financeiro {
 		}
 	}
 
+	/* -----------------------------------------------------------------
+	   Aggregate: Transacao
+	   (Iterator: ColecaoTransacoes / TransacaoIteradorImpl)
+	   ----------------------------------------------------------------- */
 	Aggregate Transacao {
+
+		Service TransacaoServico {
+			void registrar(@UsuarioId usuario, @TipoTransacao tipo, @Dinheiro valor, String referenciaExternaId);
+			List<@Transacao> extratoPorUsuario(@UsuarioId usuario);
+		}
+
 		Entity Transacao {
 			aggregateRoot
 
@@ -314,25 +952,40 @@ BoundedContext Financeiro implements Financeiro {
 	}
 }
 
+/* =====================================================================
+   BOUNDED CONTEXT: Identidade
+   (Proxy: UsuarioServicoProxy / VerificadorBloqueioRevenda)
+   ===================================================================== */
+
 BoundedContext Identidade implements Identidade {
+
 	Aggregate Usuario {
+
+		Service UsuarioServico {
+			@Usuario cadastrar(String nome, String enderecoEmail, String senha);
+			String autenticar(String enderecoEmail, String senha);
+			@Usuario obter(@UsuarioId id);
+			boolean existeEmail(String enderecoEmail);
+		}
+
 		Entity Usuario {
 			aggregateRoot
+
 			-UsuarioId id
 			String nome
-			String email
+			String enderecoEmail
 			String senhaHash
 			String fotoUrl nullable
 			String cidade nullable
 			Date dataNascimento nullable
 			boolean bloqueadoRevenda
-			Set<Papel> papeis
+			-Set<Papel> papeis
 
 			Repository UsuarioRepository {
 				@Usuario obter(@UsuarioId id);
 				void salvar(@Usuario usuario);
-				@Usuario obterPorEmail(String email);
-				boolean existeEmail(String email);
+				@Usuario obterPorEmail(String enderecoEmail);
+				boolean existeEmail(String enderecoEmail);
 			}
 		}
 
@@ -345,7 +998,13 @@ BoundedContext Identidade implements Identidade {
 	}
 }
 
+/* =====================================================================
+   BOUNDED CONTEXT: SharedKernel
+   (Value objects compartilhados entre todos os contextos)
+   ===================================================================== */
+
 BoundedContext SharedKernel implements SharedKernel {
+
 	Aggregate Identidade {
 		ValueObject UsuarioId {
 			int id
@@ -355,6 +1014,8 @@ BoundedContext SharedKernel implements SharedKernel {
 	Aggregate Monetario {
 		ValueObject Dinheiro {
 			BigDecimal valor
+
+			// Dinheiro.ZERO é constante estática utilizada no domínio
 		}
 	}
 }

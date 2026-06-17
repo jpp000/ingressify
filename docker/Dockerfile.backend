@@ -1,20 +1,43 @@
-# Build context: repositório raiz (módulos Maven).
+# syntax=docker/dockerfile:1
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /workspace
+
+# Copy parent POM first
 COPY pom.xml .
-COPY parent parent
-COPY domain-shared domain-shared
-COPY domain-marketplace domain-marketplace
-COPY domain-financeiro domain-financeiro
-COPY application application
-COPY infrastructure infrastructure
-COPY presentation-backend presentation-backend
-RUN mvn -pl presentation-backend -am package -DskipTests
+COPY pai/pom.xml pai/pom.xml
+
+# Copy module POMs (for dependency resolution layer)
+COPY dominio-compartilhado/pom.xml dominio-compartilhado/pom.xml
+COPY dominio-identidade/pom.xml dominio-identidade/pom.xml
+COPY dominio-marketplace/pom.xml dominio-marketplace/pom.xml
+COPY dominio-financeiro/pom.xml dominio-financeiro/pom.xml
+COPY aplicacao/pom.xml aplicacao/pom.xml
+COPY infraestrutura/pom.xml infraestrutura/pom.xml
+COPY apresentacao-backend/pom.xml apresentacao-backend/pom.xml
+
+# Download all dependencies (cached unless POMs change)
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -pl apresentacao-backend -am dependency:go-offline -q
+
+# Copy source code
+COPY dominio-compartilhado dominio-compartilhado
+COPY dominio-identidade dominio-identidade
+COPY dominio-marketplace dominio-marketplace
+COPY dominio-financeiro dominio-financeiro
+COPY aplicacao aplicacao
+COPY infraestrutura infraestrutura
+COPY apresentacao-backend apresentacao-backend
+
+# Build (deps already cached from previous step)
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -pl apresentacao-backend -am package -DskipTests -q
 
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 RUN groupadd -r spring && useradd -r -g spring spring
-COPY --from=build --chown=spring:spring /workspace/presentation-backend/target/ingressify-presentation-backend-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build --chown=spring:spring \
+  /workspace/apresentacao-backend/target/ingressify-presentation-backend-0.0.1-SNAPSHOT.jar \
+  app.jar
 USER spring:spring
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

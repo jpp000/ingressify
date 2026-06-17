@@ -5,6 +5,7 @@
 **/.vscode
 **/*.iml
 .cursor
-presentation-frontend/node_modules
-presentation-frontend/dist
+apresentacao-frontend/node_modules
+apresentacao-frontend/dist
 **/node_modules
+*.log

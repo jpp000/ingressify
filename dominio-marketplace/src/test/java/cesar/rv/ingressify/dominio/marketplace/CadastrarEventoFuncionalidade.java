@@ -1,0 +1,120 @@
+package cesar.rv.ingressify.dominio.marketplace;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.time.LocalDateTime;
+
+import cesar.rv.ingressify.dominio.marketplace.evento.Evento;
+import cesar.rv.ingressify.dominio.marketplace.evento.EventoId;
+import cesar.rv.ingressify.dominio.marketplace.evento.StatusEvento;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+
+public class CadastrarEventoFuncionalidade extends MarketplaceFuncionalidade {
+
+	private EventoId eventoId;
+
+	@When("tento criar um evento com nome em branco")
+	public void tentarNomeEmBranco() {
+		try {
+			MarketplaceTestData.eventoNovo("   ", LocalDateTime.now().plusDays(1), "Local X", "Festival de música.", 100);
+		} catch (Exception e) {
+			excecao = e;
+		}
+	}
+
+	@When("tento criar um evento com data no passado")
+	public void tentarDataNoPassado() {
+		try {
+			MarketplaceTestData.eventoNovo("Show", LocalDateTime.now().minusDays(1), "Local X", "Show de rock e pop.", 100);
+		} catch (Exception e) {
+			excecao = e;
+		}
+	}
+
+	@When("tento criar um evento com capacidade zero")
+	public void tentarCapacidadeZero() {
+		try {
+			MarketplaceTestData.eventoNovo("Show", LocalDateTime.now().plusDays(1), "Local X", "Festival de verão.", 0);
+		} catch (Exception e) {
+			excecao = e;
+		}
+	}
+
+	@Then("a criação é rejeitada")
+	public void criacaoRejeitada() {
+		assertNotNull(excecao);
+	}
+
+	@When("crio um evento com dados válidos")
+	public void criarEventoValido() {
+		LocalDateTime dh = LocalDateTime.now().plusDays(30);
+		Evento evento = MarketplaceTestData.eventoNovo("Festival de Verão", dh, "Estádio Municipal",
+				"Dias de apresentação com atrações nacionais e internacionais. Open food e bebida.", 5000);
+		eventoServico.salvar(evento);
+		eventoId = evento.getId();
+	}
+
+	@Then("o evento é persistido com status ativo")
+	public void eventoPeristidoComStatusAtivo() {
+		assertNotNull(eventoId);
+		assertEquals(StatusEvento.ATIVO, eventoServico.obter(eventoId).getStatus());
+	}
+
+	@Given("um evento ativo")
+	public void umEventoAtivo() {
+		LocalDateTime dh = LocalDateTime.now().plusDays(10);
+		Evento evento = MarketplaceTestData.eventoNovo("Show de Rock", dh, "Arena", "Bandas de rock e blues.", 1000);
+		eventoServico.salvar(evento);
+		eventoId = evento.getId();
+	}
+
+	@When("cancelo o evento")
+	public void canceloOEvento() {
+		eventoServico.cancelar(eventoId);
+	}
+
+	@Then("o status do evento é cancelado")
+	public void statusEventoCancelado() {
+		assertEquals(StatusEvento.CANCELADO, eventoServico.obter(eventoId).getStatus());
+	}
+
+	@When("atualizo o nome do evento")
+	public void atualizarNomeEvento() {
+		LocalDateTime dh = LocalDateTime.now().plusDays(10);
+		eventoServico.atualizar(eventoId, "Show de Rock - Edição Especial", dh, "Arena",
+				"Edição com convidados especiais e abertura antecipada.", 1500, 0, null, 7, MarketplaceTestData.aberturaPara(dh), null);
+	}
+
+	@Then("o nome do evento é atualizado")
+	public void nomeEventoAtualizado() {
+		assertEquals("Show de Rock - Edição Especial", eventoServico.obter(eventoId).getNome());
+	}
+
+	@Given("um evento já iniciado")
+	public void umEventoJaIniciado() {
+		LocalDateTime dh = LocalDateTime.now().minusHours(2);
+		Evento evento = MarketplaceTestData.eventoReidratado(new EventoId(99), "Show Passado", dh, "Teatro",
+				"Espetáculo de teatro experimental em duas atuações.", StatusEvento.ATIVO, 200);
+		eventoServico.salvar(evento);
+		eventoId = evento.getId();
+	}
+
+	@When("tento atualizar os dados do evento")
+	public void tentarAtualizarEvento() {
+		try {
+			LocalDateTime dh = LocalDateTime.now().plusDays(1);
+			eventoServico.atualizar(eventoId, "Novo Nome", dh, "Novo Local", "Nova descrição após a mudança de data.", 300,
+					0, null, 7, MarketplaceTestData.aberturaPara(dh), null);
+		} catch (Exception e) {
+			excecao = e;
+		}
+	}
+
+	@Then("a atualização do evento é rejeitada")
+	public void atualizacaoDoEventoRejeitada() {
+		assertNotNull(excecao);
+	}
+}
